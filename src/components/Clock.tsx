@@ -61,9 +61,28 @@ const Clock = () => {
   useEffect(() => {
     const fetchWeather = async () => {
       try {
-        const lat = 37.95
-        const lon = 139.33
-        const areaCode = '150000'
+        // 設定から取得した都道府県と市に基づいて座標とエリアコードを設定
+        // 新潟県新発田市の座標とエリアコード
+        let lat = 37.95
+        let lon = 139.33
+        let areaCode = '150000' // 新潟地方
+        
+        // 都道府県と市に応じて座標とエリアコードを変更
+        if (prefecture === '新潟県' && city === '新発田市') {
+          lat = 37.95
+          lon = 139.33
+          areaCode = '150000' // 新潟地方
+        } else if (prefecture === '新潟県') {
+          // 新潟県の他の市の場合
+          lat = 37.9161
+          lon = 139.0364
+          areaCode = '150000' // 新潟地方
+        } else {
+          // その他の都道府県の場合（デフォルトは新潟県新発田市）
+          lat = 37.95
+          lon = 139.33
+          areaCode = '150000'
+        }
         
         // 気象庁APIから本日の天気予報を取得
         try {
@@ -77,7 +96,29 @@ const Clock = () => {
               const timeSeries = areaData.timeSeries?.[0]
               
               if (timeSeries && timeSeries.areas && timeSeries.areas.length > 0) {
-                const area = timeSeries.areas[0]
+                // 新発田市に該当するエリアを探す
+                // エリア名に「新発田」が含まれるエリアを優先的に選択
+                let area = timeSeries.areas[0] // デフォルトは最初のエリア
+                
+                // 新発田市に該当するエリアを探す
+                if (city === '新発田市') {
+                  const shibataArea = timeSeries.areas.find((a: any) => 
+                    a.area && (a.area.name && (a.area.name.includes('新発田') || a.area.name.includes('新発田市')))
+                  )
+                  if (shibataArea) {
+                    area = shibataArea
+                  } else {
+                    // エリア名で見つからない場合は、エリアコードで探す
+                    // 新発田市のエリアコードは152020（新発田市）または152110（新発田）の可能性
+                    const shibataAreaByCode = timeSeries.areas.find((a: any) => 
+                      a.area && (a.area.code === '152020' || a.area.code === '152110')
+                    )
+                    if (shibataAreaByCode) {
+                      area = shibataAreaByCode
+                    }
+                  }
+                }
+                
                 const weatherCodes = area.weatherCodes || []
                 const temps = area.temps || []
                 
