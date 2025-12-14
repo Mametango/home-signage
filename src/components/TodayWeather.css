@@ -1,12 +1,15 @@
 .today-weather {
   width: 100%;
-  padding: 1.5rem;
+  height: 100%;
+  padding: 1rem;
   background: rgba(0, 0, 0, 0.4);
   backdrop-filter: blur(10px);
-  border-radius: 1rem;
-  margin-top: 1rem;
+  border-radius: 0.5rem;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3), inset 0 0 10px rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
 }
 
 .today-weather-header {
