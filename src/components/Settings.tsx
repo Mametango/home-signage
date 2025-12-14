@@ -56,8 +56,8 @@ const reverseGeocode = async (lat: number, lon: number): Promise<{ prefecture: s
 }
 
 const Settings = () => {
-  const [prefecture, setPrefecture] = useState<string>('東京都')
-  const [city, setCity] = useState<string>('')
+  const [prefecture, setPrefecture] = useState<string>('新潟県')
+  const [city, setCity] = useState<string>('新発田市')
   const [useCurrentLocation, setUseCurrentLocation] = useState<boolean>(false)
   const [saved, setSaved] = useState(false)
   const [gettingLocation, setGettingLocation] = useState(false)
@@ -259,7 +259,7 @@ export const getSettings = (): SettingsData => {
       console.error('設定の読み込みに失敗しました:', error)
     }
   }
-  return { prefecture: '東京都', city: '', useCurrentLocation: false }
+  return { prefecture: '新潟県', city: '新発田市', useCurrentLocation: false }
 }
 
 export default Settings

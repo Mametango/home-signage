@@ -15,8 +15,8 @@ interface HourlyForecast {
 const HourlyForecast = () => {
   const [hourlyForecast, setHourlyForecast] = useState<HourlyForecast[]>([])
   const [loading, setLoading] = useState(true)
-  const [prefecture, setPrefecture] = useState<string>('東京都')
-  const [city, setCity] = useState<string>('')
+  const [prefecture, setPrefecture] = useState<string>('新潟県')
+  const [city, setCity] = useState<string>('新発田市')
 
   // 設定を読み込み
   useEffect(() => {
