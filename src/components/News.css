@@ -13,13 +13,13 @@
 }
 
 .news-title {
-  font-size: 1.2rem;
+  font-size: 2.5rem;
   font-weight: 700;
   color: #fff;
-  margin-bottom: 0.5rem;
+  margin-bottom: 1rem;
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
-  padding-bottom: 0.5rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  padding-bottom: 1rem;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.2);
   font-family: 'Noto Sans JP', sans-serif;
 }
 
@@ -30,19 +30,21 @@
 }
 
 .news-item {
+  width: 100%;
+  height: 100%;
   background: rgba(255, 255, 255, 0.15);
-  border-radius: 0.5rem;
-  padding: 0.75rem;
+  border-radius: 0.75rem;
+  padding: 2rem;
   transition: all 0.5s ease-in-out;
-  border-left: 2px solid transparent;
+  border-left: 4px solid transparent;
   border: 1px solid rgba(255, 255, 255, 0.1);
   text-decoration: none;
   color: inherit;
-  display: block;
+  display: flex;
+  flex-direction: column;
   cursor: pointer;
   animation: fadeIn 0.5s ease-in-out;
-  min-height: auto;
-  max-height: 100%;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   overflow-y: auto;
 }
 
@@ -113,9 +115,9 @@
 
 .news-category-badge {
   background: rgba(255, 255, 255, 0.3);
-  padding: 0.25rem 0.5rem;
+  padding: 0.5rem 1rem;
   border-radius: 0.5rem;
-  font-size: 0.65rem;
+  font-size: 1.1rem;
   font-weight: 600;
   color: #fff;
   border: 1px solid rgba(255, 255, 255, 0.2);
@@ -144,7 +146,7 @@
 }
 
 .news-counter {
-  font-size: 0.7rem;
+  font-size: 1.2rem;
   color: rgba(255, 255, 255, 0.8);
   font-weight: 600;
   font-family: 'Noto Sans JP', sans-serif;
@@ -162,18 +164,18 @@
 }
 
 .news-time {
-  font-size: 0.7rem;
+  font-size: 1.2rem;
   color: rgba(255, 255, 255, 0.9);
   font-weight: 600;
   font-family: 'Noto Sans JP', sans-serif;
 }
 
 .news-item-title {
-  font-size: 1rem;
+  font-size: 2rem;
   font-weight: 700;
   color: #fff;
-  margin-bottom: 0.5rem;
-  line-height: 1.4;
+  margin-bottom: 1rem;
+  line-height: 1.6;
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
   font-family: 'Noto Sans JP', sans-serif;
 }
@@ -184,10 +186,10 @@
 }
 
 .news-item-description {
-  font-size: 0.75rem;
+  font-size: 1.4rem;
   color: rgba(255, 255, 255, 0.9);
-  line-height: 1.4;
-  margin-top: 0.5rem;
+  line-height: 1.8;
+  margin-top: 1rem;
   font-family: 'Noto Sans JP', sans-serif;
   white-space: pre-wrap;
   word-wrap: break-word;
