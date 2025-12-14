@@ -26,11 +26,12 @@
   flex-direction: column;
   background: rgba(0, 0, 0, 0.4);
   backdrop-filter: blur(15px);
-  border-radius: 1rem;
-  padding: 2rem;
+  border-radius: 0.5rem;
+  padding: 0.75rem;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   border: 1px solid rgba(255, 255, 255, 0.1);
   position: relative;
+  overflow: hidden;
 }
 
 .clock-location {
@@ -51,11 +52,11 @@
 }
 
 .clock-large .clock-time {
-  font-size: 10rem;
+  font-size: 4.5rem;
   font-weight: 800;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.25rem;
   font-family: 'Noto Sans JP', 'Courier New', 'Monaco', 'Menlo', monospace;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.05em;
   color: #fff;
   text-shadow: 
     0 0 10px rgba(255, 255, 255, 0.3),
@@ -95,74 +96,75 @@
 .clock-weather-summary {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
-  margin-top: 1rem;
-  padding: 2rem;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+  padding: 0.75rem;
   background: rgba(255, 255, 255, 0.15);
-  border-radius: 0.75rem;
+  border-radius: 0.5rem;
   border: 1px solid rgba(255, 255, 255, 0.2);
   backdrop-filter: blur(10px);
   font-family: 'Noto Sans JP', sans-serif;
   width: 100%;
+  overflow: hidden;
 }
 
 .clock-weather-header {
   display: flex;
   align-items: center;
-  gap: 1.5rem;
-  padding-bottom: 1rem;
-  border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+  gap: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .clock-weather-icon-large {
-  font-size: 5rem;
+  font-size: 2rem;
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
   flex-shrink: 0;
 }
 
 .clock-weather-condition-large {
-  font-size: 2.5rem;
+  font-size: 1.2rem;
   color: rgba(255, 255, 255, 0.95);
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
   font-weight: 700;
 }
 
 .clock-weather-description-full {
-  font-size: 1.6rem;
+  font-size: 0.85rem;
   color: rgba(255, 255, 255, 0.95);
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
   font-weight: 500;
-  line-height: 1.8;
-  padding: 1rem;
+  line-height: 1.4;
+  padding: 0.5rem;
   background: rgba(255, 255, 255, 0.08);
-  border-radius: 0.5rem;
-  border-left: 4px solid rgba(255, 255, 255, 0.3);
+  border-radius: 0.25rem;
+  border-left: 2px solid rgba(255, 255, 255, 0.3);
 }
 
 .clock-weather-info-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 0.5rem;
 }
 
 .clock-weather-info-item {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  padding: 1rem;
+  gap: 0.25rem;
+  padding: 0.5rem;
   background: rgba(255, 255, 255, 0.1);
-  border-radius: 0.5rem;
+  border-radius: 0.25rem;
   border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 .clock-weather-info-label {
-  font-size: 1.1rem;
+  font-size: 0.7rem;
   color: rgba(255, 255, 255, 0.8);
   font-weight: 500;
 }
 
 .clock-weather-info-value {
-  font-size: 2rem;
+  font-size: 1.1rem;
   font-weight: 700;
   color: #fff;
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
@@ -170,17 +172,17 @@
 
 .clock-weather-info-value.temp-max {
   color: #ff6b6b;
-  font-size: 2.2rem;
+  font-size: 1.2rem;
 }
 
 .clock-weather-info-value.temp-min {
   color: #4dabf7;
-  font-size: 2.2rem;
+  font-size: 1.2rem;
 }
 
 .clock-weather-info-value.precipitation {
   color: rgba(135, 206, 250, 0.95);
-  font-size: 2rem;
+  font-size: 1.1rem;
 }
 
 @media (max-width: 768px) {
