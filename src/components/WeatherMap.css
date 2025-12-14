@@ -1,0 +1,114 @@
+.weather-map-container {
+  position: relative;
+  width: 100%;
+  height: 400px;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  margin-top: 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.weather-map-label {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  background: rgba(0, 0, 0, 0.7);
+  color: #fff;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  z-index: 1000;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.debug-info {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.6);
+  font-weight: 400;
+}
+
+.weather-map {
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+/* Leafletのスタイル調整 */
+.weather-map :global(.leaflet-container) {
+  background: rgba(0, 0, 0, 0.4);
+}
+
+/* 地図の背景タイル（通常の地図） */
+.weather-map :global(.leaflet-tile-container img:not(.radar-tile-layer img)) {
+  filter: brightness(0.7) contrast(1.1);
+}
+
+/* レーダータイルレイヤーの自然な色表示 */
+.weather-map :global(.radar-tile-layer) {
+  mix-blend-mode: normal;
+}
+
+.weather-map :global(.radar-tile-layer img) {
+  filter: brightness(1.0) contrast(1.0) saturate(1.0);
+  opacity: 0.9;
+}
+
+.weather-marker {
+  background: transparent !important;
+  border: none !important;
+}
+
+.weather-marker-content {
+  font-size: 2rem;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.5));
+}
+
+
+/* 雨のエフェクト */
+.weather-rain-effect {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 2;
+  overflow: hidden;
+}
+
+.rain-drop {
+  position: absolute;
+  width: 2px;
+  height: 20px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.6) 0%, rgba(79, 172, 254, 0.8) 100%);
+  animation: rainFall linear infinite;
+  border-radius: 1px;
+}
+
+@keyframes rainFall {
+  0% {
+    transform: translateY(-100px);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(400px);
+    opacity: 0.3;
+  }
+}
+
+@media (max-width: 768px) {
+  .weather-map-container {
+    height: 200px;
+    margin-top: 1rem;
+  }
+}
+

@@ -1,0 +1,207 @@
+.clock {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.clock-time {
+  font-size: 4rem;
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  letter-spacing: 0.1em;
+}
+
+.clock-date {
+  font-size: 1.5rem;
+  color: rgba(255, 255, 255, 0.9);
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* 左側用の大きな時計表示 */
+.clock-large {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(15px);
+  border-radius: 1rem;
+  padding: 2rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  position: relative;
+}
+
+.clock-location {
+  position: absolute;
+  top: 1rem;
+  left: 1.5rem;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+  font-family: 'Noto Sans JP', sans-serif;
+}
+
+.clock-time-section {
+  display: flex;
+  flex-direction: column;
+  margin-top: 3rem;
+}
+
+.clock-large .clock-time {
+  font-size: 10rem;
+  font-weight: 800;
+  margin-bottom: 0.5rem;
+  font-family: 'Noto Sans JP', 'Courier New', 'Monaco', 'Menlo', monospace;
+  letter-spacing: 0.1em;
+  color: #fff;
+  text-shadow: 
+    0 0 10px rgba(255, 255, 255, 0.3),
+    0 2px 4px rgba(0, 0, 0, 0.5),
+    0 4px 8px rgba(0, 0, 0, 0.3);
+  animation: glow 2s ease-in-out infinite alternate;
+  line-height: 1;
+}
+
+@keyframes glow {
+  from {
+    text-shadow: 
+      0 0 10px rgba(255, 255, 255, 0.3),
+      0 2px 4px rgba(0, 0, 0, 0.5);
+  }
+  to {
+    text-shadow: 
+      0 0 20px rgba(255, 255, 255, 0.5),
+      0 2px 4px rgba(0, 0, 0, 0.5),
+      0 0 30px rgba(255, 255, 255, 0.2);
+  }
+}
+
+.clock-large .clock-time {
+  -webkit-text-fill-color: #fff;
+  color: #fff;
+}
+
+.clock-large .clock-date {
+  font-size: 1.3rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.9);
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+  font-family: 'Noto Sans JP', sans-serif;
+}
+
+.clock-weather-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-top: 1rem;
+  padding: 2rem;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  font-family: 'Noto Sans JP', sans-serif;
+  width: 100%;
+}
+
+.clock-weather-header {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.clock-weather-icon-large {
+  font-size: 5rem;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+  flex-shrink: 0;
+}
+
+.clock-weather-condition-large {
+  font-size: 2.5rem;
+  color: rgba(255, 255, 255, 0.95);
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+  font-weight: 700;
+}
+
+.clock-weather-description-full {
+  font-size: 1.6rem;
+  color: rgba(255, 255, 255, 0.95);
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+  font-weight: 500;
+  line-height: 1.8;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 0.5rem;
+  border-left: 4px solid rgba(255, 255, 255, 0.3);
+}
+
+.clock-weather-info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+}
+
+.clock-weather-info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.clock-weather-info-label {
+  font-size: 1.1rem;
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 500;
+}
+
+.clock-weather-info-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.clock-weather-info-value.temp-max {
+  color: #ff6b6b;
+  font-size: 2.2rem;
+}
+
+.clock-weather-info-value.temp-min {
+  color: #4dabf7;
+  font-size: 2.2rem;
+}
+
+.clock-weather-info-value.precipitation {
+  color: rgba(135, 206, 250, 0.95);
+  font-size: 2rem;
+}
+
+@media (max-width: 768px) {
+  .clock-time {
+    font-size: 2.5rem;
+  }
+  
+  .clock-date {
+    font-size: 1rem;
+  }
+  
+  .clock-large {
+    padding: 2rem;
+  }
+  
+  .clock-large .clock-time {
+    font-size: 4rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .clock-large .clock-date {
+    font-size: 1.5rem;
+  }
+}

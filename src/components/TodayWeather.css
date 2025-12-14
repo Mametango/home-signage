@@ -1,0 +1,130 @@
+.today-weather {
+  width: 100%;
+  padding: 1.5rem;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(10px);
+  border-radius: 1rem;
+  margin-top: 1rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3), inset 0 0 10px rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.today-weather-header {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.today-weather-icon {
+  font-size: 4rem;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+.today-weather-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.today-weather-temp {
+  font-size: 3rem;
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  font-family: 'Noto Sans JP', sans-serif;
+}
+
+.today-weather-condition {
+  font-size: 1.5rem;
+  color: rgba(255, 255, 255, 0.9);
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+  font-family: 'Noto Sans JP', sans-serif;
+}
+
+.today-weather-location {
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.7);
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+  font-family: 'Noto Sans JP', sans-serif;
+}
+
+.today-weather-details {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+.today-weather-detail-item {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.today-weather-detail-label {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.7);
+  font-family: 'Noto Sans JP', sans-serif;
+}
+
+.today-weather-detail-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+  font-family: 'Noto Sans JP', sans-serif;
+}
+
+.today-weather-loading {
+  font-size: 1.2rem;
+  color: rgba(255, 255, 255, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 150px;
+  font-family: 'Noto Sans JP', sans-serif;
+}
+
+@media (max-width: 768px) {
+  .today-weather {
+    padding: 1rem;
+    margin-top: 0.5rem;
+  }
+
+  .today-weather-header {
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .today-weather-icon {
+    font-size: 3rem;
+  }
+
+  .today-weather-temp {
+    font-size: 2rem;
+  }
+
+  .today-weather-condition {
+    font-size: 1.2rem;
+  }
+
+  .today-weather-details {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+  }
+
+  .today-weather-detail-item {
+    padding: 0.75rem;
+  }
+
+  .today-weather-detail-value {
+    font-size: 1.2rem;
+  }
+}
+
