@@ -1,0 +1,40 @@
+=== GitHubへの初回プッシュ手順 ===
+
+【ステップ1】GitHubでリポジトリを作成した後、以下のコマンドを実行してください：
+
+1. リモートリポジトリを追加（YOUR_USERNAMEとYOUR_REPO_NAMEを実際の値に置き換える）
+   git remote add origin https://github.com/YOUR_USERNAME/YOUR_REPO_NAME.git
+
+2. コードをプッシュ
+   git push -u origin main
+
+【ステップ2】認証が必要な場合：
+
+Windowsの場合、認証ダイアログが表示されるので：
+- ユーザー名: GitHubのユーザー名
+- パスワード: Personal Access Token（下記で作成）
+
+【Personal Access Tokenの作成方法】
+
+1. GitHubにログイン
+2. 右上のアイコン → Settings
+3. 左メニューの一番下「Developer settings」
+4. 「Personal access tokens」→「Tokens (classic)」
+5. 「Generate new token (classic)」をクリック
+6. Note（メモ）: 「Home Signage Push」など適当に入力
+7. Expiration（有効期限）: 適当に設定（例: 90 days）
+8. Select scopes（スコープ）: 「repo」にチェック
+9. 「Generate token」をクリック
+10. 表示されたトークンをコピー（一度しか表示されないので注意！）
+11. プッシュ時にパスワードの代わりにこのトークンを入力
+
+【エラーが出た場合】
+
+「remote origin already exists」というエラーが出たら：
+   git remote remove origin
+   その後、再度 git remote add origin ... を実行
+
+「failed to push some refs」というエラーが出たら：
+   git pull origin main --allow-unrelated-histories
+   その後、再度 git push -u origin main を実行
+

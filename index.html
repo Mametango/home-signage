@@ -12,10 +12,56 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <title>Home Signage</title>
+    <style>
+      /* ローディング表示 */
+      #root {
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #808080;
+        color: white;
+        font-family: sans-serif;
+      }
+      .loading {
+        text-align: center;
+        font-size: 24px;
+      }
+      .error {
+        padding: 20px;
+        background: red;
+        color: white;
+        text-align: center;
+      }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div class="loading">読み込み中...</div>
+    </div>
+    <script>
+      // エラーハンドリング
+      window.addEventListener('error', function(e) {
+        console.error('Global error:', e.error);
+        var root = document.getElementById('root');
+        if (root) {
+          root.innerHTML = '<div class="error"><h1>エラーが発生しました</h1><p>' + (e.error ? e.error.message : '不明なエラー') + '</p><p>ブラウザ: ' + navigator.userAgent + '</p></div>';
+        }
+      });
+      
+      // 未処理のPromise拒否をキャッチ
+      window.addEventListener('unhandledrejection', function(e) {
+        console.error('Unhandled promise rejection:', e.reason);
+      });
+    </script>
     <script type="module" src="/src/main.tsx"></script>
+    <noscript>
+      <div style="padding: 20px; color: white; background: red; text-align: center;">
+        <h1>JavaScriptが無効になっています</h1>
+        <p>このアプリケーションを表示するにはJavaScriptを有効にしてください。</p>
+      </div>
+    </noscript>
   </body>
 </html>
 
