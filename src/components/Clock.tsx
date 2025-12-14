@@ -233,6 +233,9 @@ const Clock = () => {
             <div className="clock-weather-header">
               <div className="clock-weather-icon">{todayWeather.icon}</div>
               <div className="clock-weather-info">
+                <div className="clock-weather-location">
+                  {todayWeather.prefecture} {todayWeather.city}
+                </div>
                 <div className="clock-weather-condition">{todayWeather.condition}</div>
                 {todayWeather.maxTemp !== undefined && todayWeather.minTemp !== undefined && (
                   <div className="clock-weather-temp">
