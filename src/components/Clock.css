@@ -3,21 +3,27 @@
   height: 100%;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  justify-content: center;
   gap: 1.5rem;
-  padding: 1rem;
+  padding: 1.5rem;
   background: rgba(0, 0, 0, 0.4);
   backdrop-filter: blur(15px);
   border-radius: 0.5rem;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  overflow: hidden;
+  overflow-y: auto;
   box-sizing: border-box;
 }
 
+/* 上: 日時 */
+.clock-datetime {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  flex-shrink: 0;
+}
+
 .clock-date {
-  font-size: 2.5rem;
+  font-size: 2rem;
   font-weight: 700;
   color: #fff;
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
@@ -28,7 +34,7 @@
 }
 
 .clock-time {
-  font-size: 5.5rem;
+  font-size: 4.5rem;
   font-weight: 800;
   color: #fff;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
@@ -39,191 +45,205 @@
   white-space: nowrap;
 }
 
-/* 左側用の大きな時計表示 */
-.clock-large {
-  width: 100%;
+/* 下: 天気 */
+.clock-weather {
   display: flex;
   flex-direction: column;
-  background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(15px);
-  border-radius: 0.5rem;
-  padding: 0.75rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  position: relative;
-  overflow: hidden;
-}
-
-.clock-location {
-  position: absolute;
-  top: 1rem;
-  left: 1.5rem;
-  font-size: 1.2rem;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.9);
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
-  font-family: 'Noto Sans JP', sans-serif;
-}
-
-.clock-time-section {
-  display: flex;
-  flex-direction: column;
-  margin-top: 3rem;
-}
-
-.clock-large .clock-time {
-  font-size: 4.5rem;
-  font-weight: 800;
-  margin-bottom: 0.25rem;
-  font-family: 'Noto Sans JP', 'Courier New', 'Monaco', 'Menlo', monospace;
-  letter-spacing: 0.05em;
-  color: #fff;
-  text-shadow: 
-    0 0 10px rgba(255, 255, 255, 0.3),
-    0 2px 4px rgba(0, 0, 0, 0.5),
-    0 4px 8px rgba(0, 0, 0, 0.3);
-  animation: glow 2s ease-in-out infinite alternate;
-  line-height: 1;
-}
-
-@keyframes glow {
-  from {
-    text-shadow: 
-      0 0 10px rgba(255, 255, 255, 0.3),
-      0 2px 4px rgba(0, 0, 0, 0.5);
-  }
-  to {
-    text-shadow: 
-      0 0 20px rgba(255, 255, 255, 0.5),
-      0 2px 4px rgba(0, 0, 0, 0.5),
-      0 0 30px rgba(255, 255, 255, 0.2);
-  }
-}
-
-.clock-large .clock-time {
-  -webkit-text-fill-color: #fff;
-  color: #fff;
-}
-
-.clock-large .clock-date {
-  font-size: 1.3rem;
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.9);
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
-  font-family: 'Noto Sans JP', sans-serif;
+  gap: 1rem;
+  flex: 1;
+  min-height: 0;
 }
 
 .clock-weather-summary {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  margin-top: 0.5rem;
-  padding: 0.75rem;
-  background: rgba(255, 255, 255, 0.15);
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.1);
   border-radius: 0.5rem;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(10px);
-  font-family: 'Noto Sans JP', sans-serif;
-  width: 100%;
-  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  flex-shrink: 0;
 }
 
 .clock-weather-header {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  gap: 1rem;
 }
 
-.clock-weather-icon-large {
-  font-size: 2rem;
+.clock-weather-icon {
+  font-size: 3rem;
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
   flex-shrink: 0;
 }
 
-.clock-weather-condition-large {
-  font-size: 1.2rem;
-  color: rgba(255, 255, 255, 0.95);
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
-  font-weight: 700;
-}
-
-.clock-weather-description-full {
-  font-size: 0.85rem;
-  color: rgba(255, 255, 255, 0.95);
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
-  font-weight: 500;
-  line-height: 1.4;
-  padding: 0.5rem;
-  background: rgba(255, 255, 255, 0.08);
-  border-radius: 0.25rem;
-  border-left: 2px solid rgba(255, 255, 255, 0.3);
-}
-
-.clock-weather-info-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-  gap: 0.5rem;
-}
-
-.clock-weather-info-item {
+.clock-weather-info {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
-  padding: 0.5rem;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 0.25rem;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  gap: 0.5rem;
+  flex: 1;
 }
 
-.clock-weather-info-label {
-  font-size: 0.7rem;
-  color: rgba(255, 255, 255, 0.8);
-  font-weight: 500;
-}
-
-.clock-weather-info-value {
-  font-size: 1.1rem;
+.clock-weather-condition {
+  font-size: 1.5rem;
   font-weight: 700;
   color: #fff;
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+  font-family: 'Noto Sans JP', sans-serif;
 }
 
-.clock-weather-info-value.temp-max {
+.clock-weather-temp {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  font-family: 'Noto Sans JP', sans-serif;
+}
+
+.clock-weather-temp .temp-max {
+  font-size: 2rem;
+  font-weight: 700;
   color: #ff6b6b;
-  font-size: 1.2rem;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
 }
 
-.clock-weather-info-value.temp-min {
+.clock-weather-temp .temp-separator {
+  font-size: 1.5rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin: 0 0.25rem;
+}
+
+.clock-weather-temp .temp-min {
+  font-size: 1.6rem;
+  font-weight: 600;
   color: #4dabf7;
-  font-size: 1.2rem;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
 }
 
-.clock-weather-info-value.precipitation {
-  color: rgba(135, 206, 250, 0.95);
-  font-size: 1.1rem;
+.clock-weather-description {
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.9);
+  line-height: 1.5;
+  font-family: 'Noto Sans JP', sans-serif;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* 2時間ごとの気温折れ線グラフ */
+.clock-weather-graph-container {
+  width: 100%;
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  flex-shrink: 0;
+}
+
+.clock-weather-graph-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.clock-weather-graph {
+  width: 100%;
+  height: 120px;
+  min-width: 600px; /* 6項目 * 100px */
+}
+
+/* 2時間ごとの天気と降水確率 */
+.clock-weather-hourly-list {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.clock-weather-hourly-item {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 0.4rem;
+  padding: 0.75rem 0.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.clock-weather-hourly-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.clock-weather-hourly-time {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 600;
+  font-family: 'Noto Sans JP', sans-serif;
+}
+
+.clock-weather-hourly-icon {
+  font-size: 1.5rem;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+.clock-weather-hourly-condition {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.7);
+  font-family: 'Noto Sans JP', sans-serif;
+}
+
+.clock-weather-hourly-precipitation {
+  font-size: 0.7rem;
+  color: rgba(135, 206, 250, 0.9);
+  font-weight: 600;
+  font-family: 'Noto Sans JP', sans-serif;
 }
 
 @media (max-width: 768px) {
+  .clock {
+    padding: 1rem;
+    gap: 1rem;
+  }
+
+  .clock-date {
+    font-size: 1.5rem;
+  }
+
   .clock-time {
+    font-size: 3rem;
+  }
+
+  .clock-weather-summary {
+    padding: 0.75rem;
+  }
+
+  .clock-weather-icon {
     font-size: 2.5rem;
   }
-  
-  .clock-date {
-    font-size: 1rem;
+
+  .clock-weather-condition {
+    font-size: 1.2rem;
   }
-  
-  .clock-large {
-    padding: 2rem;
-  }
-  
-  .clock-large .clock-time {
-    font-size: 4rem;
-    margin-bottom: 1.5rem;
-  }
-  
-  .clock-large .clock-date {
+
+  .clock-weather-temp .temp-max {
     font-size: 1.5rem;
+  }
+
+  .clock-weather-temp .temp-min {
+    font-size: 1.2rem;
+  }
+
+  .clock-weather-description {
+    font-size: 0.9rem;
+  }
+
+  .clock-weather-hourly-list {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.4rem;
+  }
+
+  .clock-weather-hourly-item {
+    padding: 0.5rem;
   }
 }
