@@ -88,7 +88,10 @@ npm run build
 npm run preview
 ```
 
+## デプロイ 🌐
+
+詳細なデプロイ手順は `README_DEPLOY.md` を参照してください。
+
 ## ライセンス
 
 MIT
-
