@@ -1,5 +1,6 @@
 import Clock from './components/Clock'
 import News from './components/News'
+import EarthquakeAlert from './components/EarthquakeAlert'
 import './App.css'
 
 function App() {
@@ -10,9 +11,10 @@ function App() {
         <Clock />
       </div>
       
-      {/* 右側: ニュース */}
+      {/* 右側: ニュースまたは地震速報 */}
       <div className="app-right">
         <div className="app-right-card">
+          <EarthquakeAlert />
           <News />
         </div>
       </div>
