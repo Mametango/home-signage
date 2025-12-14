@@ -230,25 +230,27 @@ const Clock = () => {
       {todayWeather && (
         <div className="clock-weather">
           <div className="clock-weather-summary">
-            <div className="clock-weather-header">
-              <div className="clock-weather-icon">{todayWeather.icon}</div>
-              <div className="clock-weather-info">
-                <div className="clock-weather-location">
-                  {todayWeather.prefecture} {todayWeather.city}
-                </div>
-                <div className="clock-weather-condition">{todayWeather.condition}</div>
-                {todayWeather.maxTemp !== undefined && todayWeather.minTemp !== undefined && (
-                  <div className="clock-weather-temp">
-                    <span className="temp-max">{todayWeather.maxTemp}°</span>
-                    <span className="temp-separator">/</span>
-                    <span className="temp-min">{todayWeather.minTemp}°</span>
+            <div className="clock-weather-main">
+              <div className="clock-weather-header">
+                <div className="clock-weather-icon">{todayWeather.icon}</div>
+                <div className="clock-weather-info">
+                  <div className="clock-weather-location">
+                    {todayWeather.prefecture} {todayWeather.city}
                   </div>
-                )}
+                  <div className="clock-weather-condition">{todayWeather.condition}</div>
+                  {todayWeather.maxTemp !== undefined && todayWeather.minTemp !== undefined && (
+                    <div className="clock-weather-temp">
+                      <span className="temp-max">{todayWeather.maxTemp}°</span>
+                      <span className="temp-separator">/</span>
+                      <span className="temp-min">{todayWeather.minTemp}°</span>
+                    </div>
+                  )}
+                </div>
               </div>
+              {todayWeather.description && (
+                <div className="clock-weather-description">{todayWeather.description}</div>
+              )}
             </div>
-            {todayWeather.description && (
-              <div className="clock-weather-description">{todayWeather.description}</div>
-            )}
           </div>
 
           {/* 2時間ごとの天気と降水確率 */}

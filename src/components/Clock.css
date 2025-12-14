@@ -65,10 +65,18 @@
   flex-shrink: 0;
 }
 
+.clock-weather-main {
+  display: flex;
+  flex-direction: row;
+  gap: 1.5rem;
+  align-items: flex-start;
+}
+
 .clock-weather-header {
   display: flex;
   align-items: center;
   gap: 1rem;
+  flex: 1;
 }
 
 .clock-weather-icon {
@@ -131,10 +139,12 @@
 .clock-weather-description {
   font-size: 1rem;
   color: rgba(255, 255, 255, 0.9);
-  line-height: 1.5;
+  line-height: 1.6;
   font-family: 'Noto Sans JP', sans-serif;
-  padding-top: 0.75rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  flex: 1;
+  padding-left: 1rem;
+  border-left: 1px solid rgba(255, 255, 255, 0.2);
+  min-width: 0;
 }
 
 /* 2時間ごとの天気と降水確率 */
