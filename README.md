@@ -44,7 +44,30 @@ npm run build
 
 ### 天気APIの設定
 
-`src/components/Weather.tsx` を編集して、実際の天気API（OpenWeatherMapなど）を連携できます。
+#### OpenAI API（AIによる天気予報説明生成）
+
+AIによる天気予報の説明を生成するには、OpenAI APIキーが必要です。
+
+1. `.env`ファイルを作成（`.env.example`をコピー）
+2. OpenAI APIキーを取得: https://platform.openai.com/api-keys
+3. `.env`ファイルに`VITE_OPENAI_API_KEY=your_api_key_here`を設定
+
+```bash
+# .env.exampleをコピー
+cp .env.example .env
+
+# .envファイルを編集してAPIキーを設定
+VITE_OPENAI_API_KEY=sk-...
+```
+
+#### OpenWeatherMap API（2時間ごとの天気予報）
+
+2時間ごとの天気予報を取得するには、OpenWeatherMap APIキーが必要です。
+
+1. `.env`ファイルに`VITE_OPENWEATHER_API_KEY=your_api_key_here`を設定
+2. OpenWeatherMap APIキーを取得: https://openweathermap.org/api
+
+**注意**: APIキーは`.env`ファイルに保存し、Gitにコミットしないでください（`.gitignore`に含まれています）。
 
 ### スライドショーの追加
 

@@ -141,9 +141,50 @@ const Clock = () => {
                   minTemp = parseInt(temps[1])
                 }
                 
-                let description = `今日の天気は${weatherInfo.text}`
+                // 基本的な説明を生成
+                let basicDescription = `今日の天気は${weatherInfo.text}`
                 if (maxTemp !== undefined && minTemp !== undefined) {
-                  description += `。最高気温${maxTemp}度、最低気温${minTemp}度の見込み`
+                  basicDescription += `。最高気温${maxTemp}度、最低気温${minTemp}度の見込み`
+                }
+                
+                // OpenAI APIでより詳細な説明を生成
+                let aiDescription = basicDescription
+                try {
+                  const openaiApiKey = import.meta.env.VITE_OPENAI_API_KEY
+                  if (openaiApiKey) {
+                    const aiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${openaiApiKey}`
+                      },
+                      body: JSON.stringify({
+                        model: 'gpt-3.5-turbo',
+                        messages: [
+                          {
+                            role: 'system',
+                            content: 'あなたは天気予報の専門家です。天気情報を分かりやすく、親しみやすい日本語で説明してください。'
+                          },
+                          {
+                            role: 'user',
+                            content: `${prefecture}${city}の今日の天気予報です。天気: ${weatherInfo.text}${maxTemp !== undefined && minTemp !== undefined ? `、最高気温${maxTemp}度、最低気温${minTemp}度` : ''}。この天気について、50文字程度で分かりやすく説明してください。`
+                          }
+                        ],
+                        max_tokens: 100,
+                        temperature: 0.7
+                      })
+                    })
+                    
+                    if (aiResponse.ok) {
+                      const aiData = await aiResponse.json()
+                      if (aiData.choices && aiData.choices[0] && aiData.choices[0].message) {
+                        aiDescription = aiData.choices[0].message.content.trim()
+                      }
+                    }
+                  }
+                } catch (aiError) {
+                  console.error('OpenAI APIエラー:', aiError)
+                  // AI生成に失敗した場合は基本説明を使用
                 }
                 
                 setTodayWeather({
@@ -151,7 +192,7 @@ const Clock = () => {
                   icon: weatherInfo.icon,
                   maxTemp: maxTemp,
                   minTemp: minTemp,
-                  description: description,
+                  description: aiDescription,
                   prefecture: prefecture,
                   city: city
                 })
