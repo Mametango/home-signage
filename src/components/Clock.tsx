@@ -134,11 +134,67 @@ const Clock = () => {
                 const todayWeatherCode = weatherCodes.length > 0 ? weatherCodes[0] : null
                 const weatherInfo = todayWeatherCode ? getWeatherCondition(todayWeatherCode) : { condition: '晴れ', icon: '☀️', text: '晴れ' }
                 
+                // 気温データの取得（気象庁APIの構造に合わせて修正）
                 let maxTemp: number | undefined
                 let minTemp: number | undefined
-                if (temps && temps.length >= 2) {
-                  maxTemp = parseInt(temps[0])
-                  minTemp = parseInt(temps[1])
+                
+                // 気温データはtimeSeries[1]（2日目の予報）にある場合もある
+                if (temps && Array.isArray(temps) && temps.length > 0) {
+                  // 最高気温と最低気温を取得
+                  // 気象庁APIでは、temps[0]が最高気温、temps[1]が最低気温の場合が多い
+                  // ただし、nullの可能性もあるので注意
+                  const tempValues = temps.filter((t: any) => t !== null && t !== undefined && t !== '').map((t: any) => parseInt(String(t)))
+                  
+                  if (tempValues.length >= 2) {
+                    // より高い方が最高気温、低い方が最低気温
+                    maxTemp = Math.max(...tempValues)
+                    minTemp = Math.min(...tempValues)
+                  } else if (tempValues.length === 1) {
+                    maxTemp = tempValues[0]
+                  }
+                }
+                
+                // 気温データが取得できなかった場合、timeSeries[1]を確認
+                if (maxTemp === undefined && minTemp === undefined) {
+                  const tempSeries = areaData.timeSeries?.[1]
+                  if (tempSeries && tempSeries.areas && tempSeries.areas.length > 0) {
+                    const tempArea = tempSeries.areas.find((a: any) => 
+                      a.area && (a.area.name && (a.area.name.includes('新発田') || a.area.name.includes('新発田市')))
+                    ) || tempSeries.areas[0]
+                    
+                    if (tempArea && tempArea.temps && Array.isArray(tempArea.temps) && tempArea.temps.length > 0) {
+                      const tempValues = tempArea.temps.filter((t: any) => t !== null && t !== undefined && t !== '').map((t: any) => parseInt(String(t)))
+                      
+                      if (tempValues.length >= 2) {
+                        maxTemp = Math.max(...tempValues)
+                        minTemp = Math.min(...tempValues)
+                      } else if (tempValues.length === 1) {
+                        maxTemp = tempValues[0]
+                      }
+                    }
+                  }
+                }
+                
+                // それでも取得できなかった場合、OpenWeatherMap APIから取得を試す
+                if (maxTemp === undefined && minTemp === undefined) {
+                  const apiKey = import.meta.env.VITE_OPENWEATHER_API_KEY || ''
+                  if (apiKey) {
+                    try {
+                      const currentResponse = await fetch(
+                        `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric&lang=ja`
+                      )
+                      
+                      if (currentResponse.ok) {
+                        const currentData = await currentResponse.json()
+                        const currentTemp = Math.round(currentData.main.temp)
+                        // 現在の気温から最高・最低を推定（簡易的な方法）
+                        maxTemp = currentTemp + 3
+                        minTemp = currentTemp - 3
+                      }
+                    } catch (owmError) {
+                      console.error('OpenWeatherMap APIエラー:', owmError)
+                    }
+                  }
                 }
                 
                 // 無料のルールベース方式で説明を生成
