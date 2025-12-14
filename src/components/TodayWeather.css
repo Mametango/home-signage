@@ -1,6 +1,6 @@
 .today-weather {
   width: 100%;
-  height: 100%;
+  min-height: 100%;
   padding: 1rem;
   background: rgba(0, 0, 0, 0.4);
   backdrop-filter: blur(10px);
@@ -9,7 +9,6 @@
   border: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
   flex-direction: column;
-  overflow-y: auto;
 }
 
 .today-weather-header {

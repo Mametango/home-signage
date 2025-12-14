@@ -31,6 +31,26 @@
   overflow: hidden;
 }
 
+.app-right-scroll {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch; /* iOSでのスムーズスクロール */
+  scroll-snap-type: y mandatory; /* スナップスクロール */
+  gap: 1rem;
+  padding-right: 0.5rem;
+}
+
+.app-right-scroll > * {
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+  flex-shrink: 0;
+}
+
 /* 天気アニメーションは削除されました */
 
 @media (max-width: 1024px) {
