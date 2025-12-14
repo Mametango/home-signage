@@ -213,37 +213,6 @@ const Clock = () => {
     return () => clearInterval(interval)
   }, [prefecture, city])
 
-  // 折れ線グラフ用のデータを準備
-  const getGraphData = () => {
-    if (hourlyForecast.length === 0) return null
-    
-    const temps = hourlyForecast.map(f => f.temp)
-    const dataMinTemp = Math.min(...temps)
-    const dataMaxTemp = Math.max(...temps)
-    
-    const minTemp = dataMinTemp - 2
-    const maxTemp = dataMaxTemp + 2
-    const tempRange = maxTemp - minTemp || 1
-    
-    const graphHeight = 120
-    const graphPadding = 10
-    const graphWidth = 100 * hourlyForecast.length
-    
-    const points = hourlyForecast.map((forecast, index) => {
-      const x = index * 100 + 50
-      const normalizedTemp = (forecast.temp - minTemp) / tempRange
-      const y = graphHeight - (normalizedTemp * (graphHeight - graphPadding * 2)) - graphPadding
-      return { x, y, temp: forecast.temp, time: forecast.time }
-    })
-    
-    const pathData = points.map((point, index) => {
-      return `${index === 0 ? 'M' : 'L'} ${point.x} ${point.y}`
-    }).join(' ')
-    
-    return { points, pathData, minTemp, maxTemp, graphHeight, graphWidth, graphPadding }
-  }
-
-  const graphData = getGraphData()
 
   return (
     <div className="clock">
@@ -278,75 +247,6 @@ const Clock = () => {
               <div className="clock-weather-description">{todayWeather.description}</div>
             )}
           </div>
-
-          {/* 2時間ごとの気温折れ線グラフ */}
-          {graphData && (
-            <div className="clock-weather-graph-container">
-              <div className="clock-weather-graph-wrapper">
-                <svg 
-                  className="clock-weather-graph" 
-                  viewBox={`0 0 ${graphData.graphWidth} ${graphData.graphHeight + 30}`}
-                  preserveAspectRatio="none"
-                >
-                  {/* グリッド線 */}
-                  {[0, 0.5, 1].map((ratio) => {
-                    const y = graphData.graphHeight - (ratio * (graphData.graphHeight - graphData.graphPadding * 2)) - graphData.graphPadding
-                    return (
-                      <g key={ratio}>
-                        <line
-                          x1="0"
-                          y1={y}
-                          x2={graphData.graphWidth}
-                          y2={y}
-                          stroke="rgba(255, 255, 255, 0.1)"
-                          strokeWidth="1"
-                        />
-                      </g>
-                    )
-                  })}
-                  
-                  {/* 折れ線 */}
-                  <path
-                    d={graphData.pathData}
-                    fill="none"
-                    stroke="#4dabf7"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  
-                  {/* ポイントと気温表示 */}
-                  {graphData.points.map((point, index) => (
-                    <g key={index}>
-                      <circle
-                        cx={point.x}
-                        cy={point.y}
-                        r="4"
-                        fill="#4dabf7"
-                        stroke="#fff"
-                        strokeWidth="1.5"
-                        filter="drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))"
-                      />
-                      <text
-                        x={point.x}
-                        y={point.y - 12}
-                        fill="#fff"
-                        fontSize="13"
-                        fontWeight="700"
-                        textAnchor="middle"
-                        fontFamily="'Noto Sans JP', sans-serif"
-                        style={{
-                          textShadow: '0 2px 4px rgba(0, 0, 0, 0.5)'
-                        }}
-                      >
-                        {point.temp}°
-                      </text>
-                    </g>
-                  ))}
-                </svg>
-              </div>
-            </div>
-          )}
 
           {/* 2時間ごとの天気と降水確率 */}
           <div className="clock-weather-hourly-list">
