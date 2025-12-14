@@ -1,21 +1,29 @@
 import { useState, useEffect } from 'react'
+import { format } from 'date-fns'
 import { getSettings } from './Settings'
 import './TodayWeather.css'
 
 interface TodayWeatherData {
+  condition: string
+  icon: string
+  maxTemp?: number
+  minTemp?: number
+  description?: string
+  prefecture: string
+  city: string
+}
+
+interface HourlyForecast {
+  time: Date
   temp: number
   condition: string
   icon: string
-  prefecture: string
-  city: string
   precipitation: number // 降水確率（%）
-  humidity: number // 湿度（%）
-  windSpeed: number // 風速（km/h）
-  pressure: number // 気圧（hPa）
 }
 
 const TodayWeather = () => {
-  const [weather, setWeather] = useState<TodayWeatherData | null>(null)
+  const [todayWeather, setTodayWeather] = useState<TodayWeatherData | null>(null)
+  const [hourlyForecast, setHourlyForecast] = useState<HourlyForecast[]>([])
   const [loading, setLoading] = useState(true)
   const [prefecture, setPrefecture] = useState<string>('新潟県')
   const [city, setCity] = useState<string>('新発田市')
@@ -30,7 +38,6 @@ const TodayWeather = () => {
 
     loadSettings()
     
-    // 設定変更イベントを監視
     const handleSettingsChange = () => {
       loadSettings()
     }
@@ -44,67 +51,66 @@ const TodayWeather = () => {
   useEffect(() => {
     const fetchWeather = async () => {
       try {
-        // 新潟県新発田市の座標: 37.95°N, 139.33°E
         const lat = 37.95
         const lon = 139.33
-        
-        // 気象庁の天気予報APIを使用
-        // 新潟県のエリアコード: 150000 (新潟地方)
         const areaCode = '150000'
         
+        // 気象庁APIから本日の天気予報を取得
         try {
-          // 気象庁の天気予報APIから取得
           const forecastResponse = await fetch(`https://www.jma.go.jp/bosai/forecast/data/forecast/${areaCode}.json`)
           
           if (forecastResponse.ok) {
             const forecastData = await forecastResponse.json()
             
-            // 今日の天気を取得
             if (forecastData && forecastData.length > 0) {
               const areaData = forecastData[0]
               const timeSeries = areaData.timeSeries?.[0]
               
               if (timeSeries && timeSeries.areas && timeSeries.areas.length > 0) {
                 const area = timeSeries.areas[0]
-                const weatherCodes = timeSeries.timeDefines?.[0] ? area.weatherCodes?.[0] : null
-                const temps = timeSeries.timeDefines?.[0] ? area.temps?.[0] : null
-                const pops = timeSeries.timeDefines?.[0] ? area.pops?.[0] : null
+                const weatherCodes = area.weatherCodes || []
+                const temps = area.temps || []
                 
-                // 天気コードを天気状態に変換
                 const getWeatherCondition = (code: string) => {
                   const codeNum = parseInt(code)
-                  if (codeNum >= 100 && codeNum < 200) return { condition: '晴れ', icon: '☀️' }
-                  if (codeNum >= 200 && codeNum < 300) return { condition: '曇り', icon: '☁️' }
-                  if (codeNum >= 300 && codeNum < 400) return { condition: '雨', icon: '🌧️' }
-                  if (codeNum >= 400 && codeNum < 500) return { condition: '雪', icon: '❄️' }
-                  return { condition: '晴れ', icon: '☀️' }
+                  if (codeNum >= 100 && codeNum < 200) return { condition: '晴れ', icon: '☀️', text: '晴れ' }
+                  if (codeNum >= 200 && codeNum < 300) return { condition: '曇り', icon: '☁️', text: '曇り' }
+                  if (codeNum >= 300 && codeNum < 400) return { condition: '雨', icon: '🌧️', text: '雨' }
+                  if (codeNum >= 400 && codeNum < 500) return { condition: '雪', icon: '❄️', text: '雪' }
+                  return { condition: '晴れ', icon: '☀️', text: '晴れ' }
                 }
                 
-                const weatherInfo = weatherCodes ? getWeatherCondition(weatherCodes) : { condition: '晴れ', icon: '☀️' }
-                const temp = temps ? parseInt(temps) : 15
-                const pop = pops ? parseInt(pops) : 0
+                // 本日の天気予報
+                const todayWeatherCode = weatherCodes.length > 0 ? weatherCodes[0] : null
+                const weatherInfo = todayWeatherCode ? getWeatherCondition(todayWeatherCode) : { condition: '晴れ', icon: '☀️', text: '晴れ' }
                 
-                const weatherData: TodayWeatherData = {
-                  temp: temp,
+                let maxTemp: number | undefined
+                let minTemp: number | undefined
+                if (temps && temps.length >= 2) {
+                  maxTemp = parseInt(temps[0])
+                  minTemp = parseInt(temps[1])
+                }
+                
+                // 詳細な解説を作成
+                let description = `今日の天気は${weatherInfo.text}`
+                if (maxTemp !== undefined && minTemp !== undefined) {
+                  description += `。最高気温${maxTemp}度、最低気温${minTemp}度の見込み`
+                }
+                
+                setTodayWeather({
                   condition: weatherInfo.condition,
                   icon: weatherInfo.icon,
+                  maxTemp: maxTemp,
+                  minTemp: minTemp,
+                  description: description,
                   prefecture: prefecture,
-                  city: city,
-                  precipitation: pop,
-                  humidity: 65, // デフォルト値（気象庁APIから取得できない場合）
-                  windSpeed: 5, // デフォルト値
-                  pressure: 1013 // デフォルト値
-                }
+                  city: city
+                })
                 
-                setWeather(weatherData)
-                
-                // 天気情報変更イベントを発火（背景色更新用）
+                // 天気情報変更イベントを発火
                 window.dispatchEvent(new CustomEvent('weatherChanged', { 
-                  detail: { condition: weatherData.condition } 
+                  detail: { condition: weatherInfo.condition } 
                 }))
-                
-                setLoading(false)
-                return
               }
             }
           }
@@ -112,66 +118,86 @@ const TodayWeather = () => {
           console.error('気象庁APIエラー:', apiError)
         }
         
-        // フォールバック: OpenWeatherMap API（APIキーが必要）
-        // 実際の使用時は環境変数からAPIキーを取得
+        // 2時間ごとの予報を取得（OpenWeatherMap API）
         const apiKey = import.meta.env.VITE_OPENWEATHER_API_KEY || ''
         
         if (apiKey) {
           const response = await fetch(
-            `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric&lang=ja`
+            `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric&lang=ja`
           )
           
           if (response.ok) {
             const data = await response.json()
             
             const getWeatherIcon = (condition: string) => {
-              if (condition.includes('雨')) return '🌧️'
-              if (condition.includes('曇')) return '☁️'
-              if (condition.includes('雪')) return '❄️'
+              if (condition.includes('Rain') || condition.includes('雨')) return '🌧️'
+              if (condition.includes('Cloud') || condition.includes('曇')) return '☁️'
+              if (condition.includes('Snow') || condition.includes('雪')) return '❄️'
               return '☀️'
             }
             
-            const weatherData: TodayWeatherData = {
-              temp: Math.round(data.main.temp),
-              condition: data.weather[0].description || '晴れ',
-              icon: getWeatherIcon(data.weather[0].main),
-              prefecture: prefecture,
-              city: city,
-              precipitation: data.rain ? Math.round(data.rain['1h'] || 0) : 0,
-              humidity: data.main.humidity,
-              windSpeed: Math.round(data.wind.speed * 3.6), // m/s to km/h
-              pressure: Math.round(data.main.pressure)
+            const getWeatherCondition = (condition: string) => {
+              if (condition.includes('Rain') || condition.includes('雨')) return '雨'
+              if (condition.includes('Cloud') || condition.includes('曇')) return '曇り'
+              if (condition.includes('Snow') || condition.includes('雪')) return '雪'
+              return '晴れ'
             }
             
-            setWeather(weatherData)
+            // 現在時刻から2時間ごとの予報を生成（最大12時間分、6項目）
+            const now = new Date()
+            const forecast: HourlyForecast[] = []
             
-            // 天気情報変更イベントを発火
-            window.dispatchEvent(new CustomEvent('weatherChanged', { 
-              detail: { condition: weatherData.condition } 
-            }))
+            for (let i = 0; i < 6; i++) {
+              const forecastTime = new Date(now)
+              forecastTime.setHours(now.getHours() + (i + 1) * 2, 0, 0, 0)
+              
+              // APIから取得したデータから最も近い時刻のデータを取得
+              const closestItem = data.list.reduce((prev: any, curr: any) => {
+                const prevTimeDiff = Math.abs(new Date(prev.dt_txt).getTime() - forecastTime.getTime())
+                const currTimeDiff = Math.abs(new Date(curr.dt_txt).getTime() - forecastTime.getTime())
+                return (currTimeDiff < prevTimeDiff) ? curr : prev
+              })
+              
+              forecast.push({
+                time: forecastTime,
+                temp: Math.round(closestItem.main.temp),
+                condition: getWeatherCondition(closestItem.weather[0].main),
+                icon: getWeatherIcon(closestItem.weather[0].main),
+                precipitation: Math.round(closestItem.pop * 100)
+              })
+            }
             
+            setHourlyForecast(forecast)
             setLoading(false)
             return
           }
         }
         
-        // 最終フォールバック: モックデータ（新発田市の実際の気温に近い値）
-        const weatherData: TodayWeatherData = {
-          temp: 12, // 新発田市の12月の平均気温に近い値
+        // フォールバック: モックデータ
+        setTodayWeather({
           condition: '曇り',
           icon: '☁️',
+          maxTemp: 15,
+          minTemp: 8,
+          description: '今日の天気は曇り。最高気温15度、最低気温8度の見込み',
           prefecture: prefecture,
-          city: city,
-          precipitation: 30,
-          humidity: 65,
-          windSpeed: 5,
-          pressure: 1013
-        }
+          city: city
+        })
         
-        setWeather(weatherData)
-        window.dispatchEvent(new CustomEvent('weatherChanged', { 
-          detail: { condition: weatherData.condition } 
-        }))
+        const now = new Date()
+        const mockForecast: HourlyForecast[] = []
+        for (let i = 0; i < 6; i++) {
+          const forecastTime = new Date(now)
+          forecastTime.setHours(now.getHours() + (i + 1) * 2, 0, 0, 0)
+          mockForecast.push({
+            time: forecastTime,
+            temp: 12 - i,
+            condition: i % 2 === 0 ? '曇り' : '晴れ',
+            icon: i % 2 === 0 ? '☁️' : '☀️',
+            precipitation: 30 + i * 10
+          })
+        }
+        setHourlyForecast(mockForecast)
         setLoading(false)
       } catch (error) {
         console.error('天気情報の取得に失敗しました:', error)
@@ -185,6 +211,36 @@ const TodayWeather = () => {
     return () => clearInterval(interval)
   }, [prefecture, city])
 
+  // 折れ線グラフ用のデータを準備
+  const getGraphData = () => {
+    if (hourlyForecast.length === 0) return null
+    
+    const temps = hourlyForecast.map(f => f.temp)
+    const dataMinTemp = Math.min(...temps)
+    const dataMaxTemp = Math.max(...temps)
+    
+    const minTemp = dataMinTemp - 2
+    const maxTemp = dataMaxTemp + 2
+    const tempRange = maxTemp - minTemp || 1
+    
+    const graphHeight = 150
+    const graphPadding = 10
+    const graphWidth = 100 * hourlyForecast.length
+    
+    const points = hourlyForecast.map((forecast, index) => {
+      const x = index * 100 + 50
+      const normalizedTemp = (forecast.temp - minTemp) / tempRange
+      const y = graphHeight - (normalizedTemp * (graphHeight - graphPadding * 2)) - graphPadding
+      return { x, y, temp: forecast.temp, time: forecast.time }
+    })
+    
+    const pathData = points.map((point, index) => {
+      return `${index === 0 ? 'M' : 'L'} ${point.x} ${point.y}`
+    }).join(' ')
+    
+    return { points, pathData, minTemp, maxTemp, graphHeight, graphWidth, graphPadding }
+  }
+
   if (loading) {
     return (
       <div className="today-weather">
@@ -193,47 +249,124 @@ const TodayWeather = () => {
     )
   }
 
-  if (!weather) {
-    return (
-      <div className="today-weather">
-        <div className="today-weather-loading">天気情報が取得できませんでした</div>
-      </div>
-    )
-  }
+  const graphData = getGraphData()
 
   return (
     <div className="today-weather">
-      <div className="today-weather-header">
-        <div className="today-weather-icon">{weather.icon}</div>
-        <div className="today-weather-main">
-          <div className="today-weather-temp">{weather.temp}°C</div>
-          <div className="today-weather-condition">{weather.condition}</div>
-          <div className="today-weather-location">
-            {weather.city ? `${weather.prefecture} ${weather.city}` : weather.prefecture}
+      {/* 左上: 本日の天気予報 */}
+      {todayWeather && (
+        <div className="today-weather-summary">
+          <div className="today-weather-summary-header">
+            <div className="today-weather-summary-icon">{todayWeather.icon}</div>
+            <div className="today-weather-summary-info">
+              <div className="today-weather-summary-condition">{todayWeather.condition}</div>
+              {todayWeather.maxTemp !== undefined && todayWeather.minTemp !== undefined && (
+                <div className="today-weather-summary-temp">
+                  <span className="temp-max">{todayWeather.maxTemp}°</span>
+                  <span className="temp-separator">/</span>
+                  <span className="temp-min">{todayWeather.minTemp}°</span>
+                </div>
+              )}
+            </div>
+          </div>
+          {todayWeather.description && (
+            <div className="today-weather-summary-description">{todayWeather.description}</div>
+          )}
+        </div>
+      )}
+
+      {/* その下: 2時間ごとの気温折れ線グラフ */}
+      {graphData && (
+        <div className="today-weather-graph-container">
+          <div className="today-weather-graph-wrapper">
+            <svg 
+              className="today-weather-graph" 
+              viewBox={`0 0 ${graphData.graphWidth} ${graphData.graphHeight + 40}`}
+              preserveAspectRatio="none"
+            >
+              {/* グリッド線 */}
+              {[0, 0.25, 0.5, 0.75, 1].map((ratio) => {
+                const y = graphData.graphHeight - (ratio * (graphData.graphHeight - graphData.graphPadding * 2)) - graphData.graphPadding
+                const temp = Math.round(graphData.minTemp + (graphData.maxTemp - graphData.minTemp) * ratio)
+                return (
+                  <g key={ratio}>
+                    <line
+                      x1="0"
+                      y1={y}
+                      x2={graphData.graphWidth}
+                      y2={y}
+                      stroke="rgba(255, 255, 255, 0.1)"
+                      strokeWidth="1"
+                    />
+                    <text
+                      x="0"
+                      y={y + 5}
+                      fill="rgba(255, 255, 255, 0.6)"
+                      fontSize="14"
+                      fontFamily="'Noto Sans JP', sans-serif"
+                    >
+                      {temp}°
+                    </text>
+                  </g>
+                )
+              })}
+              
+              {/* 折れ線 */}
+              <path
+                d={graphData.pathData}
+                fill="none"
+                stroke="#4dabf7"
+                strokeWidth="3"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              
+              {/* ポイントと気温表示 */}
+              {graphData.points.map((point, index) => (
+                <g key={index}>
+                  <circle
+                    cx={point.x}
+                    cy={point.y}
+                    r="5"
+                    fill="#4dabf7"
+                    stroke="#fff"
+                    strokeWidth="2"
+                    filter="drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))"
+                  />
+                  <text
+                    x={point.x}
+                    y={point.y - 15}
+                    fill="#fff"
+                    fontSize="16"
+                    fontWeight="700"
+                    textAnchor="middle"
+                    fontFamily="'Noto Sans JP', sans-serif"
+                    style={{
+                      textShadow: '0 2px 4px rgba(0, 0, 0, 0.5)'
+                    }}
+                  >
+                    {point.temp}°
+                  </text>
+                </g>
+              ))}
+            </svg>
           </div>
         </div>
-      </div>
-      <div className="today-weather-details">
-        <div className="today-weather-detail-item">
-          <span className="today-weather-detail-label">降水確率</span>
-          <span className="today-weather-detail-value">{weather.precipitation}%</span>
-        </div>
-        <div className="today-weather-detail-item">
-          <span className="today-weather-detail-label">湿度</span>
-          <span className="today-weather-detail-value">{weather.humidity}%</span>
-        </div>
-        <div className="today-weather-detail-item">
-          <span className="today-weather-detail-label">風速</span>
-          <span className="today-weather-detail-value">{weather.windSpeed}km/h</span>
-        </div>
-        <div className="today-weather-detail-item">
-          <span className="today-weather-detail-label">気圧</span>
-          <span className="today-weather-detail-value">{weather.pressure}hPa</span>
-        </div>
+      )}
+
+      {/* 更にその下: 2時間ごとの天気と降水確率 */}
+      <div className="today-weather-hourly-list">
+        {hourlyForecast.map((forecast, index) => (
+          <div key={index} className="today-weather-hourly-item">
+            <div className="today-weather-hourly-time">{format(forecast.time, 'HH時')}</div>
+            <div className="today-weather-hourly-icon">{forecast.icon}</div>
+            <div className="today-weather-hourly-condition">{forecast.condition}</div>
+            <div className="today-weather-hourly-precipitation">💧{forecast.precipitation}%</div>
+          </div>
+        ))}
       </div>
     </div>
   )
 }
 
 export default TodayWeather
-
