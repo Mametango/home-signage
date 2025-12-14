@@ -10,9 +10,24 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     assetsDir: 'assets',
-    target: 'es2015', // Android 7.1対応のためES2015をターゲット
-    minify: 'esbuild', // esbuildを使用（terserより高速）
-    sourcemap: false // デバッグ用にソースマップを無効化（必要に応じて有効化可能）
+    target: ['es2015', 'chrome75'], // Chrome 75対応
+    minify: 'esbuild',
+    sourcemap: false,
+    // Chrome 75で確実に動作するように設定
+    rollupOptions: {
+      output: {
+        // より互換性の高い形式で出力
+        format: 'es',
+        // チャンクサイズを調整
+        manualChunks: undefined
+      }
+    }
+  },
+  // 古いブラウザ向けのポリフィルを追加
+  optimizeDeps: {
+    esbuildOptions: {
+      target: 'es2015'
+    }
   }
 })
 

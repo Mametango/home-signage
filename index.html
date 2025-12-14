@@ -41,19 +41,41 @@
       <div class="loading">読み込み中...</div>
     </div>
     <script>
+      // ブラウザ互換性チェック
+      console.log('Browser:', navigator.userAgent);
+      console.log('Chrome version:', navigator.userAgent.match(/Chrome\/(\d+)/) ? navigator.userAgent.match(/Chrome\/(\d+)/)[1] : 'Unknown');
+      
+      // ES modulesのサポートチェック
+      if (!('noModule' in HTMLScriptElement.prototype)) {
+        console.warn('ES modules may not be fully supported');
+      }
+      
       // エラーハンドリング
       window.addEventListener('error', function(e) {
-        console.error('Global error:', e.error);
+        console.error('Global error:', e.error, e.filename, e.lineno, e.colno);
         var root = document.getElementById('root');
         if (root) {
-          root.innerHTML = '<div class="error"><h1>エラーが発生しました</h1><p>' + (e.error ? e.error.message : '不明なエラー') + '</p><p>ブラウザ: ' + navigator.userAgent + '</p></div>';
+          var errorMsg = e.error ? e.error.message : '不明なエラー';
+          var errorStack = e.error && e.error.stack ? '<pre style="font-size:12px;overflow:auto;">' + e.error.stack + '</pre>' : '';
+          root.innerHTML = '<div class="error"><h1>エラーが発生しました</h1><p>' + errorMsg + '</p><p>ファイル: ' + (e.filename || '不明') + ':' + (e.lineno || '?') + ':' + (e.colno || '?') + '</p>' + errorStack + '<p>ブラウザ: ' + navigator.userAgent + '</p></div>';
         }
       });
       
       // 未処理のPromise拒否をキャッチ
       window.addEventListener('unhandledrejection', function(e) {
         console.error('Unhandled promise rejection:', e.reason);
+        var root = document.getElementById('root');
+        if (root && root.innerHTML.includes('読み込み中')) {
+          root.innerHTML = '<div class="error"><h1>Promiseエラーが発生しました</h1><p>' + (e.reason ? String(e.reason) : '不明なエラー') + '</p></div>';
+        }
       });
+      
+      // モジュール読み込みエラーをキャッチ
+      window.addEventListener('error', function(e) {
+        if (e.target && (e.target.tagName === 'SCRIPT' || e.target.tagName === 'LINK')) {
+          console.error('Resource loading error:', e.target.src || e.target.href);
+        }
+      }, true);
     </script>
     <script type="module" src="/src/main.tsx"></script>
     <noscript>
