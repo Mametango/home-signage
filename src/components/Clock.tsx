@@ -141,58 +141,49 @@ const Clock = () => {
                   minTemp = parseInt(temps[1])
                 }
                 
-                // 基本的な説明を生成
-                let basicDescription = `今日の天気は${weatherInfo.text}`
-                if (maxTemp !== undefined && minTemp !== undefined) {
-                  basicDescription += `。最高気温${maxTemp}度、最低気温${minTemp}度の見込み`
-                }
-                
-                // OpenAI APIでより詳細な説明を生成
-                let aiDescription = basicDescription
-                try {
-                  const openaiApiKey = import.meta.env.VITE_OPENAI_API_KEY
-                  if (openaiApiKey) {
-                    const aiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-                      method: 'POST',
-                      headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${openaiApiKey}`
-                      },
-                      body: JSON.stringify({
-                        model: 'gpt-3.5-turbo',
-                        messages: [
-                          {
-                            role: 'system',
-                            content: 'あなたは天気予報の専門家です。天気情報を分かりやすく、親しみやすい日本語で説明してください。'
-                          },
-                          {
-                            role: 'user',
-                            content: `${prefecture}${city}の今日の天気予報です。天気: ${weatherInfo.text}${maxTemp !== undefined && minTemp !== undefined ? `、最高気温${maxTemp}度、最低気温${minTemp}度` : ''}。この天気について、50文字程度で分かりやすく説明してください。`
-                          }
-                        ],
-                        max_tokens: 100,
-                        temperature: 0.7
-                      })
-                    })
-                    
-                    if (aiResponse.ok) {
-                      const aiData = await aiResponse.json()
-                      if (aiData.choices && aiData.choices[0] && aiData.choices[0].message) {
-                        aiDescription = aiData.choices[0].message.content.trim()
-                      }
+                // 無料のルールベース方式で説明を生成
+                const generateDescription = () => {
+                  const avgTemp = maxTemp !== undefined && minTemp !== undefined ? Math.round((maxTemp + minTemp) / 2) : null
+                  
+                  let description = `今日の${prefecture}${city}は${weatherInfo.text}`
+                  
+                  if (avgTemp !== null) {
+                    if (avgTemp >= 25) {
+                      description += `。暑い一日になりそうです。熱中症にご注意ください`
+                    } else if (avgTemp >= 20) {
+                      description += `。過ごしやすい気温です。お出かけに最適な天気です`
+                    } else if (avgTemp >= 15) {
+                      description += `。少し肌寒いかもしれません。上着があると安心です`
+                    } else if (avgTemp >= 10) {
+                      description += `。寒い一日になりそうです。暖かい服装でお出かけください`
+                    } else {
+                      description += `。とても寒い一日になりそうです。防寒対策をしっかりと`
                     }
                   }
-                } catch (aiError) {
-                  console.error('OpenAI APIエラー:', aiError)
-                  // AI生成に失敗した場合は基本説明を使用
+                  
+                  if (weatherInfo.text === '雨') {
+                    description += `。傘をお忘れなく`
+                  } else if (weatherInfo.text === '雪') {
+                    description += `。路面が滑りやすくなります。お気をつけて`
+                  } else if (weatherInfo.text === '曇り') {
+                    description += `。雲が多いですが、お出かけには問題ありません`
+                  }
+                  
+                  if (maxTemp !== undefined && minTemp !== undefined) {
+                    description += `（最高${maxTemp}度、最低${minTemp}度）`
+                  }
+                  
+                  return description
                 }
+                
+                const description = generateDescription()
                 
                 setTodayWeather({
                   condition: weatherInfo.condition,
                   icon: weatherInfo.icon,
                   maxTemp: maxTemp,
                   minTemp: minTemp,
-                  description: aiDescription,
+                  description: description,
                   prefecture: prefecture,
                   city: city
                 })
