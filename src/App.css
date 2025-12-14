@@ -12,7 +12,7 @@
 }
 
 .app-left {
-  width: 33.333%; /* 横1/3 */
+  width: 40%; /* 横サイズを広げる */
   display: flex;
   flex-direction: column;
   min-width: 0;
@@ -22,7 +22,7 @@
 }
 
 .app-right {
-  width: 66.667%; /* 横2/3 */
+  width: 60%; /* 右側のサイズを調整 */
   display: flex;
   flex-direction: column;
   min-width: 0;
