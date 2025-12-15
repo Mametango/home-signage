@@ -316,7 +316,6 @@ const News = () => {
 
   return (
     <div className="news">
-      <h2 className="news-title">📰 NHKニュース</h2>
       {error && (
         <div className="news-error-banner">
           {error}
@@ -337,9 +336,12 @@ const News = () => {
               <span className="news-category-badge">{currentNews.category}</span>
               <span className="news-time">{formatDate(currentNews.pubDate)}</span>
             </div>
-            <span className="news-counter">
-              {getNewsCounter()}
-            </span>
+            <div className="news-header-right">
+              <span className="news-source-label">NHKニュース</span>
+              <span className="news-counter">
+                {getNewsCounter()}
+              </span>
+            </div>
           </div>
           <h3 className="news-item-title">{currentNews.title}</h3>
           {currentNews.description && (
