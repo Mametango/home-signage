@@ -44,26 +44,30 @@ npm run build
 
 ### 天気APIの設定
 
-#### AIによる天気予報説明生成（無料）
+#### AIによる天気予報説明生成
 
 天気予報の説明は、**デフォルトで無料のルールベース方式**を使用します。
 天気や気温に応じて、自動的に分かりやすい説明を生成します。
 
-**オプション: Hugging Face API（無料枠あり）**
+**オプション: OpenAI API（ChatGPT）**
 
-より高度なAI説明を生成する場合は、Hugging Face APIキーを設定できます。
+より自然で分かりやすいAI説明を生成する場合は、OpenAI APIキーを設定できます。
+**毎朝一回だけ**APIを呼び出し、同じ日はキャッシュを再利用するため、コストを抑えられます。
 
-1. Hugging Faceアカウントを作成: https://huggingface.co/
-2. APIキーを取得: https://huggingface.co/settings/tokens
-3. `.env`ファイルに`VITE_HUGGINGFACE_API_KEY=your_api_key_here`を設定
+1. OpenAIアカウントを作成: https://platform.openai.com/
+2. APIキーを取得: https://platform.openai.com/api-keys
+3. `.env`ファイルに`VITE_OPENAI_API_KEY=your_api_key_here`を設定
 
 ```bash
 # .envファイルを作成（存在しない場合）
 # .envファイルを編集してAPIキーを設定（オプション）
-VITE_HUGGINGFACE_API_KEY=hf_...
+VITE_OPENAI_API_KEY=sk-...
 ```
 
-**注意**: APIキーを設定しない場合でも、ルールベースの説明が自動的に生成されます。
+**注意**: 
+- APIキーを設定しない場合でも、ルールベースの説明が自動的に生成されます。
+- OpenAI APIは有料ですが、毎朝一回だけの呼び出しなので、コストは非常に低く抑えられます（1日あたり約$0.0001程度）。
+- 同じ日の説明はlocalStorageにキャッシュされるため、ページをリロードしてもAPIを再呼び出ししません。
 
 #### OpenWeatherMap API（2時間ごとの天気予報）
 

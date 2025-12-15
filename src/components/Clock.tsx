@@ -197,8 +197,8 @@ const Clock = () => {
                   }
                 }
                 
-                // 無料のルールベース方式で説明を生成
-                const generateDescription = () => {
+                // 無料のルールベース方式で説明を生成（フォールバック）
+                const generateRuleBasedDescription = (): string => {
                   const avgTemp = maxTemp !== undefined && minTemp !== undefined ? Math.round((maxTemp + minTemp) / 2) : null
                   
                   let description = `今日の${prefecture}${city}は${weatherInfo.text}`
@@ -232,16 +232,105 @@ const Clock = () => {
                   return description
                 }
                 
-                const description = generateDescription()
+                // OpenAI APIで天気説明を生成（毎朝一回だけ）
+                const generateDescription = async (): Promise<string> => {
+                  const today = format(new Date(), 'yyyy-MM-dd')
+                  const cacheKey = `weather-description-${today}-${prefecture}-${city}`
+                  
+                  // キャッシュを確認（同じ日は再利用）
+                  const cached = localStorage.getItem(cacheKey)
+                  if (cached) {
+                    try {
+                      const cachedData = JSON.parse(cached)
+                      if (cachedData.date === today) {
+                        return cachedData.description
+                      }
+                    } catch (e) {
+                      console.error('キャッシュの読み込みエラー:', e)
+                    }
+                  }
+                  
+                  // OpenAI APIキーを確認
+                  const apiKey = import.meta.env.VITE_OPENAI_API_KEY || ''
+                  
+                  if (!apiKey) {
+                    // APIキーがない場合は、無料のルールベース方式で説明を生成
+                    return generateRuleBasedDescription()
+                  }
+                  
+                  // OpenAI APIで説明を生成
+                  try {
+                    const avgTemp = maxTemp !== undefined && minTemp !== undefined ? Math.round((maxTemp + minTemp) / 2) : null
+                    const tempInfo = maxTemp !== undefined && minTemp !== undefined 
+                      ? `最高気温${maxTemp}度、最低気温${minTemp}度` 
+                      : avgTemp !== null ? `平均気温${avgTemp}度程度` : ''
+                    
+                    const prompt = `今日の${prefecture}${city}の天気は${weatherInfo.text}です。${tempInfo ? tempInfo + 'の見込みです。' : ''}簡潔で分かりやすい天気予報の説明を日本語で50文字程度で教えてください。`
+                    
+                    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`
+                      },
+                      body: JSON.stringify({
+                        model: 'gpt-3.5-turbo',
+                        messages: [
+                          {
+                            role: 'user',
+                            content: prompt
+                          }
+                        ],
+                        max_tokens: 100,
+                        temperature: 0.7
+                      })
+                    })
+                    
+                    if (response.ok) {
+                      const data = await response.json()
+                      const description = data.choices?.[0]?.message?.content?.trim() || generateRuleBasedDescription()
+                      
+                      // キャッシュに保存
+                      localStorage.setItem(cacheKey, JSON.stringify({
+                        date: today,
+                        description: description
+                      }))
+                      
+                      return description
+                    } else {
+                      console.error('OpenAI APIエラー:', response.status, response.statusText)
+                      return generateRuleBasedDescription()
+                    }
+                  } catch (error) {
+                    console.error('OpenAI API呼び出しエラー:', error)
+                    return generateRuleBasedDescription()
+                  }
+                }
                 
-                setTodayWeather({
-                  condition: weatherInfo.condition,
-                  icon: weatherInfo.icon,
-                  maxTemp: maxTemp,
-                  minTemp: minTemp,
-                  description: description,
-                  prefecture: prefecture,
-                  city: city
+                // 説明を生成（非同期）
+                generateDescription().then((description) => {
+                  setTodayWeather({
+                    condition: weatherInfo.condition,
+                    icon: weatherInfo.icon,
+                    maxTemp: maxTemp,
+                    minTemp: minTemp,
+                    description: description,
+                    prefecture: prefecture,
+                    city: city
+                  })
+                }).catch((error) => {
+                  console.error('説明生成エラー:', error)
+                  // エラー時はルールベースの説明を使用
+                  const fallbackDescription = generateRuleBasedDescription()
+                  setTodayWeather({
+                    condition: weatherInfo.condition,
+                    icon: weatherInfo.icon,
+                    maxTemp: maxTemp,
+                    minTemp: minTemp,
+                    description: fallbackDescription,
+                    prefecture: prefecture,
+                    city: city
+                  })
                 })
                 
                 window.dispatchEvent(new CustomEvent('weatherChanged', { 
