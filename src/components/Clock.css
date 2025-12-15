@@ -91,10 +91,12 @@
   flex-direction: row;
   /* gap: 1.5rem; Chrome 75では未対応のため、marginで代替 */
   align-items: flex-start;
+  min-width: 0; /* 子要素が縮小できるようにする */
 }
 
 .clock-weather-main > *:not(:last-child) {
   margin-right: 1.5rem; /* 天気情報と解説の間隔 */
+  min-width: 0; /* 子要素が縮小できるようにする */
 }
 
 .clock-weather-header {
@@ -186,6 +188,10 @@
   padding-left: 1rem;
   border-left: 1px solid rgba(255, 255, 255, 0.2);
   min-width: 0;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  white-space: normal;
+  overflow: visible;
 }
 
 /* 2時間ごとの天気と降水確率 */
