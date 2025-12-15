@@ -202,7 +202,8 @@ const Clock = () => {
                 const generateRuleBasedDescription = (): string => {
                   const avgTemp = maxTemp !== undefined && minTemp !== undefined ? Math.round((maxTemp + minTemp) / 2) : null
                   
-                  let description = `今日の${prefecture}${city}は${weatherInfo.text}`
+                  // ルールベースで生成したことが分かるようにラベルを付与
+                  let description = `【ルール】今日の${prefecture}${city}は${weatherInfo.text}`
                   
                   if (avgTemp !== null) {
                     if (avgTemp >= 25) {
@@ -251,8 +252,6 @@ const Clock = () => {
                     }
                   }
                   
-                  // キャッシュがない場合、APIキーがある場合はローディング表示は呼び出し元で行う
-                  
                   const avgTemp = maxTemp !== undefined && minTemp !== undefined ? Math.round((maxTemp + minTemp) / 2) : null
                   const tempInfo = maxTemp !== undefined && minTemp !== undefined 
                     ? `最高気温${maxTemp}度、最低気温${minTemp}度` 
@@ -260,138 +259,72 @@ const Clock = () => {
                   
                   const prompt = `今日の${prefecture}${city}の天気は${weatherInfo.text}です。${tempInfo ? tempInfo + 'の見込みです。' : ''}簡潔で分かりやすい天気予報の説明を日本語で50文字程度で教えてください。`
                   
-                  // Gemini APIを優先的に試す
-                  const geminiApiKey = import.meta.env.VITE_GEMINI_API_KEY || ''
-                  if (geminiApiKey) {
-                    try {
-                      // gemini-2.5-flashを使用（無料枠: 1分あたり15リクエスト、1日あたり1,500リクエスト）
-                      const response = await fetch(
-                        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiApiKey}`,
-                        {
-                          method: 'POST',
-                          headers: {
-                            'Content-Type': 'application/json'
-                          },
-                          body: JSON.stringify({
-                            contents: [{
-                              parts: [{
-                                text: prompt
-                              }]
-                            }],
-                            generationConfig: {
-                              temperature: 0.7,
-                              maxOutputTokens: 100
-                            }
-                          })
-                        }
-                      )
-                      
-                      if (response.ok) {
-                        const data = await response.json()
-                        const description = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || generateRuleBasedDescription()
-                        
-                        // キャッシュに保存
-                        localStorage.setItem(cacheKey, JSON.stringify({
-                          date: today,
-                          description: description
-                        }))
-                        
-                        return description
-                      } else {
-                        console.error('Gemini APIエラー:', response.status, response.statusText)
-                        // フォールバック: OpenAI APIを試す
-                      }
-                    } catch (error) {
-                      console.error('Gemini API呼び出しエラー:', error)
-                      // フォールバック: OpenAI APIを試す
-                    }
-                  }
-                  
-                  // OpenAI APIを試す（Gemini APIがない、またはエラー時）
-                  const openaiApiKey = import.meta.env.VITE_OPENAI_API_KEY || ''
-                  if (openaiApiKey) {
-                    try {
-                      const response = await fetch('https://api.openai.com/v1/chat/completions', {
-                        method: 'POST',
-                        headers: {
-                          'Content-Type': 'application/json',
-                          'Authorization': `Bearer ${openaiApiKey}`
-                        },
-                        body: JSON.stringify({
-                          model: 'gpt-3.5-turbo',
-                          messages: [
-                            {
-                              role: 'user',
-                              content: prompt
-                            }
-                          ],
-                          max_tokens: 100,
-                          temperature: 0.7
-                        })
-                      })
-                      
-                      if (response.ok) {
-                        const data = await response.json()
-                        const description = data.choices?.[0]?.message?.content?.trim() || generateRuleBasedDescription()
-                        
-                        // キャッシュに保存
-                        localStorage.setItem(cacheKey, JSON.stringify({
-                          date: today,
-                          description: description
-                        }))
-                        
-                        return description
-                      } else {
-                        console.error('OpenAI APIエラー:', response.status, response.statusText)
-                        return generateRuleBasedDescription()
-                      }
-                    } catch (error) {
-                      console.error('OpenAI API呼び出しエラー:', error)
+                  // Gemini API（サーバー側プロキシ）を優先的に試す
+                  try {
+                    const response = await fetch('/api/gemini-weather', {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json'
+                      },
+                      body: JSON.stringify({ prompt })
+                    })
+
+                    if (response.ok) {
+                      const data = await response.json()
+                      const description =
+                        data && typeof data.description === 'string' && data.description.trim().length > 0
+                          ? data.description.trim()
+                          : generateRuleBasedDescription()
+
+                      // キャッシュに保存
+                      localStorage.setItem(cacheKey, JSON.stringify({
+                        date: today,
+                        description: description
+                      }))
+
+                      return description
+                    } else {
+                      console.error('Gemini APIエラー(サーバー):', response.status, response.statusText)
                       return generateRuleBasedDescription()
                     }
+                  } catch (error) {
+                    console.error('Gemini API呼び出しエラー(サーバー):', error)
+                    return generateRuleBasedDescription()
                   }
-                  
-                  // APIキーがない場合は、無料のルールベース方式で説明を生成
-                  return generateRuleBasedDescription()
                 }
                 
                 // 説明を生成（非同期）
-                // キャッシュがない場合、APIキーがある場合はローディング表示
-                const today = format(new Date(), 'yyyy-MM-dd')
-                const cacheKey = `weather-description-${today}-${prefecture}-${city}`
-                const cached = localStorage.getItem(cacheKey)
-                const apiKey = import.meta.env.VITE_GEMINI_API_KEY || import.meta.env.VITE_OPENAI_API_KEY || ''
-                
-                if (!cached && apiKey) {
-                  setIsGeneratingDescription(true)
-                }
-                
-                generateDescription().then((description) => {
-                  setIsGeneratingDescription(false)
-                  setTodayWeather({
-                    condition: weatherInfo.condition,
-                    icon: weatherInfo.icon,
-                    maxTemp: maxTemp,
-                    minTemp: minTemp,
-                    description: description,
-                    prefecture: prefecture,
-                    city: city
+                // 必ず一度はGemini（サーバー側）を試し、失敗したらルールベース
+                setIsGeneratingDescription(true)
+
+                generateDescription()
+                  .then((description) => {
+                    setIsGeneratingDescription(false)
+                    setTodayWeather({
+                      condition: weatherInfo.condition,
+                      icon: weatherInfo.icon,
+                      maxTemp: maxTemp,
+                      minTemp: minTemp,
+                      description: description,
+                      prefecture: prefecture,
+                      city: city
+                    })
                   })
-                }).catch((error) => {
-                  console.error('説明生成エラー:', error)
-                  setIsGeneratingDescription(false)
-                  // エラー時はルールベースの説明を使用
-                  const fallbackDescription = generateRuleBasedDescription()
-                  setTodayWeather({
-                    condition: weatherInfo.condition,
-                    icon: weatherInfo.icon,
-                    maxTemp: maxTemp,
-                    minTemp: minTemp,
-                    description: fallbackDescription,
-                    prefecture: prefecture,
-                    city: city
+                  .catch((error) => {
+                    console.error('説明生成エラー:', error)
+                    setIsGeneratingDescription(false)
+                    // エラー時はルールベースの説明を使用
+                    const fallbackDescription = generateRuleBasedDescription()
+                    setTodayWeather({
+                      condition: weatherInfo.condition,
+                      icon: weatherInfo.icon,
+                      maxTemp: maxTemp,
+                      minTemp: minTemp,
+                      description: fallbackDescription,
+                      prefecture: prefecture,
+                      city: city
+                    })
                   })
-                })
                 
                 window.dispatchEvent(new CustomEvent('weatherChanged', { 
                   detail: { condition: weatherInfo.condition } 
