@@ -194,6 +194,28 @@
   overflow: visible;
 }
 
+.clock-weather-description-loading {
+  color: rgba(255, 255, 255, 0.7);
+  font-style: italic;
+}
+
+.loading-dots::after {
+  content: '...';
+  animation: loadingDots 1.5s steps(4, end) infinite;
+}
+
+@keyframes loadingDots {
+  0%, 20% {
+    content: '.';
+  }
+  40% {
+    content: '..';
+  }
+  60%, 100% {
+    content: '...';
+  }
+}
+
 /* 2時間ごとの天気と降水確率 */
 .clock-weather-hourly-list {
   display: grid;

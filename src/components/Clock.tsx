@@ -27,6 +27,7 @@ const Clock = () => {
   const [hourlyForecast, setHourlyForecast] = useState<HourlyForecast[]>([])
   const [prefecture, setPrefecture] = useState<string>('新潟県')
   const [city, setCity] = useState<string>('新発田市')
+  const [isGeneratingDescription, setIsGeneratingDescription] = useState(false)
 
   // 時刻更新
   useEffect(() => {
@@ -250,6 +251,12 @@ const Clock = () => {
                     }
                   }
                   
+                  // キャッシュがない場合、APIキーがある場合はローディング表示
+                  const apiKey = import.meta.env.VITE_GEMINI_API_KEY || import.meta.env.VITE_OPENAI_API_KEY || ''
+                  if (apiKey) {
+                    setIsGeneratingDescription(true)
+                  }
+                  
                   const avgTemp = maxTemp !== undefined && minTemp !== undefined ? Math.round((maxTemp + minTemp) / 2) : null
                   const tempInfo = maxTemp !== undefined && minTemp !== undefined 
                     ? `最高気温${maxTemp}度、最低気温${minTemp}度` 
@@ -353,7 +360,18 @@ const Clock = () => {
                 }
                 
                 // 説明を生成（非同期）
+                // キャッシュがない場合、APIキーがある場合はローディング表示
+                const today = format(new Date(), 'yyyy-MM-dd')
+                const cacheKey = `weather-description-${today}-${prefecture}-${city}`
+                const cached = localStorage.getItem(cacheKey)
+                const apiKey = import.meta.env.VITE_GEMINI_API_KEY || import.meta.env.VITE_OPENAI_API_KEY || ''
+                
+                if (!cached && apiKey) {
+                  setIsGeneratingDescription(true)
+                }
+                
                 generateDescription().then((description) => {
+                  setIsGeneratingDescription(false)
                   setTodayWeather({
                     condition: weatherInfo.condition,
                     icon: weatherInfo.icon,
@@ -365,6 +383,7 @@ const Clock = () => {
                   })
                 }).catch((error) => {
                   console.error('説明生成エラー:', error)
+                  setIsGeneratingDescription(false)
                   // エラー時はルールベースの説明を使用
                   const fallbackDescription = generateRuleBasedDescription()
                   setTodayWeather({
@@ -510,9 +529,13 @@ const Clock = () => {
                   )}
                 </div>
               </div>
-              {todayWeather.description && (
-                <div className="clock-weather-description">{todayWeather.description}</div>
-              )}
+                  {isGeneratingDescription ? (
+                    <div className="clock-weather-description clock-weather-description-loading">
+                      <span className="loading-dots">Geminiに問い合わせ中</span>
+                    </div>
+                  ) : todayWeather.description ? (
+                    <div className="clock-weather-description">{todayWeather.description}</div>
+                  ) : null}
             </div>
           </div>
 
