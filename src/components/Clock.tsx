@@ -27,7 +27,6 @@ const Clock = () => {
   const [hourlyForecast, setHourlyForecast] = useState<HourlyForecast[]>([])
   const [prefecture, setPrefecture] = useState<string>('新潟県')
   const [city, setCity] = useState<string>('新発田市')
-  const [isGeneratingDescription, setIsGeneratingDescription] = useState(false)
 
   // 時刻更新
   useEffect(() => {
@@ -234,97 +233,18 @@ const Clock = () => {
                   return description
                 }
                 
-                // AI APIで天気説明を生成（毎朝一回だけ）
-                const generateDescription = async (): Promise<string> => {
-                  const today = format(new Date(), 'yyyy-MM-dd')
-                  const cacheKey = `weather-description-${today}-${prefecture}-${city}`
-                  
-                  // キャッシュを確認（同じ日は再利用）
-                  const cached = localStorage.getItem(cacheKey)
-                  if (cached) {
-                    try {
-                      const cachedData = JSON.parse(cached)
-                      if (cachedData.date === today) {
-                        return cachedData.description
-                      }
-                    } catch (e) {
-                      console.error('キャッシュの読み込みエラー:', e)
-                    }
-                  }
-                  
-                  const avgTemp = maxTemp !== undefined && minTemp !== undefined ? Math.round((maxTemp + minTemp) / 2) : null
-                  const tempInfo = maxTemp !== undefined && minTemp !== undefined 
-                    ? `最高気温${maxTemp}度、最低気温${minTemp}度` 
-                    : avgTemp !== null ? `平均気温${avgTemp}度程度` : ''
-                  
-                  const prompt = `今日の${prefecture}${city}の天気は${weatherInfo.text}です。${tempInfo ? tempInfo + 'の見込みです。' : ''}簡潔で分かりやすい天気予報の説明を日本語で50文字程度で教えてください。`
-                  
-                  // Gemini API（サーバー側プロキシ）を優先的に試す
-                  try {
-                    const response = await fetch('/api/gemini-weather', {
-                      method: 'POST',
-                      headers: {
-                        'Content-Type': 'application/json'
-                      },
-                      body: JSON.stringify({ prompt })
-                    })
+                // 天気の解説をルールベースで生成（AIは使わない）
+                const description = generateRuleBasedDescription()
 
-                    if (response.ok) {
-                      const data = await response.json()
-                      const description =
-                        data && typeof data.description === 'string' && data.description.trim().length > 0
-                          ? data.description.trim()
-                          : generateRuleBasedDescription()
-
-                      // キャッシュに保存
-                      localStorage.setItem(cacheKey, JSON.stringify({
-                        date: today,
-                        description: description
-                      }))
-
-                      return description
-                    } else {
-                      console.error('Gemini APIエラー(サーバー):', response.status, response.statusText)
-                      return generateRuleBasedDescription()
-                    }
-                  } catch (error) {
-                    console.error('Gemini API呼び出しエラー(サーバー):', error)
-                    return generateRuleBasedDescription()
-                  }
-                }
-                
-                // 説明を生成（非同期）
-                // 必ず一度はGemini（サーバー側）を試し、失敗したらルールベース
-                setIsGeneratingDescription(true)
-
-                generateDescription()
-                  .then((description) => {
-                    setIsGeneratingDescription(false)
-                    setTodayWeather({
-                      condition: weatherInfo.condition,
-                      icon: weatherInfo.icon,
-                      maxTemp: maxTemp,
-                      minTemp: minTemp,
-                      description: description,
-                      prefecture: prefecture,
-                      city: city
-                    })
-                  })
-                  .catch((error) => {
-                    console.error('説明生成エラー:', error)
-                    setIsGeneratingDescription(false)
-                    // エラー時はルールベースの説明を使用
-                    const fallbackDescription = generateRuleBasedDescription()
-                    setTodayWeather({
-                      condition: weatherInfo.condition,
-                      icon: weatherInfo.icon,
-                      maxTemp: maxTemp,
-                      minTemp: minTemp,
-                      description: fallbackDescription,
-                      prefecture: prefecture,
-                      city: city
-                    })
-                  })
+                setTodayWeather({
+                  condition: weatherInfo.condition,
+                  icon: weatherInfo.icon,
+                  maxTemp: maxTemp,
+                  minTemp: minTemp,
+                  description: description,
+                  prefecture: prefecture,
+                  city: city
+                })
                 
                 window.dispatchEvent(new CustomEvent('weatherChanged', { 
                   detail: { condition: weatherInfo.condition } 
@@ -476,13 +396,9 @@ const Clock = () => {
                   )}
                 </div>
               </div>
-                  {isGeneratingDescription ? (
-                    <div className="clock-weather-description clock-weather-description-loading">
-                      <span className="loading-dots">Geminiに問い合わせ中</span>
-                    </div>
-                  ) : todayWeather.description ? (
-                    <div className="clock-weather-description">{todayWeather.description}</div>
-                  ) : null}
+              {todayWeather.description && (
+                <div className="clock-weather-description">{todayWeather.description}</div>
+              )}
             </div>
           </div>
 
