@@ -86,74 +86,62 @@ const News = () => {
     // 各カテゴリーから並列で取得
     const fetchPromises = NHK_CATEGORIES.map(async (category) => {
       try {
-        const proxies = [
-          `https://api.allorigins.win/raw?url=${encodeURIComponent(category.url)}`,
-          `https://thingproxy.freeboard.io/fetch/${category.url}`,
-        ]
-        
-        for (const proxyUrl of proxies) {
-          try {
-            const response = await fetch(proxyUrl, {
-              method: 'GET',
-              headers: {
-                'Accept': 'application/xml, text/xml, */*'
-              }
-            })
-            
-            if (!response.ok) {
-              throw new Error(`HTTP error! status: ${response.status}`)
-            }
+        // 自前のサーバーレス関数を経由してNHK RSSを取得（CORS回避）
+        const apiUrl = `/api/nhk-rss?url=${encodeURIComponent(category.url)}`
 
-            const xmlText = await response.text()
-            
-            if (!xmlText || xmlText.trim().length === 0) {
-              throw new Error('Empty response')
-            }
-            
-            if (xmlText.trim().startsWith('<!DOCTYPE') || xmlText.trim().startsWith('<html')) {
-              throw new Error('HTML response instead of XML')
-            }
-            
-            const parser = new DOMParser()
-            const xmlDoc = parser.parseFromString(xmlText, 'text/xml')
-            
-            const parseError = xmlDoc.querySelector('parsererror')
-            if (parseError) {
-              throw new Error('XML parse error')
-            }
-            
-            const items = xmlDoc.querySelectorAll('item')
-            
-            const newsItems: NewsItem[] = []
-            items.forEach((item, index) => {
-              const title = item.querySelector('title')?.textContent || ''
-              const link = item.querySelector('link')?.textContent || ''
-              const pubDate = item.querySelector('pubDate')?.textContent || ''
-              const description = item.querySelector('description')?.textContent || ''
-              
-              if (title && link) {
-                const trimmedTitle = title.trim()
-                const trimmedDescription = description.trim()
-                newsItems.push({
-                  id: allNews.length + index + 1,
-                  title: trimmedTitle,
-                  link: link.trim(),
-                  pubDate: pubDate.trim(),
-                  description: trimmedDescription,
-                  category: category.name,
-                  isUrgent: isUrgentNews(trimmedTitle, trimmedDescription)
-                })
-              }
-            })
-            
-            return newsItems.slice(0, 10) // 各カテゴリーから10件まで
-          } catch (err) {
-            console.log(`プロキシ ${proxyUrl} が失敗しました (${category.name}):`, err)
-            continue
+        const response = await fetch(apiUrl, {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/xml, text/xml, */*'
           }
+        })
+
+        if (!response.ok) {
+          console.error(`NHKニュース取得エラー (${category.name}): status=${response.status}`)
+          return []
         }
+
+        const xmlText = await response.text()
+
+        if (!xmlText || xmlText.trim().length === 0) {
+          console.error(`NHKニュース取得エラー (${category.name}): 空のレスポンス`)
+          return []
+        }
+
+        const parser = new DOMParser()
+        const xmlDoc = parser.parseFromString(xmlText, 'text/xml')
+
+        const parseError = xmlDoc.querySelector('parsererror')
+        if (parseError) {
+          console.error(`NHKニュースXMLパースエラー (${category.name})`)
+          return []
+        }
+
+        const items = xmlDoc.querySelectorAll('item')
+
+        const newsItems: NewsItem[] = []
+        items.forEach((item, index) => {
+          const title = item.querySelector('title')?.textContent || ''
+          const link = item.querySelector('link')?.textContent || ''
+          const pubDate = item.querySelector('pubDate')?.textContent || ''
+          const description = item.querySelector('description')?.textContent || ''
+          
+          if (title && link) {
+            const trimmedTitle = title.trim()
+            const trimmedDescription = description.trim()
+            newsItems.push({
+              id: allNews.length + index + 1,
+              title: trimmedTitle,
+              link: link.trim(),
+              pubDate: pubDate.trim(),
+              description: trimmedDescription,
+              category: category.name,
+              isUrgent: isUrgentNews(trimmedTitle, trimmedDescription)
+            })
+          }
+        })
         
-        return []
+        return newsItems.slice(0, 10) // 各カテゴリーから10件まで
       } catch (err) {
         console.error(`NHKニュース取得エラー (${category.name}):`, err)
         return []
