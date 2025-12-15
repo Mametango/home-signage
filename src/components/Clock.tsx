@@ -261,8 +261,9 @@ const Clock = () => {
                   const geminiApiKey = import.meta.env.VITE_GEMINI_API_KEY || ''
                   if (geminiApiKey) {
                     try {
+                      // gemini-2.5-flashを使用（無料枠: 1分あたり15リクエスト、1日あたり1,500リクエスト）
                       const response = await fetch(
-                        `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${geminiApiKey}`,
+                        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiApiKey}`,
                         {
                           method: 'POST',
                           headers: {
