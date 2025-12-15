@@ -232,7 +232,7 @@ const Clock = () => {
                   return description
                 }
                 
-                // OpenAI APIで天気説明を生成（毎朝一回だけ）
+                // AI APIで天気説明を生成（毎朝一回だけ）
                 const generateDescription = async (): Promise<string> => {
                   const today = format(new Date(), 'yyyy-MM-dd')
                   const cacheKey = `weather-description-${today}-${prefecture}-${city}`
@@ -250,61 +250,105 @@ const Clock = () => {
                     }
                   }
                   
-                  // OpenAI APIキーを確認
-                  const apiKey = import.meta.env.VITE_OPENAI_API_KEY || ''
+                  const avgTemp = maxTemp !== undefined && minTemp !== undefined ? Math.round((maxTemp + minTemp) / 2) : null
+                  const tempInfo = maxTemp !== undefined && minTemp !== undefined 
+                    ? `最高気温${maxTemp}度、最低気温${minTemp}度` 
+                    : avgTemp !== null ? `平均気温${avgTemp}度程度` : ''
                   
-                  if (!apiKey) {
-                    // APIキーがない場合は、無料のルールベース方式で説明を生成
-                    return generateRuleBasedDescription()
+                  const prompt = `今日の${prefecture}${city}の天気は${weatherInfo.text}です。${tempInfo ? tempInfo + 'の見込みです。' : ''}簡潔で分かりやすい天気予報の説明を日本語で50文字程度で教えてください。`
+                  
+                  // Gemini APIを優先的に試す
+                  const geminiApiKey = import.meta.env.VITE_GEMINI_API_KEY || ''
+                  if (geminiApiKey) {
+                    try {
+                      const response = await fetch(
+                        `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${geminiApiKey}`,
+                        {
+                          method: 'POST',
+                          headers: {
+                            'Content-Type': 'application/json'
+                          },
+                          body: JSON.stringify({
+                            contents: [{
+                              parts: [{
+                                text: prompt
+                              }]
+                            }],
+                            generationConfig: {
+                              temperature: 0.7,
+                              maxOutputTokens: 100
+                            }
+                          })
+                        }
+                      )
+                      
+                      if (response.ok) {
+                        const data = await response.json()
+                        const description = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || generateRuleBasedDescription()
+                        
+                        // キャッシュに保存
+                        localStorage.setItem(cacheKey, JSON.stringify({
+                          date: today,
+                          description: description
+                        }))
+                        
+                        return description
+                      } else {
+                        console.error('Gemini APIエラー:', response.status, response.statusText)
+                        // フォールバック: OpenAI APIを試す
+                      }
+                    } catch (error) {
+                      console.error('Gemini API呼び出しエラー:', error)
+                      // フォールバック: OpenAI APIを試す
+                    }
                   }
                   
-                  // OpenAI APIで説明を生成
-                  try {
-                    const avgTemp = maxTemp !== undefined && minTemp !== undefined ? Math.round((maxTemp + minTemp) / 2) : null
-                    const tempInfo = maxTemp !== undefined && minTemp !== undefined 
-                      ? `最高気温${maxTemp}度、最低気温${minTemp}度` 
-                      : avgTemp !== null ? `平均気温${avgTemp}度程度` : ''
-                    
-                    const prompt = `今日の${prefecture}${city}の天気は${weatherInfo.text}です。${tempInfo ? tempInfo + 'の見込みです。' : ''}簡潔で分かりやすい天気予報の説明を日本語で50文字程度で教えてください。`
-                    
-                    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-                      method: 'POST',
-                      headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${apiKey}`
-                      },
-                      body: JSON.stringify({
-                        model: 'gpt-3.5-turbo',
-                        messages: [
-                          {
-                            role: 'user',
-                            content: prompt
-                          }
-                        ],
-                        max_tokens: 100,
-                        temperature: 0.7
+                  // OpenAI APIを試す（Gemini APIがない、またはエラー時）
+                  const openaiApiKey = import.meta.env.VITE_OPENAI_API_KEY || ''
+                  if (openaiApiKey) {
+                    try {
+                      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+                        method: 'POST',
+                        headers: {
+                          'Content-Type': 'application/json',
+                          'Authorization': `Bearer ${openaiApiKey}`
+                        },
+                        body: JSON.stringify({
+                          model: 'gpt-3.5-turbo',
+                          messages: [
+                            {
+                              role: 'user',
+                              content: prompt
+                            }
+                          ],
+                          max_tokens: 100,
+                          temperature: 0.7
+                        })
                       })
-                    })
-                    
-                    if (response.ok) {
-                      const data = await response.json()
-                      const description = data.choices?.[0]?.message?.content?.trim() || generateRuleBasedDescription()
                       
-                      // キャッシュに保存
-                      localStorage.setItem(cacheKey, JSON.stringify({
-                        date: today,
-                        description: description
-                      }))
-                      
-                      return description
-                    } else {
-                      console.error('OpenAI APIエラー:', response.status, response.statusText)
+                      if (response.ok) {
+                        const data = await response.json()
+                        const description = data.choices?.[0]?.message?.content?.trim() || generateRuleBasedDescription()
+                        
+                        // キャッシュに保存
+                        localStorage.setItem(cacheKey, JSON.stringify({
+                          date: today,
+                          description: description
+                        }))
+                        
+                        return description
+                      } else {
+                        console.error('OpenAI APIエラー:', response.status, response.statusText)
+                        return generateRuleBasedDescription()
+                      }
+                    } catch (error) {
+                      console.error('OpenAI API呼び出しエラー:', error)
                       return generateRuleBasedDescription()
                     }
-                  } catch (error) {
-                    console.error('OpenAI API呼び出しエラー:', error)
-                    return generateRuleBasedDescription()
                   }
+                  
+                  // APIキーがない場合は、無料のルールベース方式で説明を生成
+                  return generateRuleBasedDescription()
                 }
                 
                 // 説明を生成（非同期）

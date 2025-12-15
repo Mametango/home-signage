@@ -49,25 +49,40 @@ npm run build
 天気予報の説明は、**デフォルトで無料のルールベース方式**を使用します。
 天気や気温に応じて、自動的に分かりやすい説明を生成します。
 
+**オプション: Gemini API（推奨・無料枠あり）**
+
+より自然で分かりやすいAI説明を生成する場合は、Google Gemini APIキーを設定できます。
+**毎朝一回だけ**APIを呼び出し、同じ日はキャッシュを再利用するため、コストを抑えられます。
+
+1. Google AI Studioにアクセス: https://aistudio.google.com/
+2. APIキーを取得: https://aistudio.google.com/app/apikey
+3. `.env`ファイルに`VITE_GEMINI_API_KEY=your_api_key_here`を設定
+
+```bash
+# .envファイルを作成（存在しない場合）
+# .envファイルを編集してAPIキーを設定（オプション）
+VITE_GEMINI_API_KEY=AIza...
+```
+
 **オプション: OpenAI API（ChatGPT）**
 
-より自然で分かりやすいAI説明を生成する場合は、OpenAI APIキーを設定できます。
-**毎朝一回だけ**APIを呼び出し、同じ日はキャッシュを再利用するため、コストを抑えられます。
+Gemini APIがない場合、OpenAI APIも使用できます。
 
 1. OpenAIアカウントを作成: https://platform.openai.com/
 2. APIキーを取得: https://platform.openai.com/api-keys
 3. `.env`ファイルに`VITE_OPENAI_API_KEY=your_api_key_here`を設定
 
 ```bash
-# .envファイルを作成（存在しない場合）
 # .envファイルを編集してAPIキーを設定（オプション）
 VITE_OPENAI_API_KEY=sk-...
 ```
 
 **注意**: 
 - APIキーを設定しない場合でも、ルールベースの説明が自動的に生成されます。
-- OpenAI APIは有料ですが、毎朝一回だけの呼び出しなので、コストは非常に低く抑えられます（1日あたり約$0.0001程度）。
-- 同じ日の説明はlocalStorageにキャッシュされるため、ページをリロードしてもAPIを再呼び出ししません。
+- **優先順位**: Gemini API → OpenAI API → ルールベース方式
+- Gemini APIは無料枠があります（1分あたり15リクエスト、1日あたり1500リクエスト）
+- OpenAI APIは有料ですが、毎朝一回だけの呼び出しなので、コストは非常に低く抑えられます（1日あたり約$0.0001程度）
+- 同じ日の説明はlocalStorageにキャッシュされるため、ページをリロードしてもAPIを再呼び出ししません
 
 #### OpenWeatherMap API（2時間ごとの天気予報）
 
