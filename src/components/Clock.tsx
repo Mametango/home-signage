@@ -251,11 +251,7 @@ const Clock = () => {
                     }
                   }
                   
-                  // キャッシュがない場合、APIキーがある場合はローディング表示
-                  const apiKey = import.meta.env.VITE_GEMINI_API_KEY || import.meta.env.VITE_OPENAI_API_KEY || ''
-                  if (apiKey) {
-                    setIsGeneratingDescription(true)
-                  }
+                  // キャッシュがない場合、APIキーがある場合はローディング表示は呼び出し元で行う
                   
                   const avgTemp = maxTemp !== undefined && minTemp !== undefined ? Math.round((maxTemp + minTemp) / 2) : null
                   const tempInfo = maxTemp !== undefined && minTemp !== undefined 
@@ -459,13 +455,31 @@ const Clock = () => {
           }
         }
         
-        // フォールバック: モックデータ
+        // フォールバック: モックデータ（説明も生成）
+        const mockMaxTemp = 15
+        const mockMinTemp = 8
+        const mockAvgTemp = Math.round((mockMaxTemp + mockMinTemp) / 2)
+        
+        let mockDescription = `今日の${prefecture}${city}は曇り`
+        if (mockAvgTemp >= 25) {
+          mockDescription += `。暑い一日になりそうです。熱中症にご注意ください`
+        } else if (mockAvgTemp >= 20) {
+          mockDescription += `。過ごしやすい気温です。お出かけに最適な天気です`
+        } else if (mockAvgTemp >= 15) {
+          mockDescription += `。少し肌寒いかもしれません。上着があると安心です`
+        } else if (mockAvgTemp >= 10) {
+          mockDescription += `。寒い一日になりそうです。暖かい服装でお出かけください`
+        } else {
+          mockDescription += `。とても寒い一日になりそうです。防寒対策をしっかりと`
+        }
+        mockDescription += `。雲が多いですが、お出かけには問題ありません（最高${mockMaxTemp}度、最低${mockMinTemp}度）`
+        
         setTodayWeather({
           condition: '曇り',
           icon: '☁️',
-          maxTemp: 15,
-          minTemp: 8,
-          description: '今日の天気は曇り。最高気温15度、最低気温8度の見込み',
+          maxTemp: mockMaxTemp,
+          minTemp: mockMinTemp,
+          description: mockDescription,
           prefecture: prefecture,
           city: city
         })
