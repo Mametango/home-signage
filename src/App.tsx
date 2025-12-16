@@ -5,9 +5,8 @@ import WeeklyWeather from './components/WeeklyWeather'
 import './App.css'
 
 function App() {
-  // テスト用: 短い間隔で動作確認する場合は、以下のコメントを外して使用
-  const INTERVAL_MS = 10000 // 10秒ごと（テスト用）
-  // const INTERVAL_MS = 180000 // 3分ごと（本番用）
+  // 週間天気予報の表示間隔（5分ごと）
+  const INTERVAL_MS = 300000 // 5分ごと（300秒）
   
   const [showWeeklyWeather, setShowWeeklyWeather] = useState(false)
   const [countdown, setCountdown] = useState<number>(Math.floor(INTERVAL_MS / 1000))
@@ -94,17 +93,16 @@ function App() {
     }
   }, [INTERVAL_MS])
 
-  // 全画面表示を閉じる（30秒後に自動で閉じる）
+  // 全画面表示を閉じる（1分後に自動で閉じる）
   useEffect(() => {
     if (showWeeklyWeather) {
-      console.log('週間天気予報を表示中。30秒後に自動で閉じます')
+      console.log('週間天気予報を表示中。1分後に自動で閉じます')
       const timer = setTimeout(() => {
         console.log('週間天気予報を閉じます:', new Date().toLocaleTimeString())
         setShowWeeklyWeather(false)
         
         // カウントダウンを再開
-        const INTERVAL_MS = 10000 // テスト用
-        // const INTERVAL_MS = 180000 // 本番用
+        const INTERVAL_MS = 300000 // 5分ごと
         const seconds = Math.floor(INTERVAL_MS / 1000)
         setCountdown(seconds)
         
@@ -123,7 +121,7 @@ function App() {
             return prev - 1
           })
         }, 1000)
-      }, 30000) // 30秒後に閉じる
+      }, 60000) // 1分（60秒）後に閉じる
 
       return () => clearTimeout(timer)
     }

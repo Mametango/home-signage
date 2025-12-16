@@ -62,9 +62,10 @@ const WeeklyWeather = () => {
           if (forecastResponse.ok) {
             const forecastData = await forecastResponse.json()
             
-            if (forecastData && forecastData.length > 0) {
-              const areaData = forecastData[0]
-              const timeSeries = areaData.timeSeries?.[0]
+            if (forecastData && forecastData.length > 1) {
+              // 週間予報は通常2番目の要素（forecastData[1]）
+              const weeklyData = forecastData[1]
+              const timeSeries = weeklyData.timeSeries?.[0]
               
               if (timeSeries && timeSeries.areas && timeSeries.areas.length > 0) {
                 // 新発田市に該当するエリアを探す
@@ -98,30 +99,44 @@ const WeeklyWeather = () => {
                   return { condition: '晴れ', icon: '☀️', text: '晴れ' }
                 }
                 
-                // 気温データを取得
-                const tempSeries = areaData.timeSeries?.find((ts: any) => ts.temps && ts.temps.length > 0)
-                let tempArea = tempSeries?.areas?.[0]
+                // 気温データを取得（週間予報のtimeSeriesから）
+                let tempArea: any = null
+                let tempTimeDefines: string[] = []
                 
-                if (tempSeries && tempSeries.areas && tempSeries.areas.length > 0) {
-                  if (city === '新発田市') {
-                    const shibataTempArea = tempSeries.areas.find((a: any) => 
-                      a.area && (a.area.name && (a.area.name.includes('新発田') || a.area.name.includes('新発田市')))
-                    )
-                    if (shibataTempArea) {
-                      tempArea = shibataTempArea
-                    } else {
-                      const shibataTempAreaByCode = tempSeries.areas.find((a: any) => 
-                        a.area && (a.area.code === '1520600' || a.area.code === '152020' || a.area.code === '152110')
-                      )
-                      if (shibataTempAreaByCode) {
-                        tempArea = shibataTempAreaByCode
+                // 気温データを含むtimeSeriesを探す
+                for (const ts of weeklyData.timeSeries || []) {
+                  if (ts.tempsMax && ts.tempsMax.length > 0) {
+                    // 新発田市のエリアを探す
+                    if (ts.areas && ts.areas.length > 0) {
+                      if (city === '新発田市') {
+                        const shibataTempArea = ts.areas.find((a: any) => 
+                          a.area && (a.area.name && (a.area.name.includes('新発田') || a.area.name.includes('新発田市')))
+                        )
+                        if (shibataTempArea) {
+                          tempArea = shibataTempArea
+                          tempTimeDefines = ts.timeDefines || []
+                          break
+                        } else {
+                          const shibataTempAreaByCode = ts.areas.find((a: any) => 
+                            a.area && (a.area.code === '1520600' || a.area.code === '152020' || a.area.code === '152110')
+                          )
+                          if (shibataTempAreaByCode) {
+                            tempArea = shibataTempAreaByCode
+                            tempTimeDefines = ts.timeDefines || []
+                            break
+                          }
+                        }
+                      } else {
+                        tempArea = ts.areas[0]
+                        tempTimeDefines = ts.timeDefines || []
+                        break
                       }
                     }
                   }
                 }
                 
                 // 1週間分の天気予報データを構築
-                const weeklyData: DailyWeatherData[] = []
+                const weeklyDataArray: DailyWeatherData[] = []
                 const today = new Date()
                 today.setHours(0, 0, 0, 0)
                 
@@ -158,8 +173,10 @@ const WeeklyWeather = () => {
                   let maxTemp: number | undefined
                   let minTemp: number | undefined
                   
-                  if (tempArea && tempArea.temps && Array.isArray(tempArea.temps)) {
-                    const tempTimeDefines = tempSeries?.timeDefines || []
+                  if (tempArea) {
+                    // 週間予報の気温データ構造: tempsMaxとtempsMinが別々の配列
+                    const tempsMax = tempArea.tempsMax || []
+                    const tempsMin = tempArea.tempsMin || []
                     let tempDateIndex = -1
                     if (tempTimeDefines.length > 0) {
                       for (let j = 0; j < tempTimeDefines.length; j++) {
@@ -172,28 +189,26 @@ const WeeklyWeather = () => {
                       }
                     }
                     
-                    if (tempDateIndex >= 0) {
-                      const todayMaxIndex = tempDateIndex * 2
-                      const todayMinIndex = tempDateIndex * 2 + 1
+                    // インデックスが見つからない場合、i番目のデータを使用
+                    const tempIndex = tempDateIndex >= 0 ? tempDateIndex : i
+                    
+                    if (tempsMax.length > tempIndex && tempsMin.length > tempIndex) {
+                      const maxTempValue = tempsMax[tempIndex]
+                      const minTempValue = tempsMin[tempIndex]
                       
-                      if (tempArea.temps.length > todayMaxIndex && tempArea.temps.length > todayMinIndex) {
-                        const maxTempValue = tempArea.temps[todayMaxIndex]
-                        const minTempValue = tempArea.temps[todayMinIndex]
-                        
-                        if (maxTempValue !== null && maxTempValue !== undefined && maxTempValue !== '' &&
-                            minTempValue !== null && minTempValue !== undefined && minTempValue !== '') {
-                          const max = parseInt(String(maxTempValue))
-                          const min = parseInt(String(minTempValue))
-                          if (!isNaN(max) && !isNaN(min)) {
-                            maxTemp = max
-                            minTemp = min
-                          }
+                      if (maxTempValue !== null && maxTempValue !== undefined && maxTempValue !== '' &&
+                          minTempValue !== null && minTempValue !== undefined && minTempValue !== '') {
+                        const max = parseInt(String(maxTempValue))
+                        const min = parseInt(String(minTempValue))
+                        if (!isNaN(max) && !isNaN(min)) {
+                          maxTemp = max
+                          minTemp = min
                         }
                       }
                     }
                   }
                   
-                  weeklyData.push({
+                  weeklyDataArray.push({
                     date: targetDate,
                     condition: weatherInfo.condition,
                     icon: weatherInfo.icon,
@@ -203,8 +218,8 @@ const WeeklyWeather = () => {
                   })
                 }
                 
-                console.log('1週間の天気予報を取得成功:', weeklyData.length, '日分')
-                setWeeklyWeather(weeklyData)
+                console.log('1週間の天気予報を取得成功:', weeklyDataArray.length, '日分')
+                setWeeklyWeather(weeklyDataArray)
                 setLoading(false)
                 return
               }
@@ -265,13 +280,19 @@ const WeeklyWeather = () => {
             </div>
             <div className="weekly-weather-icon">{day.icon}</div>
             <div className="weekly-weather-condition">{day.condition}</div>
-            {day.maxTemp !== undefined && day.minTemp !== undefined && (
-              <div className="weekly-weather-temp">
+            <div className="weekly-weather-temp">
+              {day.maxTemp !== undefined ? (
                 <span className="temp-max">{day.maxTemp}°</span>
-                <span className="temp-separator">/</span>
+              ) : (
+                <span className="temp-max">--</span>
+              )}
+              <span className="temp-separator">/</span>
+              {day.minTemp !== undefined ? (
                 <span className="temp-min">{day.minTemp}°</span>
-              </div>
-            )}
+              ) : (
+                <span className="temp-min">--</span>
+              )}
+            </div>
           </div>
         ))}
       </div>

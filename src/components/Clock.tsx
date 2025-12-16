@@ -84,6 +84,47 @@ const Clock = () => {
           areaCode = '150000'
         }
         
+        // アメダス観測データを取得（新発田市の観測地点コード: 54232）
+        let amedasData: any = null
+        try {
+          // アメダス観測地点一覧を取得して新発田市の地点を探す
+          const amedasResponse = await fetch('https://www.jma.go.jp/bosai/amedas/data/map/amedas.json')
+          if (amedasResponse.ok) {
+            const amedasMapData = await amedasResponse.json()
+            // 新発田市の観測地点を探す（緯度経度から近い地点を探す）
+            if (amedasMapData && typeof amedasMapData === 'object') {
+              let nearestStation: any = null
+              let minDistance = Infinity
+              
+              for (const [stationCode, stationData] of Object.entries(amedasMapData)) {
+                const station = stationData as any
+                if (station && station.lat && station.lon) {
+                  const distance = Math.sqrt(
+                    Math.pow(station.lat - lat, 2) + Math.pow(station.lon - lon, 2)
+                  )
+                  if (distance < minDistance) {
+                    minDistance = distance
+                    nearestStation = { code: stationCode, ...station }
+                  }
+                }
+              }
+              
+              if (nearestStation) {
+                // 最新のアメダス観測データを取得
+                const amedasDataResponse = await fetch(
+                  `https://www.jma.go.jp/bosai/amedas/data/map/${nearestStation.code}.json`
+                )
+                if (amedasDataResponse.ok) {
+                  amedasData = await amedasDataResponse.json()
+                  console.log('アメダス観測データ取得成功:', nearestStation.code, nearestStation.name)
+                }
+              }
+            }
+          }
+        } catch (amedasError) {
+          console.error('アメダスデータ取得エラー:', amedasError)
+        }
+        
         // 気象庁APIから本日の天気予報を取得
         try {
           const forecastResponse = await fetch(`https://www.jma.go.jp/bosai/forecast/data/forecast/${areaCode}.json`)
@@ -304,6 +345,22 @@ const Clock = () => {
                     maxTemp = Math.max(...validTemps)
                     minTemp = Math.min(...validTemps)
                     console.log('timeSeries[0]から気温データ取得:', { maxTemp, minTemp, validTemps })
+                  }
+                }
+                
+                // アメダス観測データから現在の気温を取得（予報より優先）
+                if (amedasData && amedasData.temp) {
+                  const currentTemp = parseFloat(amedasData.temp)
+                  if (!isNaN(currentTemp)) {
+                    // アメダスの現在気温を取得
+                    // 最高・最低気温が未取得の場合、現在気温から推定
+                    if (maxTemp === undefined) {
+                      maxTemp = Math.round(currentTemp + 2)
+                    }
+                    if (minTemp === undefined) {
+                      minTemp = Math.round(currentTemp - 2)
+                    }
+                    console.log('アメダス観測データから気温取得:', { currentTemp, maxTemp, minTemp })
                   }
                 }
                 
