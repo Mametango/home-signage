@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import Clock from './components/Clock'
+import News from './components/News'
 import WeeklyWeather from './components/WeeklyWeather'
 import './App.css'
 
@@ -189,7 +190,12 @@ function App() {
         <Clock />
       </div>
       
-      {/* 右側: 削除済み */}
+      {/* 右側: ニュース */}
+      <div className="app-right">
+        <div className="app-right-card">
+          <News />
+        </div>
+      </div>
     </div>
   )
 }

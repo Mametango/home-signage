@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import { createPortal } from 'react-dom'
 import './News.css'
 
 interface NewsItem {
@@ -31,11 +30,8 @@ const NHK_CATEGORIES = [
 ]
 
 const News = () => {
-  const [urgentNews, setUrgentNews] = useState<NewsItem[]>([])
   const [normalNews, setNormalNews] = useState<NewsItem[]>([])
-  const [currentUrgentIndex, setCurrentUrgentIndex] = useState(0)
   const [currentNormalIndex, setCurrentNormalIndex] = useState(0)
-  const [isShowingUrgent, setIsShowingUrgent] = useState(false)
   // const [urgentDisplayStartTime, setUrgentDisplayStartTime] = useState<number | null>(null) // 未使用
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -268,35 +264,13 @@ const News = () => {
           // 非表示にした記事を除外
           const filteredNews = newsItems.filter(item => !hiddenNewsIds.has(item.id))
           
-          // 緊急ニュースを完全にクリア
-          console.log('【デバッグ】ニュース取得完了:', {
-            totalNews: newsItems.length,
-            filteredNews: filteredNews.length,
-            hiddenNewsCount: hiddenNewsIds.size
-          })
-          
-          setUrgentNews([])
+          // 通常ニュースを設定
           setNormalNews(filteredNews)
-          
-          // 緊急ニュースの表示を完全に停止（確実にfalseにする）
-          console.log('【デバッグ】緊急ニュース表示状態:', {
-            before: isShowingUrgent,
-            willSet: false
-          })
-          setIsShowingUrgent(false)
-          // setUrgentDisplayStartTime(null) // 未使用のためコメントアウト
-          setCurrentUrgentIndex(0)
           
           // 通常ニュースのインデックスをリセット（念のため）
           if (filteredNews.length > 0 && currentNormalIndex >= filteredNews.length) {
             setCurrentNormalIndex(0)
           }
-          
-          console.log('【デバッグ】状態設定完了:', {
-            urgentNewsLength: 0,
-            normalNewsLength: filteredNews.length,
-            isShowingUrgent: false
-          })
           
           setError(null)
         }
@@ -357,22 +331,10 @@ const News = () => {
 
   // 表示するニュースを決定（緊急ニュースは完全に無効化）
   const getCurrentNews = () => {
-    // デバッグログ
-    console.log('【デバッグ】getCurrentNews呼び出し:', {
-      isShowingUrgent,
-      urgentNewsLength: urgentNews.length,
-      normalNewsLength: normalNews.length,
-      currentNormalIndex,
-      currentUrgentIndex
-    })
-    
     // 緊急ニュースは一切表示しない（強制的に通常ニュースのみ）
     if (normalNews.length > 0) {
-      const news = normalNews[currentNormalIndex]
-      console.log('【デバッグ】通常ニュースを返します:', news?.title)
-      return news
+      return normalNews[currentNormalIndex]
     }
-    console.log('【デバッグ】ニュースがありません')
     return null
   }
 
@@ -385,67 +347,9 @@ const News = () => {
   }
 
   const currentNews = getCurrentNews()
-  
-  // デバッグログ：現在の状態を表示
-  console.log('【デバッグ】Newsコンポーネントの状態:', {
-    isShowingUrgent,
-    urgentNewsLength: urgentNews.length,
-    normalNewsLength: normalNews.length,
-    currentNormalIndex,
-    currentNewsTitle: currentNews?.title,
-    currentNewsCategory: currentNews?.category,
-    currentNewsIsUrgent: currentNews?.isUrgent
-  })
-
-  // デバッグ情報を常に表示（確実に表示されるように）
-  const debugInfo = {
-    isShowingUrgent,
-    urgentNewsLength: urgentNews.length,
-    normalNewsLength: normalNews.length,
-    currentNormalIndex,
-    currentUrgentIndex,
-    currentNewsIsUrgent: currentNews?.isUrgent,
-    currentNewsCategory: currentNews?.category,
-    currentNewsTitle: currentNews?.title?.substring(0, 30)
-  }
-  
-  console.log('【デバッグ】Newsコンポーネント レンダリング:', debugInfo)
-
-  // デバッグ情報をbody直下に表示（React Portalを使用）
-  const debugElement = (
-    <div style={{
-      position: 'fixed',
-      bottom: '1rem',
-      left: '1rem',
-      background: 'rgba(255, 0, 0, 0.95)',
-      color: '#fff',
-      padding: '1rem',
-      fontSize: '0.9rem',
-      zIndex: 999999,
-      borderRadius: '0.5rem',
-      fontFamily: 'monospace',
-      maxWidth: '500px',
-      border: '3px solid #fff',
-      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.8)',
-      pointerEvents: 'none'
-    }}>
-      <div style={{ fontWeight: 'bold', marginBottom: '0.5rem', fontSize: '1rem' }}>【デバッグ情報】</div>
-      <div>isShowingUrgent: {String(isShowingUrgent)}</div>
-      <div>urgentNews.length: {urgentNews.length}</div>
-      <div>normalNews.length: {normalNews.length}</div>
-      <div>currentNormalIndex: {currentNormalIndex}</div>
-      <div>currentUrgentIndex: {currentUrgentIndex}</div>
-      <div>currentNews?.isUrgent: {String(currentNews?.isUrgent || false)}</div>
-      <div>currentNews?.category: {currentNews?.category || 'なし'}</div>
-      <div>currentNews?.title: {currentNews?.title?.substring(0, 40) || 'なし'}...</div>
-      <div>hiddenNewsIds.size: {hiddenNewsIds.size}</div>
-    </div>
-  )
 
   return (
-    <>
-      {createPortal(debugElement, document.body)}
-      <div className="news">
+    <div className="news">
       
       {error && (
         <div className="news-error-banner">
@@ -498,8 +402,7 @@ const News = () => {
       ) : (
         <div className="news-empty">ニュースが取得できませんでした</div>
       )}
-      </div>
-    </>
+    </div>
   )
 }
 
