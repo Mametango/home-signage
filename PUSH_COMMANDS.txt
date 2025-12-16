@@ -38,3 +38,4 @@ Windowsの場合、認証ダイアログが表示されるので：
    git pull origin main --allow-unrelated-histories
    その後、再度 git push -u origin main を実行
 
+

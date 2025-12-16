@@ -107,20 +107,40 @@ const Clock = () => {
                   )
                   if (shibataArea) {
                     area = shibataArea
+                    console.log('新発田市の天気エリアを発見（名前）:', area.area?.name, area.area?.code)
                   } else {
                     // エリア名で見つからない場合は、エリアコードで探す
-                    // 新発田市のエリアコードは152020（新発田市）または152110（新発田）の可能性
+                    // 新発田市のエリアコードは1520600
                     const shibataAreaByCode = timeSeries.areas.find((a: any) => 
-                      a.area && (a.area.code === '152020' || a.area.code === '152110')
+                      a.area && (a.area.code === '1520600' || a.area.code === '152020' || a.area.code === '152110')
                     )
                     if (shibataAreaByCode) {
                       area = shibataAreaByCode
+                      console.log('新発田市の天気エリアを発見（コード）:', area.area?.name, area.area?.code)
                     }
                   }
                 }
                 
                 const weatherCodes = area.weatherCodes || []
                 const temps = area.temps || []
+                const timeDefines = timeSeries.timeDefines || []
+                
+                // 今日の日付を取得
+                const today = new Date()
+                today.setHours(0, 0, 0, 0)
+                
+                // timeDefinesから今日のデータのインデックスを探す
+                let todayIndex = 0
+                if (timeDefines.length > 0) {
+                  for (let i = 0; i < timeDefines.length; i++) {
+                    const defineDate = new Date(timeDefines[i])
+                    defineDate.setHours(0, 0, 0, 0)
+                    if (defineDate.getTime() === today.getTime()) {
+                      todayIndex = i
+                      break
+                    }
+                  }
+                }
                 
                 const getWeatherCondition = (code: string) => {
                   const codeNum = parseInt(code)
@@ -131,47 +151,159 @@ const Clock = () => {
                   return { condition: '晴れ', icon: '☀️', text: '晴れ' }
                 }
                 
-                const todayWeatherCode = weatherCodes.length > 0 ? weatherCodes[0] : null
+                // 今日の天気コードを取得
+                const todayWeatherCode = weatherCodes.length > todayIndex ? weatherCodes[todayIndex] : (weatherCodes.length > 0 ? weatherCodes[0] : null)
                 const weatherInfo = todayWeatherCode ? getWeatherCondition(todayWeatherCode) : { condition: '晴れ', icon: '☀️', text: '晴れ' }
                 
-                // 気温データの取得（気象庁APIの構造に合わせて修正）
+                // 今日の気温データの取得
                 let maxTemp: number | undefined
                 let minTemp: number | undefined
                 
-                // 気温データはtimeSeries[1]（2日目の予報）にある場合もある
-                if (temps && Array.isArray(temps) && temps.length > 0) {
-                  // 最高気温と最低気温を取得
-                  // 気象庁APIでは、temps[0]が最高気温、temps[1]が最低気温の場合が多い
-                  // ただし、nullの可能性もあるので注意
-                  const tempValues = temps.filter((t: any) => t !== null && t !== undefined && t !== '').map((t: any) => parseInt(String(t)))
+                // 気象庁APIの構造: timeSeries[1]に気温データがある場合が多い
+                // 気温データは通常、最高気温と最低気温が別々の配列として格納される
+                // または、最高気温と最低気温が別々のtimeSeriesに格納される場合もある
+                // まず、気温データを含むtimeSeriesを探す
+                console.log('気温データ取得開始: timeSeries数', areaData.timeSeries?.length)
+                for (let tsIndex = 0; tsIndex < (areaData.timeSeries?.length || 0); tsIndex++) {
+                  const ts = areaData.timeSeries[tsIndex]
+                  if (!ts || !ts.areas || ts.areas.length === 0) continue
                   
-                  if (tempValues.length >= 2) {
-                    // より高い方が最高気温、低い方が最低気温
-                    maxTemp = Math.max(...tempValues)
-                    minTemp = Math.min(...tempValues)
-                  } else if (tempValues.length === 1) {
-                    maxTemp = tempValues[0]
+                  // このtimeSeriesに気温データがあるか確認
+                  const hasTempData = ts.areas.some((a: any) => a.temps && Array.isArray(a.temps) && a.temps.length > 0)
+                  if (!hasTempData) continue
+                  
+                  console.log(`timeSeries[${tsIndex}]に気温データを発見`)
+                  
+                  // 新発田市に該当するエリアを探す（天気コードと同じロジック）
+                  let tempArea = ts.areas[0] // デフォルトは最初のエリア
+                  
+                  if (city === '新発田市') {
+                    const shibataTempArea = ts.areas.find((a: any) => 
+                      a.area && (a.area.name && (a.area.name.includes('新発田') || a.area.name.includes('新発田市')))
+                    )
+                    if (shibataTempArea) {
+                      tempArea = shibataTempArea
+                      console.log('新発田市の気温エリアを発見（名前）:', tempArea.area?.name, tempArea.area?.code)
+                    } else {
+                      // エリア名で見つからない場合は、エリアコードで探す
+                      // 新発田市のエリアコードは1520600
+                      const shibataTempAreaByCode = ts.areas.find((a: any) => 
+                        a.area && (a.area.code === '1520600' || a.area.code === '152020' || a.area.code === '152110')
+                      )
+                      if (shibataTempAreaByCode) {
+                        tempArea = shibataTempAreaByCode
+                        console.log('新発田市の気温エリアを発見（コード）:', tempArea.area?.name, tempArea.area?.code)
+                      }
+                    }
+                  } else {
+                    // その他の市の場合も、エリア名で検索
+                    const cityTempArea = ts.areas.find((a: any) => 
+                      a.area && (a.area.name && (a.area.name.includes(city) || a.area.name.includes(city.replace('市', ''))))
+                    )
+                    if (cityTempArea) {
+                      tempArea = cityTempArea
+                    }
+                  }
+                  
+                  if (tempArea && tempArea.temps && Array.isArray(tempArea.temps)) {
+                    const tempTimeDefines = ts.timeDefines || []
+                    let tempTodayIndex = 0
+                    if (tempTimeDefines.length > 0) {
+                      for (let i = 0; i < tempTimeDefines.length; i++) {
+                        const defineDate = new Date(tempTimeDefines[i])
+                        defineDate.setHours(0, 0, 0, 0)
+                        if (defineDate.getTime() === today.getTime()) {
+                          tempTodayIndex = i
+                          break
+                        }
+                      }
+                    }
+                    
+                    console.log('気温データ取得試行:', {
+                      areaName: tempArea.area?.name,
+                      areaCode: tempArea.area?.code,
+                      temps: tempArea.temps,
+                      tempTimeDefines: tempTimeDefines,
+                      tempTodayIndex: tempTodayIndex
+                    })
+                    
+                    // 気象庁APIの構造: 気温データは通常、最高気温と最低気温が交互に格納される
+                    // 例: temps[0] = 今日の最高気温, temps[1] = 今日の最低気温, temps[2] = 明日の最高気温, temps[3] = 明日の最低気温
+                    // または、timeDefinesのインデックスに対応して格納される場合もある
+                    // 今日のデータを取得（tempTodayIndex * 2 が最高気温、tempTodayIndex * 2 + 1 が最低気温の可能性）
+                    
+                    // まず、今日のインデックスに対応する気温データを取得
+                    const todayMaxIndex = tempTodayIndex * 2
+                    const todayMinIndex = tempTodayIndex * 2 + 1
+                    
+                    // 方法1: 交互に格納されている場合
+                    if (tempArea.temps.length > todayMaxIndex && tempArea.temps.length > todayMinIndex) {
+                      const maxTempValue = tempArea.temps[todayMaxIndex]
+                      const minTempValue = tempArea.temps[todayMinIndex]
+                      
+                      if (maxTempValue !== null && maxTempValue !== undefined && maxTempValue !== '' &&
+                          minTempValue !== null && minTempValue !== undefined && minTempValue !== '') {
+                        const max = parseInt(String(maxTempValue))
+                        const min = parseInt(String(minTempValue))
+                        if (!isNaN(max) && !isNaN(min)) {
+                          maxTemp = max
+                          minTemp = min
+                          console.log('気温データ取得成功（交互）:', { maxTemp, minTemp, todayMaxIndex, todayMinIndex })
+                        }
+                      }
+                    }
+                    
+                    // 方法2: timeDefinesのインデックスに対応している場合
+                    if ((maxTemp === undefined || minTemp === undefined) && tempArea.temps.length > tempTodayIndex) {
+                      const todayTemp = tempArea.temps[tempTodayIndex]
+                      if (todayTemp !== null && todayTemp !== undefined && todayTemp !== '') {
+                        const tempValue = parseInt(String(todayTemp))
+                        if (!isNaN(tempValue)) {
+                          // 単一の値の場合、最高と最低を同じ値として扱う
+                          if (maxTemp === undefined) maxTemp = tempValue
+                          if (minTemp === undefined) minTemp = tempValue
+                          console.log('気温データ取得成功（単一）:', { maxTemp, minTemp, tempTodayIndex })
+                        }
+                      }
+                    }
+                    
+                    // 方法3: すべての気温データを確認して、最高と最低を探す（フォールバック）
+                    if (maxTemp === undefined || minTemp === undefined) {
+                      const validTemps = tempArea.temps
+                        .filter((_t: any, idx: number) => {
+                          // 今日のインデックスに該当するか、または最初のデータが今日の可能性がある
+                          return idx === tempTodayIndex || idx === todayMaxIndex || idx === todayMinIndex || (tempTodayIndex === 0 && idx < 2)
+                        })
+                        .filter((t: any) => t !== null && t !== undefined && t !== '')
+                        .map((t: any) => parseInt(String(t)))
+                        .filter((t: number) => !isNaN(t))
+                      
+                      if (validTemps.length > 0) {
+                        if (maxTemp === undefined) maxTemp = Math.max(...validTemps)
+                        if (minTemp === undefined) minTemp = Math.min(...validTemps)
+                        console.log('気温データ取得成功（フォールバック）:', { maxTemp, minTemp, validTemps })
+                      }
+                    }
+                    
+                    // データが見つかったらループを抜ける
+                    if (maxTemp !== undefined && minTemp !== undefined) {
+                      break
+                    }
                   }
                 }
                 
-                // 気温データが取得できなかった場合、timeSeries[1]を確認
-                if (maxTemp === undefined && minTemp === undefined) {
-                  const tempSeries = areaData.timeSeries?.[1]
-                  if (tempSeries && tempSeries.areas && tempSeries.areas.length > 0) {
-                    const tempArea = tempSeries.areas.find((a: any) => 
-                      a.area && (a.area.name && (a.area.name.includes('新発田') || a.area.name.includes('新発田市')))
-                    ) || tempSeries.areas[0]
-                    
-                    if (tempArea && tempArea.temps && Array.isArray(tempArea.temps) && tempArea.temps.length > 0) {
-                      const tempValues = tempArea.temps.filter((t: any) => t !== null && t !== undefined && t !== '').map((t: any) => parseInt(String(t)))
-                      
-                      if (tempValues.length >= 2) {
-                        maxTemp = Math.max(...tempValues)
-                        minTemp = Math.min(...tempValues)
-                      } else if (tempValues.length === 1) {
-                        maxTemp = tempValues[0]
-                      }
-                    }
+                // 気温データが取得できなかった場合、timeSeries[0]のtempsから今日のデータを取得
+                if (maxTemp === undefined && minTemp === undefined && temps && Array.isArray(temps) && temps.length > 0) {
+                  const validTemps = temps
+                    .filter((_t: any, idx: number) => idx === todayIndex || (todayIndex === 0 && idx === 0))
+                    .filter((t: any) => t !== null && t !== undefined && t !== '')
+                    .map((t: any) => parseInt(String(t)))
+                    .filter((t: number) => !isNaN(t))
+                  
+                  if (validTemps.length > 0) {
+                    maxTemp = Math.max(...validTemps)
+                    minTemp = Math.min(...validTemps)
+                    console.log('timeSeries[0]から気温データ取得:', { maxTemp, minTemp, validTemps })
                   }
                 }
                 
@@ -281,25 +413,31 @@ const Clock = () => {
               return '晴れ'
             }
             
-            const now = new Date()
+            const today = new Date()
+            today.setHours(0, 0, 0, 0)
+            const tomorrow = new Date(today)
+            tomorrow.setDate(tomorrow.getDate() + 1)
+            
+            // 今日のデータのみをフィルタリング
+            const todayForecasts = data.list.filter((item: any) => {
+              const itemDate = new Date(item.dt_txt)
+              itemDate.setHours(0, 0, 0, 0)
+              return itemDate.getTime() === today.getTime()
+            })
+            
             const forecast: HourlyForecast[] = []
             
-            for (let i = 0; i < 6; i++) {
-              const forecastTime = new Date(now)
-              forecastTime.setHours(now.getHours() + (i + 1) * 2, 0, 0, 0)
-              
-              const closestItem = data.list.reduce((prev: any, curr: any) => {
-                const prevTimeDiff = Math.abs(new Date(prev.dt_txt).getTime() - forecastTime.getTime())
-                const currTimeDiff = Math.abs(new Date(curr.dt_txt).getTime() - forecastTime.getTime())
-                return (currTimeDiff < prevTimeDiff) ? curr : prev
-              })
+            // 今日のデータから2時間ごとの予報を取得（最大6件）
+            for (let i = 0; i < Math.min(6, todayForecasts.length); i++) {
+              const item = todayForecasts[i]
+              const forecastTime = new Date(item.dt_txt)
               
               forecast.push({
                 time: forecastTime,
-                temp: Math.round(closestItem.main.temp),
-                condition: getWeatherCondition(closestItem.weather[0].main),
-                icon: getWeatherIcon(closestItem.weather[0].main),
-                precipitation: Math.round(closestItem.pop * 100)
+                temp: Math.round(item.main.temp),
+                condition: getWeatherCondition(item.weather[0].main),
+                icon: getWeatherIcon(item.weather[0].main),
+                precipitation: Math.round(item.pop * 100)
               })
             }
             
@@ -338,10 +476,26 @@ const Clock = () => {
         })
         
         const now = new Date()
+        const today = new Date()
+        today.setHours(0, 0, 0, 0)
         const mockForecast: HourlyForecast[] = []
+        
+        // 今日の残りの時間から2時間ごとの予報を生成（最大6件）
+        let currentHour = now.getHours()
+        // 次の偶数時に調整
+        if (currentHour % 2 !== 0) {
+          currentHour = currentHour + 1
+        }
+        
         for (let i = 0; i < 6; i++) {
-          const forecastTime = new Date(now)
-          forecastTime.setHours(now.getHours() + (i + 1) * 2, 0, 0, 0)
+          const forecastTime = new Date(today)
+          forecastTime.setHours(currentHour + (i * 2), 0, 0, 0)
+          
+          // 今日の日付を超えないようにする
+          if (forecastTime.getTime() > today.getTime() + 24 * 60 * 60 * 1000) {
+            break
+          }
+          
           mockForecast.push({
             time: forecastTime,
             temp: 12 - i,

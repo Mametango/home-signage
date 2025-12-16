@@ -1,0 +1,147 @@
+.weekly-weather {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 2rem;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(20px);
+  border-radius: 1rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+.weekly-weather-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  font-size: 2rem;
+  color: #fff;
+  font-family: 'Noto Sans JP', sans-serif;
+}
+
+.weekly-weather-header {
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.weekly-weather-title {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: #fff;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+  font-family: 'Noto Sans JP', sans-serif;
+  margin: 0;
+}
+
+.weekly-weather-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 1.5rem;
+  flex: 1;
+}
+
+.weekly-weather-day {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 0.75rem;
+  padding: 1.5rem 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.weekly-weather-day:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+}
+
+.weekly-weather-date {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.9);
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+  font-family: 'Noto Sans JP', sans-serif;
+  margin-bottom: 0.75rem;
+}
+
+.weekly-weather-icon {
+  font-size: 4rem;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+  margin-bottom: 0.75rem;
+}
+
+.weekly-weather-condition {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #fff;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+  font-family: 'Noto Sans JP', sans-serif;
+  margin-bottom: 0.75rem;
+}
+
+.weekly-weather-temp {
+  display: flex;
+  align-items: baseline;
+  font-family: 'Noto Sans JP', sans-serif;
+}
+
+.weekly-weather-temp .temp-max {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #ff6b6b;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.weekly-weather-temp .temp-separator {
+  font-size: 1.3rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin: 0 0.25rem;
+}
+
+.weekly-weather-temp .temp-min {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: #4dabf7;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+@media (max-width: 768px) {
+  .weekly-weather {
+    padding: 1rem;
+  }
+  
+  .weekly-weather-title {
+    font-size: 1.8rem;
+  }
+  
+  .weekly-weather-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+  }
+  
+  .weekly-weather-day {
+    padding: 1rem 0.5rem;
+  }
+  
+  .weekly-weather-icon {
+    font-size: 3rem;
+  }
+  
+  .weekly-weather-condition {
+    font-size: 1.1rem;
+  }
+  
+  .weekly-weather-temp .temp-max {
+    font-size: 1.5rem;
+  }
+  
+  .weekly-weather-temp .temp-min {
+    font-size: 1.2rem;
+  }
+}
+

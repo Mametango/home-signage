@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import './News.css'
 
 interface NewsItem {
@@ -11,51 +12,11 @@ interface NewsItem {
   isUrgent?: boolean // 緊急ニュースフラグ
 }
 
-// 緊急ニュースを判定する関数（災害関連のアラートのみ）
-const isUrgentNews = (title: string, description?: string): boolean => {
-  const text = `${title} ${description || ''}`
-  
-  // 緊急地震速報の場合は震度4以上のみ
-  if (text.includes('緊急地震速報')) {
-    // 震度情報を抽出（震度4、震度5、震度6、震度7など）
-    const intensityMatch = text.match(/震度([4-7]|４|５|６|７)/)
-    if (intensityMatch) {
-      const intensity = intensityMatch[1]
-      // 数字または全角数字を判定
-      const intensityNum = intensity === '４' || intensity === '4' ? 4 :
-                          intensity === '５' || intensity === '5' ? 5 :
-                          intensity === '６' || intensity === '6' ? 6 :
-                          intensity === '７' || intensity === '7' ? 7 : 0
-      return intensityNum >= 4
-    }
-    // 震度情報がない場合は、震度4以上を示す表現を探す
-    if (text.includes('震度4') || text.includes('震度５') || text.includes('震度6') || 
-        text.includes('震度7') || text.includes('震度４') || text.includes('震度５') || 
-        text.includes('震度６') || text.includes('震度７') ||
-        text.includes('震度5弱') || text.includes('震度5強') || 
-        text.includes('震度6弱') || text.includes('震度6強') ||
-        text.includes('震度７') || text.includes('最大震度4') || 
-        text.includes('最大震度5') || text.includes('最大震度6') || 
-        text.includes('最大震度7')) {
-      return true
-    }
-    // 震度情報が不明な場合は緊急として扱わない
-    return false
-  }
-  
-  // その他のアラートキーワード
-  const alertKeywords = [
-    '津波警報', '津波注意報', '気象警報', '土砂災害警戒情報',
-    '洪水警報', '暴風警報', '大雪警報', '暴風雪警報', '台風警報',
-    '避難指示', '避難勧告', '避難準備', '警戒レベル', '特別警報',
-    '土石流警戒', '地滑り警戒', '崖崩れ警戒', '落石警戒', '雪崩警戒',
-    '火山噴火警報', '火災警報', '浸水警戒', '冠水警戒'
-  ]
-  
-  return alertKeywords.some(keyword => 
-    text.includes(keyword)
-  )
-}
+// NHKニュースからの緊急判定は削除（P2P地震情報のAPIからの緊急地震速報のみを使用）
+// const isUrgentNews = (title: string, description?: string): boolean => {
+//   // NHKニュースは全て通常ニュースとして扱う
+//   return false
+// }
 
 // NHKニュースのカテゴリーとRSS URL
 const NHK_CATEGORIES = [
@@ -75,9 +36,113 @@ const News = () => {
   const [currentUrgentIndex, setCurrentUrgentIndex] = useState(0)
   const [currentNormalIndex, setCurrentNormalIndex] = useState(0)
   const [isShowingUrgent, setIsShowingUrgent] = useState(false)
-  const [urgentDisplayStartTime, setUrgentDisplayStartTime] = useState<number | null>(null)
+  // const [urgentDisplayStartTime, setUrgentDisplayStartTime] = useState<number | null>(null) // 未使用
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [hiddenNewsIds, setHiddenNewsIds] = useState<Set<number>>(new Set())
+
+  // localStorageから非表示記事のIDを読み込み
+  useEffect(() => {
+    const savedHiddenIds = localStorage.getItem('hiddenNewsIds')
+    if (savedHiddenIds) {
+      try {
+        const ids = JSON.parse(savedHiddenIds)
+        setHiddenNewsIds(new Set(ids))
+      } catch (e) {
+        console.error('非表示記事IDの読み込みに失敗しました:', e)
+      }
+    }
+  }, [])
+
+  // 記事を非表示にする関数
+  const hideNews = (newsId: number, e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    
+    const newHiddenIds = new Set(hiddenNewsIds)
+    newHiddenIds.add(newsId)
+    setHiddenNewsIds(newHiddenIds)
+    
+    // localStorageに保存
+    localStorage.setItem('hiddenNewsIds', JSON.stringify(Array.from(newHiddenIds)))
+    
+    // 非表示にした記事をリストから除外
+    setNormalNews(prev => prev.filter(item => item.id !== newsId))
+    
+    console.log('記事を非表示にしました:', newsId)
+  }
+
+  // P2P地震情報から緊急地震速報を取得（未使用のためコメントアウト）
+  /*
+  const fetchP2PQuakeEEW = async (): Promise<NewsItem[]> => {
+    const urgentItems: NewsItem[] = []
+    
+    try {
+      // P2P地震情報のAPIから最新の地震情報を取得
+      const response = await fetch('https://api.p2pquake.net/v2/history?limit=10', {
+        cache: 'no-cache'
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        
+        if (Array.isArray(data)) {
+          // 緊急地震速報（EEW）または震度4以上の地震を取得
+          data.forEach((item: any, index: number) => {
+            // 緊急地震速報（code: 551）または震度4以上の地震（code: 9611, maxScale >= 4）
+            const isEEW = item.code === 551 // 緊急地震速報
+            const isStrongQuake = item.code === 9611 && item.earthquake && item.earthquake.maxScale >= 4
+            
+            if (isEEW || isStrongQuake) {
+              const time = item.time ? new Date(item.time) : new Date()
+              const eq = item.earthquake || {}
+              
+              let title = ''
+              let description = ''
+              
+              if (isEEW) {
+                title = '緊急地震速報'
+                description = `最大震度${eq.maxScale || '不明'}の地震が予想されます。強い揺れに注意してください。`
+                if (eq.hypocenter?.name) {
+                  description += ` 震源地: ${eq.hypocenter.name}`
+                }
+                if (eq.hypocenter?.magnitude) {
+                  description += ` M${eq.hypocenter.magnitude}`
+                }
+              } else {
+                title = `地震発生 - ${eq.hypocenter?.name || '不明'}`
+                description = `最大震度${eq.maxScale || '不明'}の地震が発生しました。`
+                if (eq.hypocenter?.name) {
+                  description += ` 震源地: ${eq.hypocenter.name}`
+                }
+                if (eq.hypocenter?.magnitude) {
+                  description += ` M${eq.hypocenter.magnitude}`
+                }
+                if (eq.hypocenter?.depth) {
+                  description += ` 深さ: ${eq.hypocenter.depth}km`
+                }
+              }
+              
+              urgentItems.push({
+                id: item.id || `p2p-${index}`,
+                title: title,
+                link: 'https://www.p2pquake.net/',
+                pubDate: time.toISOString(),
+                description: description,
+                category: '緊急地震速報',
+                isUrgent: true
+              })
+            }
+          })
+        }
+      }
+    } catch (error) {
+      console.error('P2P地震情報の取得に失敗しました:', error)
+    }
+    
+    return urgentItems
+  }
+  */
 
   // NHKニュースを取得（複数カテゴリーから）
   const fetchNHKNews = async (): Promise<NewsItem[]> => {
@@ -129,6 +194,26 @@ const News = () => {
           if (title && link) {
             const trimmedTitle = title.trim()
             const trimmedDescription = description.trim()
+            
+            // 除外する記事のタイトル（部分一致で除外）
+            const excludedTitles = [
+              '岩手 久慈 8日の地震直後 避難所への道路渋滞',
+              '岩手 久慈8日の地震直後 避難所への道路渋滞',
+              '久慈 8日の地震直後 避難所への道路渋滞',
+              '久慈8日の地震直後 避難所への道路渋滞'
+            ]
+            
+            // 除外する記事かどうかをチェック
+            const shouldExclude = excludedTitles.some(excludedTitle => 
+              trimmedTitle.includes(excludedTitle) || trimmedDescription.includes(excludedTitle)
+            )
+            
+            // 除外する記事は追加しない
+            if (shouldExclude) {
+              console.log('記事を除外:', trimmedTitle)
+              return
+            }
+            
             newsItems.push({
               id: allNews.length + index + 1,
               title: trimmedTitle,
@@ -136,7 +221,7 @@ const News = () => {
               pubDate: pubDate.trim(),
               description: trimmedDescription,
               category: category.name,
-              isUrgent: isUrgentNews(trimmedTitle, trimmedDescription)
+              isUrgent: false // NHKニュースは全て通常ニュースとして扱う
             })
           }
         })
@@ -170,27 +255,48 @@ const News = () => {
         setLoading(true)
         setError(null)
 
+        // 緊急ニュース機能を完全に停止
+        // P2P地震情報のAPIからの取得も停止
+        
+        // NHKニュースのみを取得
         const newsItems = await fetchNHKNews()
 
         if (newsItems.length === 0) {
-          setError('NHKニュースが取得できませんでした')
+          setError('ニュースが取得できませんでした')
         } else {
-          // 緊急ニュースと通常ニュースを分離
-          const urgent = newsItems.filter(item => item.isUrgent)
-          const normal = newsItems.filter(item => !item.isUrgent)
+          // 全て通常ニュースとして扱う（緊急ニュースは一切表示しない）
+          // 非表示にした記事を除外
+          const filteredNews = newsItems.filter(item => !hiddenNewsIds.has(item.id))
           
-          setUrgentNews(urgent)
-          setNormalNews(normal)
+          // 緊急ニュースを完全にクリア
+          console.log('【デバッグ】ニュース取得完了:', {
+            totalNews: newsItems.length,
+            filteredNews: filteredNews.length,
+            hiddenNewsCount: hiddenNewsIds.size
+          })
           
-          // 緊急ニュースがある場合は、緊急ニュースを優先表示
-          if (urgent.length > 0) {
-            setIsShowingUrgent(true)
-            setCurrentUrgentIndex(0)
-            setUrgentDisplayStartTime(Date.now())
-          } else {
-            setIsShowingUrgent(false)
-            setUrgentDisplayStartTime(null)
+          setUrgentNews([])
+          setNormalNews(filteredNews)
+          
+          // 緊急ニュースの表示を完全に停止（確実にfalseにする）
+          console.log('【デバッグ】緊急ニュース表示状態:', {
+            before: isShowingUrgent,
+            willSet: false
+          })
+          setIsShowingUrgent(false)
+          // setUrgentDisplayStartTime(null) // 未使用のためコメントアウト
+          setCurrentUrgentIndex(0)
+          
+          // 通常ニュースのインデックスをリセット（念のため）
+          if (filteredNews.length > 0 && currentNormalIndex >= filteredNews.length) {
+            setCurrentNormalIndex(0)
           }
+          
+          console.log('【デバッグ】状態設定完了:', {
+            urgentNewsLength: 0,
+            normalNewsLength: filteredNews.length,
+            isShowingUrgent: false
+          })
           
           setError(null)
         }
@@ -206,56 +312,24 @@ const News = () => {
     const interval = setInterval(fetchNews, 300000) // 5分ごとに自動更新
 
     return () => clearInterval(interval)
-  }, [])
+  }, [hiddenNewsIds])
 
-  // 緊急ニュースの表示管理（5分間表示）
-  useEffect(() => {
-    if (!isShowingUrgent || urgentNews.length === 0 || urgentDisplayStartTime === null) return
-
-    const checkUrgentDisplay = () => {
-      const elapsed = Date.now() - urgentDisplayStartTime
-      const urgentDisplayDuration = 300000 // 5分（300秒）
-
-      if (elapsed >= urgentDisplayDuration) {
-        // 5分経過したら次の緊急ニュースへ、または通常ニュースへ
-        if (currentUrgentIndex < urgentNews.length - 1) {
-          // 次の緊急ニュースへ
-          setCurrentUrgentIndex(prev => prev + 1)
-          setUrgentDisplayStartTime(Date.now())
-        } else {
-          // 緊急ニュースが全て表示されたら通常ニュースへ
-          setIsShowingUrgent(false)
-          setUrgentDisplayStartTime(null)
-          setCurrentUrgentIndex(0)
-        }
-      }
-    }
-
-    const interval = setInterval(checkUrgentDisplay, 1000) // 1秒ごとにチェック
-
-    return () => clearInterval(interval)
-  }, [isShowingUrgent, urgentNews, currentUrgentIndex, urgentDisplayStartTime])
+  // 緊急ニュースの表示管理を完全に停止
+  // useEffect(() => { ... }, []) // コメントアウト
 
   // 通常ニュースの自動切り替え（1分ごと）
   useEffect(() => {
-    if (isShowingUrgent || normalNews.length === 0) return
+    // 緊急ニュースのチェックを削除（常に通常ニュースのみ）
+    if (normalNews.length === 0) return
 
     const timer = setInterval(() => {
       setCurrentNormalIndex((prev) => (prev + 1) % normalNews.length)
     }, 60000) // 1分（60秒）ごとに切り替え
 
     return () => clearInterval(timer)
-  }, [isShowingUrgent, normalNews])
+  }, [normalNews])
 
-  // 新しい緊急ニュースが追加された場合の処理
-  useEffect(() => {
-    if (urgentNews.length > 0 && !isShowingUrgent) {
-      // 緊急ニュースが新しく追加された場合は、すぐに表示
-      setIsShowingUrgent(true)
-      setCurrentUrgentIndex(0)
-      setUrgentDisplayStartTime(Date.now())
-    }
-  }, [urgentNews.length, isShowingUrgent])
+  // 新しい緊急ニュースが追加された場合の処理（削除：既にfetchNews内で処理しているため不要）
 
   const formatDate = (dateString: string) => {
     try {
@@ -281,65 +355,151 @@ const News = () => {
     )
   }
 
-  // 表示するニュースを決定
+  // 表示するニュースを決定（緊急ニュースは完全に無効化）
   const getCurrentNews = () => {
-    if (isShowingUrgent && urgentNews.length > 0) {
-      return urgentNews[currentUrgentIndex]
-    } else if (normalNews.length > 0) {
-      return normalNews[currentNormalIndex]
+    // デバッグログ
+    console.log('【デバッグ】getCurrentNews呼び出し:', {
+      isShowingUrgent,
+      urgentNewsLength: urgentNews.length,
+      normalNewsLength: normalNews.length,
+      currentNormalIndex,
+      currentUrgentIndex
+    })
+    
+    // 緊急ニュースは一切表示しない（強制的に通常ニュースのみ）
+    if (normalNews.length > 0) {
+      const news = normalNews[currentNormalIndex]
+      console.log('【デバッグ】通常ニュースを返します:', news?.title)
+      return news
     }
+    console.log('【デバッグ】ニュースがありません')
     return null
   }
 
   const getNewsCounter = () => {
-    if (isShowingUrgent && urgentNews.length > 0) {
-      return `${currentUrgentIndex + 1} / ${urgentNews.length} (緊急)`
-    } else if (normalNews.length > 0) {
+    // 緊急の表示を完全に削除
+    if (normalNews.length > 0) {
       return `${currentNormalIndex + 1} / ${normalNews.length}`
     }
     return ''
   }
 
   const currentNews = getCurrentNews()
+  
+  // デバッグログ：現在の状態を表示
+  console.log('【デバッグ】Newsコンポーネントの状態:', {
+    isShowingUrgent,
+    urgentNewsLength: urgentNews.length,
+    normalNewsLength: normalNews.length,
+    currentNormalIndex,
+    currentNewsTitle: currentNews?.title,
+    currentNewsCategory: currentNews?.category,
+    currentNewsIsUrgent: currentNews?.isUrgent
+  })
+
+  // デバッグ情報を常に表示（確実に表示されるように）
+  const debugInfo = {
+    isShowingUrgent,
+    urgentNewsLength: urgentNews.length,
+    normalNewsLength: normalNews.length,
+    currentNormalIndex,
+    currentUrgentIndex,
+    currentNewsIsUrgent: currentNews?.isUrgent,
+    currentNewsCategory: currentNews?.category,
+    currentNewsTitle: currentNews?.title?.substring(0, 30)
+  }
+  
+  console.log('【デバッグ】Newsコンポーネント レンダリング:', debugInfo)
+
+  // デバッグ情報をbody直下に表示（React Portalを使用）
+  const debugElement = (
+    <div style={{
+      position: 'fixed',
+      bottom: '1rem',
+      left: '1rem',
+      background: 'rgba(255, 0, 0, 0.95)',
+      color: '#fff',
+      padding: '1rem',
+      fontSize: '0.9rem',
+      zIndex: 999999,
+      borderRadius: '0.5rem',
+      fontFamily: 'monospace',
+      maxWidth: '500px',
+      border: '3px solid #fff',
+      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.8)',
+      pointerEvents: 'none'
+    }}>
+      <div style={{ fontWeight: 'bold', marginBottom: '0.5rem', fontSize: '1rem' }}>【デバッグ情報】</div>
+      <div>isShowingUrgent: {String(isShowingUrgent)}</div>
+      <div>urgentNews.length: {urgentNews.length}</div>
+      <div>normalNews.length: {normalNews.length}</div>
+      <div>currentNormalIndex: {currentNormalIndex}</div>
+      <div>currentUrgentIndex: {currentUrgentIndex}</div>
+      <div>currentNews?.isUrgent: {String(currentNews?.isUrgent || false)}</div>
+      <div>currentNews?.category: {currentNews?.category || 'なし'}</div>
+      <div>currentNews?.title: {currentNews?.title?.substring(0, 40) || 'なし'}...</div>
+      <div>hiddenNewsIds.size: {hiddenNewsIds.size}</div>
+    </div>
+  )
 
   return (
-    <div className="news">
+    <>
+      {createPortal(debugElement, document.body)}
+      <div className="news">
+      
       {error && (
         <div className="news-error-banner">
           {error}
         </div>
       )}
+      
       {currentNews ? (
-        <a
-          href={currentNews.link}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={`news-item ${currentNews.isUrgent ? 'news-item-urgent' : ''}`}
-        >
-          <div className="news-item-header">
-            <div className="news-item-meta">
-              {currentNews.isUrgent && (
-                <span className="news-urgent-badge">🚨 緊急</span>
-              )}
-              <span className="news-category-badge">{currentNews.category}</span>
-              <span className="news-time">{formatDate(currentNews.pubDate)}</span>
+        <div className="news-item-wrapper">
+          <a
+            href={currentNews.link}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="news-item"
+            style={{
+              // 緊急ニュースのスタイルを強制的に無効化
+              background: currentNews.isUrgent ? 'rgba(255, 255, 255, 0.15) !important' : undefined,
+              border: currentNews.isUrgent ? '1px solid rgba(255, 255, 255, 0.1) !important' : undefined
+            }}
+          >
+            <div className="news-item-header">
+              <div className="news-item-meta">
+                {/* 緊急バッジの表示を完全に停止 */}
+                <span className="news-category-badge">{currentNews.category}</span>
+                <span className="news-time">{formatDate(currentNews.pubDate)}</span>
+              </div>
+              <div className="news-header-right">
+                <span className="news-source-label">
+                  {currentNews.category === '緊急地震速報' ? 'P2P地震情報' : 'NHKニュース'}
+                </span>
+                <span className="news-counter">
+                  {getNewsCounter()}
+                </span>
+              </div>
             </div>
-            <div className="news-header-right">
-              <span className="news-source-label">NHKニュース</span>
-              <span className="news-counter">
-                {getNewsCounter()}
-              </span>
-            </div>
-          </div>
-          <h3 className="news-item-title">{currentNews.title}</h3>
-          {currentNews.description && (
-            <div className="news-item-description">{currentNews.description}</div>
-          )}
-        </a>
+            <h3 className="news-item-title">{currentNews.title}</h3>
+            {currentNews.description && (
+              <div className="news-item-description">{currentNews.description}</div>
+            )}
+          </a>
+          <button
+            className="news-delete-button"
+            onClick={(e) => hideNews(currentNews.id, e)}
+            title="この記事を非表示にする"
+            aria-label="記事を削除"
+          >
+            🗑️
+          </button>
+        </div>
       ) : (
         <div className="news-empty">ニュースが取得できませんでした</div>
       )}
-    </div>
+      </div>
+    </>
   )
 }
 
