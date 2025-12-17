@@ -92,6 +92,13 @@ const WeeklyWeather = () => {
                 
                 const getWeatherCondition = (code: string) => {
                   const codeNum = parseInt(code)
+                  // 気象庁の天気コード: 100=晴れ, 200=曇り, 300=雨, 400=雪
+                  // より詳細な判定
+                  if (codeNum === 100 || codeNum === 101) return { condition: '晴れ', icon: '☀️', text: '晴れ' }
+                  if (codeNum === 200 || codeNum === 201 || codeNum === 202) return { condition: '曇り', icon: '☁️', text: '曇り' }
+                  if (codeNum === 300 || codeNum === 301 || codeNum === 302 || codeNum === 303 || codeNum === 304 || codeNum === 306 || codeNum === 308 || codeNum === 309 || codeNum === 311 || codeNum === 313 || codeNum === 314 || codeNum === 315 || codeNum === 316 || codeNum === 317 || codeNum === 320 || codeNum === 321 || codeNum === 322 || codeNum === 323 || codeNum === 324 || codeNum === 325 || codeNum === 326 || codeNum === 327) return { condition: '雨', icon: '🌧️', text: '雨' }
+                  if (codeNum === 400 || codeNum === 401 || codeNum === 402 || codeNum === 403 || codeNum === 405 || codeNum === 406 || codeNum === 407 || codeNum === 409 || codeNum === 411 || codeNum === 413 || codeNum === 414 || codeNum === 420 || codeNum === 421 || codeNum === 422 || codeNum === 423 || codeNum === 425 || codeNum === 426 || codeNum === 427) return { condition: '雪', icon: '❄️', text: '雪' }
+                  // 範囲での判定（フォールバック）
                   if (codeNum >= 100 && codeNum < 200) return { condition: '晴れ', icon: '☀️', text: '晴れ' }
                   if (codeNum >= 200 && codeNum < 300) return { condition: '曇り', icon: '☁️', text: '曇り' }
                   if (codeNum >= 300 && codeNum < 400) return { condition: '雨', icon: '🌧️', text: '雨' }

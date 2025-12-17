@@ -281,6 +281,13 @@
   font-family: 'Noto Sans JP', sans-serif;
 }
 
+.clock-weather-hourly-temp {
+  font-size: 0.8rem;
+  color: #fff;
+  font-weight: 600;
+  font-family: 'Noto Sans JP', sans-serif;
+}
+
 .clock-weather-hourly-precipitation {
   font-size: 0.7rem;
   color: rgba(135, 206, 250, 0.9);

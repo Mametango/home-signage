@@ -66,22 +66,185 @@ const Clock = () => {
         let lat = 37.95
         let lon = 139.33
         let areaCode = '150000' // 新潟地方
+        let cityId = '150020' // 新発田市のlocation ID (weather.tsukumijima.net用)
         
         // 都道府県と市に応じて座標とエリアコードを変更
         if (prefecture === '新潟県' && city === '新発田市') {
           lat = 37.95
           lon = 139.33
           areaCode = '150000' // 新潟地方
+          cityId = '150020' // 新発田市
         } else if (prefecture === '新潟県') {
           // 新潟県の他の市の場合
           lat = 37.9161
           lon = 139.0364
           areaCode = '150000' // 新潟地方
+          cityId = '150010' // 新潟市（デフォルト）
         } else {
           // その他の都道府県の場合（デフォルトは新潟県新発田市）
           lat = 37.95
           lon = 139.33
           areaCode = '150000'
+          cityId = '150020'
+        }
+        
+        // weather.tsukumijima.net APIから天気予報を取得（優先）
+        try {
+          const tsukumijimaResponse = await fetch(`https://weather.tsukumijima.net/api/forecast/city/${cityId}`)
+          
+          if (tsukumijimaResponse.ok) {
+            const tsukumijimaData = await tsukumijimaResponse.json()
+            
+            if (tsukumijimaData && tsukumijimaData.forecasts && tsukumijimaData.forecasts.length > 0) {
+              // 今日の天気予報を取得（forecasts[0]が今日）
+              const todayForecast = tsukumijimaData.forecasts[0]
+              
+              // 天気コードから天気情報を取得
+              const getWeatherCondition = (telop: string) => {
+                if (telop.includes('雨') || telop.includes('雷')) return { condition: '雨', icon: '🌧️', text: '雨' }
+                if (telop.includes('雪')) return { condition: '雪', icon: '❄️', text: '雪' }
+                if (telop.includes('曇')) return { condition: '曇り', icon: '☁️', text: '曇り' }
+                return { condition: '晴れ', icon: '☀️', text: '晴れ' }
+              }
+              
+              const weatherInfo = getWeatherCondition(todayForecast.telop || '')
+              
+              // 最高気温・最低気温を取得
+              let maxTemp: number | undefined
+              let minTemp: number | undefined
+              
+              if (todayForecast.temperature && todayForecast.temperature.max) {
+                const maxCelsius = todayForecast.temperature.max.celsius
+                if (maxCelsius !== null && maxCelsius !== undefined && maxCelsius !== '') {
+                  maxTemp = parseInt(String(maxCelsius))
+                }
+              }
+              
+              if (todayForecast.temperature && todayForecast.temperature.min) {
+                const minCelsius = todayForecast.temperature.min.celsius
+                if (minCelsius !== null && minCelsius !== undefined && minCelsius !== '') {
+                  minTemp = parseInt(String(minCelsius))
+                }
+              }
+              
+              console.log('【デバッグ】weather.tsukumijima.net API取得成功:', {
+                telop: todayForecast.telop,
+                maxTemp,
+                minTemp,
+                weatherInfo
+              })
+              
+              // 無料のルールベース方式で説明を生成
+              const generateRuleBasedDescription = (): string => {
+                const avgTemp = maxTemp !== undefined && minTemp !== undefined ? Math.round((maxTemp + minTemp) / 2) : null
+                
+                let description = `【ルール】今日の${prefecture}${city}は${weatherInfo.text}`
+                
+                if (avgTemp !== null) {
+                  if (avgTemp >= 25) {
+                    description += `。暑い一日になりそうです。熱中症にご注意ください`
+                  } else if (avgTemp >= 20) {
+                    description += `。過ごしやすい気温です。お出かけに最適な天気です`
+                  } else if (avgTemp >= 15) {
+                    description += `。少し肌寒いかもしれません。上着があると安心です`
+                  } else if (avgTemp >= 10) {
+                    description += `。寒い一日になりそうです。暖かい服装でお出かけください`
+                  } else {
+                    description += `。とても寒い一日になりそうです。防寒対策をしっかりと`
+                  }
+                }
+                
+                if (weatherInfo.text === '雨') {
+                  description += `。傘をお忘れなく`
+                } else if (weatherInfo.text === '雪') {
+                  description += `。路面が滑りやすくなります。お気をつけて`
+                } else if (weatherInfo.text === '曇り') {
+                  description += `。雲が多いですが、お出かけには問題ありません`
+                }
+                
+                if (maxTemp !== undefined && minTemp !== undefined) {
+                  description += `（最高${maxTemp}度、最低${minTemp}度）`
+                }
+                
+                return description
+              }
+              
+              const description = generateRuleBasedDescription()
+              
+              setTodayWeather({
+                condition: weatherInfo.condition,
+                icon: weatherInfo.icon,
+                maxTemp: maxTemp,
+                minTemp: minTemp,
+                description: description,
+                prefecture: prefecture,
+                city: city
+              })
+              
+              window.dispatchEvent(new CustomEvent('weatherChanged', { 
+                detail: { condition: weatherInfo.condition } 
+              }))
+              
+              // 2時間ごとの予報も取得（OpenWeatherMap API）
+              const apiKey = import.meta.env.VITE_OPENWEATHER_API_KEY || ''
+              if (apiKey) {
+                const response = await fetch(
+                  `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric&lang=ja`
+                )
+                
+                if (response.ok) {
+                  const data = await response.json()
+                  
+                  const getWeatherIcon = (condition: string) => {
+                    if (condition.includes('Rain') || condition.includes('雨')) return '🌧️'
+                    if (condition.includes('Cloud') || condition.includes('曇')) return '☁️'
+                    if (condition.includes('Snow') || condition.includes('雪')) return '❄️'
+                    return '☀️'
+                  }
+                  
+                  const getWeatherCondition = (condition: string) => {
+                    if (condition.includes('Rain') || condition.includes('雨')) return '雨'
+                    if (condition.includes('Cloud') || condition.includes('曇')) return '曇り'
+                    if (condition.includes('Snow') || condition.includes('雪')) return '雪'
+                    return '晴れ'
+                  }
+                  
+                  const today = new Date()
+                  today.setHours(0, 0, 0, 0)
+                  
+                  // 今日のデータのみをフィルタリング
+                  const todayForecasts = data.list.filter((item: any) => {
+                    const itemDate = new Date(item.dt_txt)
+                    itemDate.setHours(0, 0, 0, 0)
+                    return itemDate.getTime() === today.getTime()
+                  })
+                  
+                  const forecast: HourlyForecast[] = []
+                  
+                  // 今日のデータから2時間ごとの予報を取得（最大6件）
+                  for (let i = 0; i < Math.min(6, todayForecasts.length); i++) {
+                    const item = todayForecasts[i]
+                    const forecastTime = new Date(item.dt_txt)
+                    
+                    forecast.push({
+                      time: forecastTime,
+                      temp: Math.round(item.main.temp),
+                      condition: getWeatherCondition(item.weather[0].main),
+                      icon: getWeatherIcon(item.weather[0].main),
+                      precipitation: Math.round(item.pop * 100)
+                    })
+                  }
+                  
+                  setHourlyForecast(forecast)
+                }
+              }
+              
+              return // weather.tsukumijima.net APIで成功したら終了
+            }
+          }
+        } catch (tsukumijimaError) {
+          console.error('weather.tsukumijima.net APIエラー:', tsukumijimaError)
+          // エラーが発生した場合は、従来のJMA APIにフォールバック
         }
         
         // アメダス観測データを取得（新発田市の観測地点コード: 54232）
@@ -185,6 +348,13 @@ const Clock = () => {
                 
                 const getWeatherCondition = (code: string) => {
                   const codeNum = parseInt(code)
+                  // 気象庁の天気コード: 100=晴れ, 200=曇り, 300=雨, 400=雪
+                  // より詳細な判定（雨のコードを優先的に判定）
+                  if (codeNum >= 300 && codeNum < 400) return { condition: '雨', icon: '🌧️', text: '雨' }
+                  if (codeNum >= 400 && codeNum < 500) return { condition: '雪', icon: '❄️', text: '雪' }
+                  if (codeNum >= 200 && codeNum < 300) return { condition: '曇り', icon: '☁️', text: '曇り' }
+                  if (codeNum >= 100 && codeNum < 200) return { condition: '晴れ', icon: '☀️', text: '晴れ' }
+                  // フォールバック: 範囲での判定
                   if (codeNum >= 100 && codeNum < 200) return { condition: '晴れ', icon: '☀️', text: '晴れ' }
                   if (codeNum >= 200 && codeNum < 300) return { condition: '曇り', icon: '☁️', text: '曇り' }
                   if (codeNum >= 300 && codeNum < 400) return { condition: '雨', icon: '🌧️', text: '雨' }
@@ -194,7 +364,14 @@ const Clock = () => {
                 
                 // 今日の天気コードを取得
                 const todayWeatherCode = weatherCodes.length > todayIndex ? weatherCodes[todayIndex] : (weatherCodes.length > 0 ? weatherCodes[0] : null)
+                console.log('【デバッグ】今日の天気コード:', {
+                  todayIndex,
+                  weatherCodes,
+                  todayWeatherCode,
+                  timeDefines: timeDefines.map((d: string) => new Date(d).toLocaleDateString())
+                })
                 const weatherInfo = todayWeatherCode ? getWeatherCondition(todayWeatherCode) : { condition: '晴れ', icon: '☀️', text: '晴れ' }
+                console.log('【デバッグ】天気情報:', weatherInfo)
                 
                 // 今日の気温データの取得
                 let maxTemp: number | undefined
@@ -503,65 +680,25 @@ const Clock = () => {
           }
         }
         
-        // フォールバック: モックデータ（説明も生成）
-        const mockMaxTemp = 15
-        const mockMinTemp = 8
-        const mockAvgTemp = Math.round((mockMaxTemp + mockMinTemp) / 2)
+        // すべてのAPIが失敗した場合、エラーメッセージを表示
+        console.error('すべての天気APIからのデータ取得に失敗しました')
         
-        let mockDescription = `今日の${prefecture}${city}は曇り`
-        if (mockAvgTemp >= 25) {
-          mockDescription += `。暑い一日になりそうです。熱中症にご注意ください`
-        } else if (mockAvgTemp >= 20) {
-          mockDescription += `。過ごしやすい気温です。お出かけに最適な天気です`
-        } else if (mockAvgTemp >= 15) {
-          mockDescription += `。少し肌寒いかもしれません。上着があると安心です`
-        } else if (mockAvgTemp >= 10) {
-          mockDescription += `。寒い一日になりそうです。暖かい服装でお出かけください`
-        } else {
-          mockDescription += `。とても寒い一日になりそうです。防寒対策をしっかりと`
+        // 最低限の天気情報を表示（気温なし）
+        const generateFallbackDescription = (): string => {
+          return `【エラー】天気情報の取得に失敗しました。しばらくしてから再度お試しください。`
         }
-        mockDescription += `。雲が多いですが、お出かけには問題ありません（最高${mockMaxTemp}度、最低${mockMinTemp}度）`
         
         setTodayWeather({
           condition: '曇り',
           icon: '☁️',
-          maxTemp: mockMaxTemp,
-          minTemp: mockMinTemp,
-          description: mockDescription,
+          maxTemp: undefined,
+          minTemp: undefined,
+          description: generateFallbackDescription(),
           prefecture: prefecture,
           city: city
         })
         
-        const now = new Date()
-        const today = new Date()
-        today.setHours(0, 0, 0, 0)
-        const mockForecast: HourlyForecast[] = []
-        
-        // 今日の残りの時間から2時間ごとの予報を生成（最大6件）
-        let currentHour = now.getHours()
-        // 次の偶数時に調整
-        if (currentHour % 2 !== 0) {
-          currentHour = currentHour + 1
-        }
-        
-        for (let i = 0; i < 6; i++) {
-          const forecastTime = new Date(today)
-          forecastTime.setHours(currentHour + (i * 2), 0, 0, 0)
-          
-          // 今日の日付を超えないようにする
-          if (forecastTime.getTime() > today.getTime() + 24 * 60 * 60 * 1000) {
-            break
-          }
-          
-          mockForecast.push({
-            time: forecastTime,
-            temp: 12 - i,
-            condition: i % 2 === 0 ? '曇り' : '晴れ',
-            icon: i % 2 === 0 ? '☁️' : '☀️',
-            precipitation: 30 + i * 10
-          })
-        }
-        setHourlyForecast(mockForecast)
+        setHourlyForecast([])
       } catch (error) {
         console.error('天気情報の取得に失敗しました:', error)
       }
@@ -613,13 +750,14 @@ const Clock = () => {
             </div>
           </div>
 
-          {/* 2時間ごとの天気と降水確率 */}
+          {/* 2時間ごとの天気・気温・降水確率 */}
           <div className="clock-weather-hourly-list">
             {hourlyForecast.map((forecast, index) => (
               <div key={index} className="clock-weather-hourly-item">
                 <div className="clock-weather-hourly-time">{format(forecast.time, 'HH時')}</div>
                 <div className="clock-weather-hourly-icon">{forecast.icon}</div>
                 <div className="clock-weather-hourly-condition">{forecast.condition}</div>
+                <div className="clock-weather-hourly-temp">{forecast.temp}°</div>
                 <div className="clock-weather-hourly-precipitation">💧{forecast.precipitation}%</div>
               </div>
             ))}
