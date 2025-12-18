@@ -84,16 +84,24 @@ export default async function handler(req, res) {
       hasCandidates: !!(data && data.candidates && data.candidates.length),
       rawSample: JSON.stringify(data).slice(0, 500)
     });
-    let description =
-      data &&
-      data.candidates &&
-      data.candidates[0] &&
-      data.candidates[0].content &&
-      data.candidates[0].content.parts &&
-      data.candidates[0].content.parts[0] &&
-      typeof data.candidates[0].content.parts[0].text === 'string'
-        ? data.candidates[0].content.parts[0].text.trim()
-        : '';
+
+    // これまでは parts[0].text だけを読んでいたが、
+    // 「はい、」のような短いあいさつだけが先頭に入りやすい。
+    // すべての text パートを結合して、実際の本文も含めて返すようにする。
+    let description = '';
+    try {
+      if (data && Array.isArray(data.candidates) && data.candidates.length > 0) {
+        const first = data.candidates[0];
+        if (first && first.content && Array.isArray(first.content.parts)) {
+          description = first.content.parts
+            .map((p) => (p && typeof p.text === 'string' ? p.text : ''))
+            .join('')
+            .trim();
+        }
+      }
+    } catch (e) {
+      console.error('[Gemini API][server] failed to extract description text', e);
+    }
 
     // サーバー側でラベルを付与（フロントですぐに分かるように）
     if (description) {
