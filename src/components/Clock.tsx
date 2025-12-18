@@ -784,6 +784,18 @@ const Clock = () => {
 
       console.log('[Gemini Debug] final description string', description)
 
+      // Geminiの返答が短すぎる（地名だけ等）の場合は、お天気おじさんの
+      // ルールベース解説を優先し、Geminiの結果は無視する
+      const visibleText = description.replace(/^【Gemini】/, '').trim()
+      const isTooShort = visibleText.length < 15 || !/[。．\.\!！]/.test(visibleText)
+      if (isTooShort) {
+        console.warn('[Gemini Debug] response considered too short/unhelpful, keeping ojisanMessage', {
+          description,
+          visibleTextLength: visibleText.length
+        })
+        return
+      }
+
       // 画面上で確実に見えるように、結果は
       // 1) 上部の「Gemini応答」欄
       // 2) テキストエリア本体
