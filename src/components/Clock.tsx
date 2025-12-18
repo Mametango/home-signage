@@ -21,7 +21,7 @@ const Clock = () => {
   const [geminiPrompt, setGeminiPrompt] = useState<string>('')
   const [geminiResponse, setGeminiResponse] = useState<string | null>(null)
   const [geminiError, setGeminiError] = useState<string | null>(null)
-  const [geminiLoading, setGeminiLoading] = useState(false)
+  // const [geminiLoading, setGeminiLoading] = useState(false) // 自動問い合わせ状態の管理用（UIでは現在未使用）
   const geminiAutoTriggered = useRef(false)
 
   // 時刻更新
@@ -726,7 +726,7 @@ const Clock = () => {
         return
       }
 
-      setGeminiLoading(true)
+      // setGeminiLoading(true)
       setGeminiError(null)
       setGeminiResponse(null)
 
@@ -801,7 +801,7 @@ const Clock = () => {
       console.error('[Gemini Debug] fetch to /api/gemini-weather failed', error)
       setGeminiError(String(error))
     } finally {
-      setGeminiLoading(false)
+      // setGeminiLoading(false)
     }
   }
 
@@ -827,47 +827,23 @@ const Clock = () => {
         </div>
       </div>
 
-      {/* 下: 天気（デバッグのため一時的に非表示） */}
-      {/* todayWeather && (
-        <div className="clock-weather">
-          ...天気カード...
+      {/* 下: お天気おじさんによる解説 */}
+      <div className="weather-ojisan">
+        <div className="weather-ojisan-avatar">
+          <div className="weather-ojisan-face">👴</div>
+          <div className="weather-ojisan-name">お天気おじさん</div>
         </div>
-      ) */}
-
-      {/* Gemini デバッグ専用表示（天気と独立させて常に表示） */}
-      <div className="clock-gemini-debug">
-        <div className="clock-gemini-debug-title">Gemini天気解説デバッグ</div>
-        <div className="clock-gemini-debug-status">
-          {geminiError && (
-            <div className="clock-gemini-debug-error">
-              エラー: {geminiError}
-            </div>
-          )}
-          {geminiResponse && !geminiError && (
-            <div className="clock-gemini-debug-response">
-              <strong>Gemini応答:</strong>
-              <div>{geminiResponse}</div>
-            </div>
-          )}
-          {!geminiError && !geminiResponse && !geminiLoading && (
-            <div className="clock-gemini-debug-hint">
-              Gemini API が正しく動作しているか確認するためのデバッグ用エリアです。
-            </div>
+        <div className="weather-ojisan-bubble">
+          {geminiError ? (
+            <span>
+              今日はAIのお天気おじさんがうまく天気をしゃべれないみたいです。時間をおいてからまた見てみてください。
+            </span>
+          ) : geminiResponse ? (
+            <span>{geminiResponse}</span>
+          ) : (
+            <span>お天気おじさんが最新の天気を集めています…</span>
           )}
         </div>
-        <textarea
-          className="clock-gemini-debug-input"
-          placeholder="Gemini に送るプロンプトを入力（空の場合は現在の2時間予報から自動生成）"
-          value={geminiPrompt}
-          onChange={(e) => setGeminiPrompt(e.target.value)}
-        />
-        <button
-          className="clock-gemini-debug-button"
-          onClick={handleGeminiTest}
-          disabled={geminiLoading}
-        >
-          {geminiLoading ? '問い合わせ中...' : 'Geminiにテスト問い合わせ'}
-        </button>
       </div>
     </div>
   )

@@ -331,6 +331,64 @@
   font-style: italic;
 }
 
+/* お天気おじさん */
+.weather-ojisan {
+  display: flex;
+  align-items: flex-start;
+  margin-top: 1.5rem;
+  gap: 1rem;
+}
+
+.weather-ojisan-avatar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.weather-ojisan-face {
+  width: 3.2rem;
+  height: 3.2rem;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 20%, #fff9c4, #ffa94d);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.1rem;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4);
+}
+
+.weather-ojisan-name {
+  margin-top: 0.3rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.9);
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+.weather-ojisan-bubble {
+  position: relative;
+  flex: 1;
+  background: rgba(0, 0, 0, 0.55);
+  border-radius: 0.9rem;
+  padding: 0.75rem 1rem;
+  color: #fff;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  font-family: 'Noto Sans JP', sans-serif;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.35);
+}
+
+.weather-ojisan-bubble::before {
+  content: '';
+  position: absolute;
+  left: -0.6rem;
+  top: 1.1rem;
+  border-width: 0.6rem;
+  border-style: solid;
+  border-color: transparent rgba(0, 0, 0, 0.55) transparent transparent;
+}
+
 .clock-weather-hourly-item:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
