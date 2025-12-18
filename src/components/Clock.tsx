@@ -11,10 +11,19 @@ interface HourlyForecast {
   precipitation: number
 }
 
+interface TodayWeatherData {
+  condition: string
+  icon: string
+  maxTemp?: number
+  minTemp?: number
+  description?: string
+  prefecture: string
+  city: string
+}
+
 const Clock = () => {
   const [time, setTime] = useState(new Date())
-  // 以前は今日の天気表示にも使用していたが、Geminiデバッグ中は非表示のためコメントアウト
-  // const [todayWeather, setTodayWeather] = useState<TodayWeatherData | null>(null)
+  const [todayWeather, setTodayWeather] = useState<TodayWeatherData | null>(null)
   const [hourlyForecast, setHourlyForecast] = useState<HourlyForecast[]>([])
   const [prefecture, setPrefecture] = useState<string>('新潟県')
   const [city, setCity] = useState<string>('新発田市')
@@ -242,15 +251,16 @@ const Clock = () => {
               setOjisanMaxTemp(finalMaxTemp ?? null)
               setOjisanMinTemp(finalMinTemp ?? null)
               
-              // setTodayWeather({
-              //   condition: weatherInfo.condition,
-              //   icon: weatherInfo.icon,
-              //   maxTemp: maxTemp,
-              //   minTemp: minTemp,
-              //   description: description,
-              //   prefecture: prefecture,
-              //   city: city
-              // })
+              // 今日の天気を上段に常時表示するために状態をセット
+              setTodayWeather({
+                condition: weatherInfo.condition,
+                icon: weatherInfo.icon,
+                maxTemp: finalMaxTemp,
+                minTemp: finalMinTemp,
+                description: ruleText,
+                prefecture: prefecture,
+                city: city
+              })
               
               window.dispatchEvent(new CustomEvent('weatherChanged', { 
                 detail: { condition: weatherInfo.condition } 
@@ -895,6 +905,32 @@ const Clock = () => {
           {format(time, 'HH:mm:ss')}
         </div>
       </div>
+
+      {/* 中: 今日の天気（常時表示） */}
+      {todayWeather && (
+        <div className="clock-weather">
+          <div className="clock-weather-summary">
+            <div className="clock-weather-main">
+              <div className="clock-weather-header">
+                <div className="clock-weather-icon">{todayWeather.icon}</div>
+                <div className="clock-weather-info">
+                  <div className="clock-weather-location">
+                    {todayWeather.prefecture} {todayWeather.city}
+                  </div>
+                  <div className="clock-weather-condition">{todayWeather.condition}</div>
+                  {todayWeather.maxTemp !== undefined && todayWeather.minTemp !== undefined && (
+                    <div className="clock-weather-temp">
+                      <span className="temp-max">{todayWeather.maxTemp}°</span>
+                      <span className="temp-separator">/</span>
+                      <span className="temp-min">{todayWeather.minTemp}°</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 下: お天気おじさんによる解説（吹き出しが増えていくイメージ） */}
       <div className="weather-ojisan">
