@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { format } from 'date-fns'
 import { getSettings } from './Settings'
 import './Clock.css'
@@ -22,6 +22,7 @@ const Clock = () => {
   const [geminiResponse, setGeminiResponse] = useState<string | null>(null)
   const [geminiError, setGeminiError] = useState<string | null>(null)
   const [geminiLoading, setGeminiLoading] = useState(false)
+  const geminiAutoTriggered = useRef(false)
 
   // 時刻更新
   useEffect(() => {
@@ -787,6 +788,15 @@ const Clock = () => {
       setGeminiLoading(false)
     }
   }
+
+  // 2時間ごとの天気予報が取れたタイミングで、1回だけ自動でGeminiに問い合わせる
+  useEffect(() => {
+    if (geminiAutoTriggered.current) return
+    if (hourlyForecast.length === 0) return
+
+    geminiAutoTriggered.current = true
+    handleGeminiTest()
+  }, [hourlyForecast])
 
 
   return (
