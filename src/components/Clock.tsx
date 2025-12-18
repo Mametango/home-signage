@@ -688,6 +688,10 @@ const Clock = () => {
   const handleGeminiTest = async () => {
     try {
       const trimmed = geminiPrompt.trim()
+      // Gemini には常に「新潟県新発田市」の天気予報を問い合わせる
+      const targetPrefecture = '新潟県'
+      const targetCity = '新発田市'
+
       const hasForecast = hourlyForecast.length > 0
       const forecastDataForPrompt = hasForecast
         ? JSON.stringify(
@@ -701,18 +705,18 @@ const Clock = () => {
         : '（2時間ごとの天気データは取得できませんでした）'
 
       const userQuestion =
-        trimmed || 'このデータをもとに、今日と今後数時間の天気をわかりやすく教えてください。'
+        trimmed || '新潟県新発田市の今日と今後24時間の天気をわかりやすく教えてください。'
 
       const promptToSend =
         `あなたは日本の気象予報士です。` +
         `以下の天気データとユーザーからの質問にもとづいて、` +
         `現在からおおよそ24時間程度の天気の概要を日本語で1行の短い文章で説明してください。` +
         `改行は入れず、全体を1行の文として出力してください。\n\n` +
-        `【地点】${prefecture}${city}\n` +
+        `【地点】${targetPrefecture}${targetCity}\n` +
         `【現在時刻】${format(time, 'yyyy年MM月dd日 HH:mm')}\n` +
         `【2時間ごとの天気データ】\n${forecastDataForPrompt}\n\n` +
         `【ユーザーからの質問】${userQuestion}\n\n` +
-        `必ず、気温の傾向（暑い・寒いなど）や雨・雪の可能性にも触れてください。`
+        `必ず、新潟県新発田市の天気として、気温の傾向（暑い・寒いなど）や雨・雪の可能性にも触れてください。`
 
       if (!promptToSend) {
         setGeminiError('Geminiに送るプロンプトを入力してください。')
