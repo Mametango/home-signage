@@ -19,11 +19,11 @@ const Clock = () => {
   const [prefecture, setPrefecture] = useState<string>('新潟県')
   const [city, setCity] = useState<string>('新発田市')
   const [geminiPrompt, setGeminiPrompt] = useState<string>('')
-  const [geminiResponse, setGeminiResponse] = useState<string | null>(null)
   const [geminiError, setGeminiError] = useState<string | null>(null)
   const [ojisanMessage, setOjisanMessage] = useState<string | null>(null)
   const [ojisanMaxTemp, setOjisanMaxTemp] = useState<number | null>(null)
   const [ojisanMinTemp, setOjisanMinTemp] = useState<number | null>(null)
+  const [ojisanHistory, setOjisanHistory] = useState<string[]>([])
   // const [geminiLoading, setGeminiLoading] = useState(false) // 自動問い合わせ状態の管理用（UIでは現在未使用）
   const geminiAutoTriggered = useRef(false)
 
@@ -172,7 +172,9 @@ const Clock = () => {
                 return description
               }
 
-              setOjisanMessage(generateRuleBasedDescription())
+              const ruleText = generateRuleBasedDescription()
+              setOjisanMessage(ruleText)
+              setOjisanHistory((prev) => [...prev, ruleText])
               setOjisanMaxTemp(maxTemp ?? null)
               setOjisanMinTemp(minTemp ?? null)
               
@@ -739,7 +741,6 @@ const Clock = () => {
 
       // setGeminiLoading(true)
       setGeminiError(null)
-      setGeminiResponse(null)
 
       console.log('[Gemini Debug] sending request to /api/gemini-weather', {
         promptLength: promptToSend.length,
@@ -786,7 +787,7 @@ const Clock = () => {
         (json && typeof json.description === 'string' && json.description.trim()) ||
         '(description フィールドが空です)'
 
-      console.log('[Gemini Debug] final description string', description)
+      console.log('[Gemini Debug] final description string', description, 'current ojisanMessage:', ojisanMessage)
 
       // Geminiの返答が短すぎる（地名だけ等）の場合は、お天気おじさんの
       // ルールベース解説を優先し、Geminiの結果は無視する
@@ -800,12 +801,9 @@ const Clock = () => {
         return
       }
 
-      // 画面上で確実に見えるように、結果は
-      // 1) 上部の「Gemini応答」欄
-      // 2) テキストエリア本体
-      // の両方に反映する
-      setGeminiResponse(description)
+      // 画面上で確実に見えるように、履歴に追加してお天気おじさんにしゃべってもらう
       setGeminiPrompt(description)
+      setOjisanHistory((prev) => [...prev, description])
     } catch (error) {
       console.error('[Gemini Debug] fetch to /api/gemini-weather failed', error)
       setGeminiError(String(error))
@@ -834,35 +832,44 @@ const Clock = () => {
         </div>
       </div>
 
-      {/* 下: お天気おじさんによる解説 */}
+      {/* 下: お天気おじさんによる解説（吹き出しが増えていくイメージ） */}
       <div className="weather-ojisan">
         <div className="weather-ojisan-avatar">
           <div className="weather-ojisan-face">👴</div>
           <div className="weather-ojisan-name">お天気おじさん</div>
         </div>
-        <div className="weather-ojisan-bubble">
-          {geminiResponse ? (
-            <span>{geminiResponse}</span>
-          ) : ojisanMessage ? (
-            <span>{ojisanMessage}</span>
-          ) : geminiError ? (
-            <span>
-              今日はAIのお天気おじさんがうまく天気をしゃべれないみたいです。時間をおいてからまた見てみてください。
-            </span>
-          ) : (
-            <span>お天気おじさんが最新の天気を集めています…</span>
+        <div className="weather-ojisan-bubbles">
+          {ojisanHistory.length === 0 && !geminiError && (
+            <div className="weather-ojisan-bubble">
+              <span>お天気おじさんが最新の天気を集めています…</span>
+            </div>
           )}
-          {(ojisanMaxTemp !== null || ojisanMinTemp !== null) && (
-            <div className="weather-ojisan-temps">
-              {ojisanMaxTemp !== null && (
-                <span className="temp-max">{ojisanMaxTemp}°</span>
-              )}
-              {ojisanMaxTemp !== null && ojisanMinTemp !== null && (
-                <span className="temp-separator">/</span>
-              )}
-              {ojisanMinTemp !== null && (
-                <span className="temp-min">{ojisanMinTemp}°</span>
-              )}
+          {ojisanHistory.map((text, index) => {
+            const isLast = index === ojisanHistory.length - 1
+            return (
+              <div key={index} className="weather-ojisan-bubble">
+                <span>{text}</span>
+                {isLast && (ojisanMaxTemp !== null || ojisanMinTemp !== null) && (
+                  <div className="weather-ojisan-temps">
+                    {ojisanMaxTemp !== null && (
+                      <span className="temp-max">{ojisanMaxTemp}°</span>
+                    )}
+                    {ojisanMaxTemp !== null && ojisanMinTemp !== null && (
+                      <span className="temp-separator">/</span>
+                    )}
+                    {ojisanMinTemp !== null && (
+                      <span className="temp-min">{ojisanMinTemp}°</span>
+                    )}
+                  </div>
+                )}
+              </div>
+            )
+          })}
+          {geminiError && (
+            <div className="weather-ojisan-bubble">
+              <span>
+                今日はAIのお天気おじさんがうまく天気をしゃべれないみたいです。時間をおいてからまた見てみてください。
+              </span>
             </div>
           )}
         </div>

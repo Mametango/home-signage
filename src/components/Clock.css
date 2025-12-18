@@ -339,6 +339,14 @@
   gap: 1rem;
 }
 
+.weather-ojisan-bubbles {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: 10rem;
+  overflow-y: auto;
+}
+
 .weather-ojisan-avatar {
   display: flex;
   flex-direction: column;
