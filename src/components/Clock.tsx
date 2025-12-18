@@ -172,11 +172,75 @@ const Clock = () => {
                 return description
               }
 
+              // Tsukumijimaで最低気温が取れなかった場合、JMAフォールバックを試す
+              let finalMaxTemp = maxTemp
+              let finalMinTemp = minTemp
+              
+              // 最低気温が未取得の場合、JMA APIから補完を試みる
+              if (finalMinTemp === undefined) {
+                try {
+                  const jmaForecastResponse = await fetch(`https://www.jma.go.jp/bosai/forecast/data/forecast/${areaCode}.json`)
+                  if (jmaForecastResponse.ok) {
+                    const jmaData = await jmaForecastResponse.json()
+                    if (jmaData && jmaData.length > 0) {
+                      const jmaAreaData = jmaData[0]
+                      const jmaTimeSeries = jmaAreaData.timeSeries?.[0]
+                      
+                      if (jmaTimeSeries && jmaTimeSeries.areas && jmaTimeSeries.areas.length > 0) {
+                        const jmaArea = jmaTimeSeries.areas[0]
+                        const jmaTemps = jmaArea.temps || []
+                        const jmaTimeDefines = jmaTimeSeries.timeDefines || []
+                        
+                        const today = new Date()
+                        today.setHours(0, 0, 0, 0)
+                        let jmaTodayIndex = 0
+                        for (let i = 0; i < jmaTimeDefines.length; i++) {
+                          const defineDate = new Date(jmaTimeDefines[i])
+                          defineDate.setHours(0, 0, 0, 0)
+                          if (defineDate.getTime() === today.getTime()) {
+                            jmaTodayIndex = i
+                            break
+                          }
+                        }
+                        
+                        // 気温データは交互に格納されている可能性
+                        const jmaTodayMaxIndex = jmaTodayIndex * 2
+                        const jmaTodayMinIndex = jmaTodayIndex * 2 + 1
+                        
+                        if (jmaTemps.length > jmaTodayMinIndex) {
+                          const jmaMinValue = jmaTemps[jmaTodayMinIndex]
+                          if (jmaMinValue !== null && jmaMinValue !== undefined && jmaMinValue !== '') {
+                            const jmaMin = parseInt(String(jmaMinValue))
+                            if (!isNaN(jmaMin)) {
+                              finalMinTemp = jmaMin
+                              console.log('JMA APIから最低気温を補完:', finalMinTemp)
+                            }
+                          }
+                        }
+                        
+                        if (finalMaxTemp === undefined && jmaTemps.length > jmaTodayMaxIndex) {
+                          const jmaMaxValue = jmaTemps[jmaTodayMaxIndex]
+                          if (jmaMaxValue !== null && jmaMaxValue !== undefined && jmaMaxValue !== '') {
+                            const jmaMax = parseInt(String(jmaMaxValue))
+                            if (!isNaN(jmaMax)) {
+                              finalMaxTemp = jmaMax
+                              console.log('JMA APIから最高気温を補完:', finalMaxTemp)
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                } catch (jmaError) {
+                  console.error('JMA API補完エラー:', jmaError)
+                }
+              }
+
               const ruleText = generateRuleBasedDescription()
               setOjisanMessage(ruleText)
               setOjisanHistory((prev) => [...prev, ruleText])
-              setOjisanMaxTemp(maxTemp ?? null)
-              setOjisanMinTemp(minTemp ?? null)
+              setOjisanMaxTemp(finalMaxTemp ?? null)
+              setOjisanMinTemp(finalMinTemp ?? null)
               
               // setTodayWeather({
               //   condition: weatherInfo.condition,
