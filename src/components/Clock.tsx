@@ -27,6 +27,10 @@ const Clock = () => {
   const [hourlyForecast, setHourlyForecast] = useState<HourlyForecast[]>([])
   const [prefecture, setPrefecture] = useState<string>('新潟県')
   const [city, setCity] = useState<string>('新発田市')
+  const [geminiPrompt, setGeminiPrompt] = useState<string>('')
+  const [geminiResponse, setGeminiResponse] = useState<string | null>(null)
+  const [geminiError, setGeminiError] = useState<string | null>(null)
+  const [geminiLoading, setGeminiLoading] = useState(false)
 
   // 時刻更新
   useEffect(() => {
@@ -710,6 +714,81 @@ const Clock = () => {
     return () => clearInterval(interval)
   }, [prefecture, city])
 
+  const handleGeminiTest = async () => {
+    try {
+      const trimmed = geminiPrompt.trim()
+      const defaultPrompt =
+        `以下は${prefecture}${city}の本日の2時間ごとの天気予報データです。` +
+        'わかりやすく1〜2文で要約してください。\n' +
+        JSON.stringify(
+          hourlyForecast.map((f) => ({
+            time: format(f.time, 'HH時'),
+            temp: f.temp,
+            condition: f.condition,
+            precipitation: f.precipitation
+          }))
+        )
+
+      const promptToSend = trimmed || defaultPrompt
+
+      if (!promptToSend) {
+        setGeminiError('Geminiに送るプロンプトを入力してください。')
+        return
+      }
+
+      setGeminiLoading(true)
+      setGeminiError(null)
+      setGeminiResponse(null)
+
+      console.log('[Gemini Debug] sending request to /api/gemini-weather', {
+        promptLength: promptToSend.length,
+        promptSample: promptToSend.slice(0, 120)
+      })
+
+      const res = await fetch('/api/gemini-weather', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ prompt: promptToSend })
+      })
+
+      const text = await res.text()
+      let json: any = null
+      try {
+        json = text ? JSON.parse(text) : null
+      } catch {
+        console.warn('[Gemini Debug] response is not valid JSON, raw text:', text)
+      }
+
+      if (!res.ok) {
+        console.error('[Gemini Debug] HTTP error from /api/gemini-weather', {
+          status: res.status,
+          statusText: res.statusText,
+          bodySample: text.slice(0, 300)
+        })
+        const message =
+          (json && (json.error || json.message)) ||
+          `HTTP ${res.status} ${res.statusText || ''}`.trim()
+        setGeminiError(message)
+        return
+      }
+
+      console.log('[Gemini Debug] success response from /api/gemini-weather', json)
+
+      const description =
+        (json && typeof json.description === 'string' && json.description.trim()) ||
+        '(description フィールドが空です)'
+
+      setGeminiResponse(description)
+    } catch (error) {
+      console.error('[Gemini Debug] fetch to /api/gemini-weather failed', error)
+      setGeminiError(String(error))
+    } finally {
+      setGeminiLoading(false)
+    }
+  }
+
 
   return (
     <div className="clock">
@@ -750,17 +829,40 @@ const Clock = () => {
             </div>
           </div>
 
-          {/* 2時間ごとの天気・気温・降水確率 */}
-          <div className="clock-weather-hourly-list">
-            {hourlyForecast.map((forecast, index) => (
-              <div key={index} className="clock-weather-hourly-item">
-                <div className="clock-weather-hourly-time">{format(forecast.time, 'HH時')}</div>
-                <div className="clock-weather-hourly-icon">{forecast.icon}</div>
-                <div className="clock-weather-hourly-condition">{forecast.condition}</div>
-                <div className="clock-weather-hourly-temp">{forecast.temp}°</div>
-                <div className="clock-weather-hourly-precipitation">💧{forecast.precipitation}%</div>
-              </div>
-            ))}
+          {/* 2時間ごとの天気・気温・降水確率（テストのため一時的に非表示） */}
+          <div className="clock-gemini-debug">
+            <div className="clock-gemini-debug-title">Gemini天気解説デバッグ</div>
+            <textarea
+              className="clock-gemini-debug-input"
+              placeholder="Gemini に送るプロンプトを入力（空の場合は現在の2時間予報から自動生成）"
+              value={geminiPrompt}
+              onChange={(e) => setGeminiPrompt(e.target.value)}
+            />
+            <button
+              className="clock-gemini-debug-button"
+              onClick={handleGeminiTest}
+              disabled={geminiLoading}
+            >
+              {geminiLoading ? '問い合わせ中...' : 'Geminiにテスト問い合わせ'}
+            </button>
+            <div className="clock-gemini-debug-status">
+              {geminiError && (
+                <div className="clock-gemini-debug-error">
+                  エラー: {geminiError}
+                </div>
+              )}
+              {geminiResponse && !geminiError && (
+                <div className="clock-gemini-debug-response">
+                  <strong>Gemini応答:</strong>
+                  <div>{geminiResponse}</div>
+                </div>
+              )}
+              {!geminiError && !geminiResponse && !geminiLoading && (
+                <div className="clock-gemini-debug-hint">
+                  Gemini API が正しく動作しているか確認するためのデバッグ用エリアです。
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}

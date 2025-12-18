@@ -258,6 +258,77 @@
   margin-bottom: 0;
 }
 
+.clock-gemini-debug {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 0.5rem;
+  border: 1px dashed rgba(255, 255, 255, 0.4);
+  font-family: 'Noto Sans JP', sans-serif;
+}
+
+.clock-gemini-debug-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 0.5rem;
+}
+
+.clock-gemini-debug-input {
+  width: 100%;
+  min-height: 3.5rem;
+  resize: vertical;
+  padding: 0.5rem;
+  border-radius: 0.4rem;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(0, 0, 0, 0.4);
+  color: #fff;
+  font-size: 0.9rem;
+  box-sizing: border-box;
+  margin-bottom: 0.5rem;
+}
+
+.clock-gemini-debug-input::placeholder {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.clock-gemini-debug-button {
+  padding: 0.4rem 0.8rem;
+  font-size: 0.9rem;
+  border-radius: 0.4rem;
+  border: none;
+  cursor: pointer;
+  background: #4dabf7;
+  color: #fff;
+  font-weight: 600;
+}
+
+.clock-gemini-debug-button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.clock-gemini-debug-status {
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.clock-gemini-debug-error {
+  color: #ff6b6b;
+}
+
+.clock-gemini-debug-response {
+  margin-top: 0.25rem;
+  max-height: 6rem;
+  overflow-y: auto;
+}
+
+.clock-gemini-debug-hint {
+  color: rgba(255, 255, 255, 0.7);
+  font-style: italic;
+}
+
 .clock-weather-hourly-item:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);

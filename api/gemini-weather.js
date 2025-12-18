@@ -37,6 +37,11 @@ export default async function handler(req, res) {
       return;
     }
 
+    console.log('[Gemini API][server] incoming request to /api/gemini-weather', {
+      promptLength: prompt.length,
+      promptSample: prompt.slice(0, 120)
+    });
+
     const geminiResponse = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
       {
@@ -65,11 +70,20 @@ export default async function handler(req, res) {
     if (!geminiResponse.ok) {
       const text = await geminiResponse.text().catch(() => '');
       console.error('Gemini API error:', geminiResponse.status, geminiResponse.statusText, text);
-      res.status(502).json({ error: 'Gemini API error', status: geminiResponse.status });
+      res.status(502).json({
+        error: 'Gemini API error',
+        status: geminiResponse.status,
+        statusText: geminiResponse.statusText,
+        body: text ? text.slice(0, 500) : ''
+      });
       return;
     }
 
     const data = await geminiResponse.json();
+    console.log('[Gemini API][server] success response from Gemini', {
+      hasCandidates: !!(data && data.candidates && data.candidates.length),
+      rawSample: JSON.stringify(data).slice(0, 500)
+    });
     let description =
       data &&
       data.candidates &&
