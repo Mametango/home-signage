@@ -712,7 +712,9 @@ const Clock = () => {
         `あなたは日本の気象予報士です。` +
         `以下の天気データとユーザーからの質問にもとづいて、` +
         `現在からおおよそ24時間程度の天気の概要を日本語で1行の短い文章で説明してください。` +
-        `改行は入れず、全体を1行の文として出力してください。\n\n` +
+        `改行は入れず、全体を1行の文として出力してください。` +
+        `地名だけ（例:「新潟」「新発田市」など）で答えてはいけません。` +
+        `必ず「現在〜今後24時間の天気の傾向」を含む説明文として40文字以上で出力してください。\n\n` +
         `【地点】${targetPrefecture}${targetCity}\n` +
         `【現在時刻】${format(time, 'yyyy年MM月dd日 HH:mm')}\n` +
         `【2時間ごとの天気データ】\n${forecastDataForPrompt}\n\n` +
@@ -774,6 +776,20 @@ const Clock = () => {
         '(description フィールドが空です)'
 
       console.log('[Gemini Debug] final description string', description)
+
+      // 短すぎる応答や地名だけの応答はフォールバック扱いにする
+      const visibleText = description.replace(/^【Gemini】/, '').trim()
+      if (visibleText.length < 15) {
+        const fallback =
+          '【Gemini】現在、AIによる天気解説をうまく取得できませんでした。時間をおいてから再度お試しください。'
+        console.warn('[Gemini Debug] response too short, using fallback message', {
+          description,
+          visibleTextLength: visibleText.length
+        })
+        setGeminiResponse(fallback)
+        setGeminiPrompt(fallback)
+        return
+      }
 
       // 画面上で確実に見えるように、結果は
       // 1) 上部の「Gemini応答」欄
