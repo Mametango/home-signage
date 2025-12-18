@@ -688,19 +688,30 @@ const Clock = () => {
   const handleGeminiTest = async () => {
     try {
       const trimmed = geminiPrompt.trim()
-      const defaultPrompt =
-        `以下は${prefecture}${city}の本日の2時間ごとの天気予報データです。` +
-        'わかりやすく1〜2文で要約してください。\n' +
-        JSON.stringify(
-          hourlyForecast.map((f) => ({
-            time: format(f.time, 'HH時'),
-            temp: f.temp,
-            condition: f.condition,
-            precipitation: f.precipitation
-          }))
-        )
+      const hasForecast = hourlyForecast.length > 0
+      const forecastDataForPrompt = hasForecast
+        ? JSON.stringify(
+            hourlyForecast.map((f) => ({
+              time: format(f.time, 'HH時'),
+              temp: f.temp,
+              condition: f.condition,
+              precipitation: f.precipitation
+            }))
+          )
+        : '（2時間ごとの天気データは取得できませんでした）'
 
-      const promptToSend = trimmed || defaultPrompt
+      const userQuestion =
+        trimmed || 'このデータをもとに、今日と今後数時間の天気をわかりやすく教えてください。'
+
+      const promptToSend =
+        `あなたは日本の気象予報士です。` +
+        `以下の天気データとユーザーからの質問にもとづいて、` +
+        `現在からおおよそ24時間程度の天気の概要を日本語で具体的に2〜4文で説明してください。\n\n` +
+        `【地点】${prefecture}${city}\n` +
+        `【現在時刻】${format(time, 'yyyy年MM月dd日 HH:mm')}\n` +
+        `【2時間ごとの天気データ】\n${forecastDataForPrompt}\n\n` +
+        `【ユーザーからの質問】${userQuestion}\n\n` +
+        `必ず、気温の傾向（暑い・寒いなど）や雨・雪の可能性にも触れてください。`
 
       if (!promptToSend) {
         setGeminiError('Geminiに送るプロンプトを入力してください。')
