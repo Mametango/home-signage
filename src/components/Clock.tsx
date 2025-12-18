@@ -21,6 +21,7 @@ const Clock = () => {
   const [geminiPrompt, setGeminiPrompt] = useState<string>('')
   const [geminiResponse, setGeminiResponse] = useState<string | null>(null)
   const [geminiError, setGeminiError] = useState<string | null>(null)
+  const [ojisanMessage, setOjisanMessage] = useState<string | null>(null)
   // const [geminiLoading, setGeminiLoading] = useState(false) // 自動問い合わせ状態の管理用（UIでは現在未使用）
   const geminiAutoTriggered = useRef(false)
 
@@ -129,41 +130,47 @@ const Clock = () => {
                 minTemp,
                 weatherInfo
               })
-              
-              // 無料のルールベース方式で説明を生成（現在は画面表示には未使用）
-              // const generateRuleBasedDescription = (): string => {
-              //   const avgTemp = maxTemp !== undefined && minTemp !== undefined ? Math.round((maxTemp + minTemp) / 2) : null
-              //   
-              //   let description = `【ルール】今日の${prefecture}${city}は${weatherInfo.text}`
-              //   
-              //   if (avgTemp !== null) {
-              //     if (avgTemp >= 25) {
-              //       description += `。暑い一日になりそうです。熱中症にご注意ください`
-              //     } else if (avgTemp >= 20) {
-              //       description += `。過ごしやすい気温です。お出かけに最適な天気です`
-              //     } else if (avgTemp >= 15) {
-              //       description += `。少し肌寒いかもしれません。上着があると安心です`
-              //     } else if (avgTemp >= 10) {
-              //       description += `。寒い一日になりそうです。暖かい服装でお出かけください`
-              //     } else {
-              //       description += `。とても寒い一日になりそうです。防寒対策をしっかりと`
-              //     }
-              //   }
-              //   
-              //   if (weatherInfo.text === '雨') {
-              //     description += `。傘をお忘れなく`
-              //   } else if (weatherInfo.text === '雪') {
-              //     description += `。路面が滑りやすくなります。お気をつけて`
-              //   } else if (weatherInfo.text === '曇り') {
-              //     description += `。雲が多いですが、お出かけには問題ありません`
-              //   }
-              //   
-              //   if (maxTemp !== undefined && minTemp !== undefined) {
-              //     description += `（最高${maxTemp}度、最低${minTemp}度）`
-              //   }
-              //   
-              //   return description
-              // }
+
+              // 無料のルールベース方式で説明を生成して、お天気おじさんのデフォルト発話にする
+              const generateRuleBasedDescription = (): string => {
+                const avgTemp = maxTemp !== undefined && minTemp !== undefined ? Math.round((maxTemp + minTemp) / 2) : null
+                
+                let description = `今日の${prefecture}${city}は${weatherInfo.text}で、`
+                
+                if (avgTemp !== null) {
+                  if (avgTemp >= 25) {
+                    description += `暑い一日になりそうです。熱中症に注意してください。`
+                  } else if (avgTemp >= 20) {
+                    description += `過ごしやすい体感でお出かけ日和です。`
+                  } else if (avgTemp >= 15) {
+                    description += `ややひんやりする時間もあるので、薄手の上着があると安心です。`
+                  } else if (avgTemp >= 10) {
+                    description += `肌寒い体感になりそうです。暖かい服装がおすすめです。`
+                  } else {
+                    description += `かなり冷え込みます。マフラーやコートなど防寒対策をしっかり行ってください。`
+                  }
+                } else {
+                  description += `気温は平年並みの見込みです。`
+                }
+                
+                if (weatherInfo.text === '雨') {
+                  description += `雨具を持って出かけると安心です。`
+                } else if (weatherInfo.text === '雪') {
+                  description += `路面の凍結や積雪に注意してください。`
+                } else if (weatherInfo.text === '曇り') {
+                  description += `日差しは少ないものの、大きな崩れはなさそうです。`
+                } else if (weatherInfo.text === '晴れ') {
+                  description += `日差しがしっかり届き、洗濯日和になりそうです。`
+                }
+                
+                if (maxTemp !== undefined && minTemp !== undefined) {
+                  description += `最高気温は${maxTemp}度前後、最低気温は${minTemp}度前後の見込みです。`
+                }
+                
+                return description
+              }
+
+              setOjisanMessage(generateRuleBasedDescription())
               
               // setTodayWeather({
               //   condition: weatherInfo.condition,
@@ -777,20 +784,6 @@ const Clock = () => {
 
       console.log('[Gemini Debug] final description string', description)
 
-      // 短すぎる応答や地名だけの応答はフォールバック扱いにする
-      const visibleText = description.replace(/^【Gemini】/, '').trim()
-      if (visibleText.length < 15) {
-        const fallback =
-          '【Gemini】現在、AIによる天気解説をうまく取得できませんでした。時間をおいてから再度お試しください。'
-        console.warn('[Gemini Debug] response too short, using fallback message', {
-          description,
-          visibleTextLength: visibleText.length
-        })
-        setGeminiResponse(fallback)
-        setGeminiPrompt(fallback)
-        return
-      }
-
       // 画面上で確実に見えるように、結果は
       // 1) 上部の「Gemini応答」欄
       // 2) テキストエリア本体
@@ -832,12 +825,14 @@ const Clock = () => {
           <div className="weather-ojisan-name">お天気おじさん</div>
         </div>
         <div className="weather-ojisan-bubble">
-          {geminiError ? (
+          {geminiResponse ? (
+            <span>{geminiResponse}</span>
+          ) : ojisanMessage ? (
+            <span>{ojisanMessage}</span>
+          ) : geminiError ? (
             <span>
               今日はAIのお天気おじさんがうまく天気をしゃべれないみたいです。時間をおいてからまた見てみてください。
             </span>
-          ) : geminiResponse ? (
-            <span>{geminiResponse}</span>
           ) : (
             <span>お天気おじさんが最新の天気を集めています…</span>
           )}
