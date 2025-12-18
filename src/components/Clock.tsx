@@ -849,17 +849,15 @@ const Clock = () => {
             return (
               <div key={index} className="weather-ojisan-bubble">
                 <span>{text}</span>
-                {isLast && (ojisanMaxTemp !== null || ojisanMinTemp !== null) && (
+                {isLast && (
                   <div className="weather-ojisan-temps">
-                    {ojisanMaxTemp !== null && (
-                      <span className="temp-max">{ojisanMaxTemp}°</span>
-                    )}
-                    {ojisanMaxTemp !== null && ojisanMinTemp !== null && (
-                      <span className="temp-separator">/</span>
-                    )}
-                    {ojisanMinTemp !== null && (
-                      <span className="temp-min">{ojisanMinTemp}°</span>
-                    )}
+                    <span className="temp-max">
+                      {ojisanMaxTemp !== null ? `${ojisanMaxTemp}°` : '--'}
+                    </span>
+                    <span className="temp-separator">/</span>
+                    <span className="temp-min">
+                      {ojisanMinTemp !== null ? `${ojisanMinTemp}°` : '--'}
+                    </span>
                   </div>
                 )}
               </div>
