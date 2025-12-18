@@ -3,16 +3,6 @@ import { format } from 'date-fns'
 import { getSettings } from './Settings'
 import './Clock.css'
 
-interface TodayWeatherData {
-  condition: string
-  icon: string
-  maxTemp?: number
-  minTemp?: number
-  description?: string
-  prefecture: string
-  city: string
-}
-
 interface HourlyForecast {
   time: Date
   temp: number
@@ -23,7 +13,8 @@ interface HourlyForecast {
 
 const Clock = () => {
   const [time, setTime] = useState(new Date())
-  const [todayWeather, setTodayWeather] = useState<TodayWeatherData | null>(null)
+  // 以前は今日の天気表示にも使用していたが、Geminiデバッグ中は非表示のためコメントアウト
+  // const [todayWeather, setTodayWeather] = useState<TodayWeatherData | null>(null)
   const [hourlyForecast, setHourlyForecast] = useState<HourlyForecast[]>([])
   const [prefecture, setPrefecture] = useState<string>('新潟県')
   const [city, setCity] = useState<string>('新発田市')
@@ -138,52 +129,50 @@ const Clock = () => {
                 weatherInfo
               })
               
-              // 無料のルールベース方式で説明を生成
-              const generateRuleBasedDescription = (): string => {
-                const avgTemp = maxTemp !== undefined && minTemp !== undefined ? Math.round((maxTemp + minTemp) / 2) : null
-                
-                let description = `【ルール】今日の${prefecture}${city}は${weatherInfo.text}`
-                
-                if (avgTemp !== null) {
-                  if (avgTemp >= 25) {
-                    description += `。暑い一日になりそうです。熱中症にご注意ください`
-                  } else if (avgTemp >= 20) {
-                    description += `。過ごしやすい気温です。お出かけに最適な天気です`
-                  } else if (avgTemp >= 15) {
-                    description += `。少し肌寒いかもしれません。上着があると安心です`
-                  } else if (avgTemp >= 10) {
-                    description += `。寒い一日になりそうです。暖かい服装でお出かけください`
-                  } else {
-                    description += `。とても寒い一日になりそうです。防寒対策をしっかりと`
-                  }
-                }
-                
-                if (weatherInfo.text === '雨') {
-                  description += `。傘をお忘れなく`
-                } else if (weatherInfo.text === '雪') {
-                  description += `。路面が滑りやすくなります。お気をつけて`
-                } else if (weatherInfo.text === '曇り') {
-                  description += `。雲が多いですが、お出かけには問題ありません`
-                }
-                
-                if (maxTemp !== undefined && minTemp !== undefined) {
-                  description += `（最高${maxTemp}度、最低${minTemp}度）`
-                }
-                
-                return description
-              }
+              // 無料のルールベース方式で説明を生成（現在は画面表示には未使用）
+              // const generateRuleBasedDescription = (): string => {
+              //   const avgTemp = maxTemp !== undefined && minTemp !== undefined ? Math.round((maxTemp + minTemp) / 2) : null
+              //   
+              //   let description = `【ルール】今日の${prefecture}${city}は${weatherInfo.text}`
+              //   
+              //   if (avgTemp !== null) {
+              //     if (avgTemp >= 25) {
+              //       description += `。暑い一日になりそうです。熱中症にご注意ください`
+              //     } else if (avgTemp >= 20) {
+              //       description += `。過ごしやすい気温です。お出かけに最適な天気です`
+              //     } else if (avgTemp >= 15) {
+              //       description += `。少し肌寒いかもしれません。上着があると安心です`
+              //     } else if (avgTemp >= 10) {
+              //       description += `。寒い一日になりそうです。暖かい服装でお出かけください`
+              //     } else {
+              //       description += `。とても寒い一日になりそうです。防寒対策をしっかりと`
+              //     }
+              //   }
+              //   
+              //   if (weatherInfo.text === '雨') {
+              //     description += `。傘をお忘れなく`
+              //   } else if (weatherInfo.text === '雪') {
+              //     description += `。路面が滑りやすくなります。お気をつけて`
+              //   } else if (weatherInfo.text === '曇り') {
+              //     description += `。雲が多いですが、お出かけには問題ありません`
+              //   }
+              //   
+              //   if (maxTemp !== undefined && minTemp !== undefined) {
+              //     description += `（最高${maxTemp}度、最低${minTemp}度）`
+              //   }
+              //   
+              //   return description
+              // }
               
-              const description = generateRuleBasedDescription()
-              
-              setTodayWeather({
-                condition: weatherInfo.condition,
-                icon: weatherInfo.icon,
-                maxTemp: maxTemp,
-                minTemp: minTemp,
-                description: description,
-                prefecture: prefecture,
-                city: city
-              })
+              // setTodayWeather({
+              //   condition: weatherInfo.condition,
+              //   icon: weatherInfo.icon,
+              //   maxTemp: maxTemp,
+              //   minTemp: minTemp,
+              //   description: description,
+              //   prefecture: prefecture,
+              //   city: city
+              // })
               
               window.dispatchEvent(new CustomEvent('weatherChanged', { 
                 detail: { condition: weatherInfo.condition } 
@@ -567,58 +556,56 @@ const Clock = () => {
                   }
                 }
                 
-                // 無料のルールベース方式で説明を生成（フォールバック）
-                const generateRuleBasedDescription = (): string => {
-                  const avgTemp = maxTemp !== undefined && minTemp !== undefined ? Math.round((maxTemp + minTemp) / 2) : null
-                  
-                  // ルールベースで生成したことが分かるようにラベルを付与
-                  let description = `【ルール】今日の${prefecture}${city}は${weatherInfo.text}`
-                  
-                  if (avgTemp !== null) {
-                    if (avgTemp >= 25) {
-                      description += `。暑い一日になりそうです。熱中症にご注意ください`
-                    } else if (avgTemp >= 20) {
-                      description += `。過ごしやすい気温です。お出かけに最適な天気です`
-                    } else if (avgTemp >= 15) {
-                      description += `。少し肌寒いかもしれません。上着があると安心です`
-                    } else if (avgTemp >= 10) {
-                      description += `。寒い一日になりそうです。暖かい服装でお出かけください`
-                    } else {
-                      description += `。とても寒い一日になりそうです。防寒対策をしっかりと`
-                    }
-                  }
-                  
-                  if (weatherInfo.text === '雨') {
-                    description += `。傘をお忘れなく`
-                  } else if (weatherInfo.text === '雪') {
-                    description += `。路面が滑りやすくなります。お気をつけて`
-                  } else if (weatherInfo.text === '曇り') {
-                    description += `。雲が多いですが、お出かけには問題ありません`
-                  }
-                  
-                  if (maxTemp !== undefined && minTemp !== undefined) {
-                    description += `（最高${maxTemp}度、最低${minTemp}度）`
-                  }
-                  
-                  return description
-                }
-                
-                // 天気の解説をルールベースで生成（AIは使わない）
-                const description = generateRuleBasedDescription()
+                // 無料のルールベース方式で説明を生成（フォールバック・現在は未使用）
+                // const generateRuleBasedDescription = (): string => {
+                //   const avgTemp = maxTemp !== undefined && minTemp !== undefined ? Math.round((maxTemp + minTemp) / 2) : null
+                //   
+                //   // ルールベースで生成したことが分かるようにラベルを付与
+                //   let description = `【ルール】今日の${prefecture}${city}は${weatherInfo.text}`
+                //   
+                //   if (avgTemp !== null) {
+                //     if (avgTemp >= 25) {
+                //       description += `。暑い一日になりそうです。熱中症にご注意ください`
+                //     } else if (avgTemp >= 20) {
+                //       description += `。過ごしやすい気温です。お出かけに最適な天気です`
+                //     } else if (avgTemp >= 15) {
+                //       description += `。少し肌寒いかもしれません。上着があると安心です`
+                //     } else if (avgTemp >= 10) {
+                //       description += `。寒い一日になりそうです。暖かい服装でお出かけください`
+                //     } else {
+                //       description += `。とても寒い一日になりそうです。防寒対策をしっかりと`
+                //     }
+                //   }
+                //   
+                //   if (weatherInfo.text === '雨') {
+                //     description += `。傘をお忘れなく`
+                //   } else if (weatherInfo.text === '雪') {
+                //     description += `。路面が滑りやすくなります。お気をつけて`
+                //   } else if (weatherInfo.text === '曇り') {
+                //     description += `。雲が多いですが、お出かけには問題ありません`
+                //   }
+                //   
+                //   if (maxTemp !== undefined && minTemp !== undefined) {
+                //     description += `（最高${maxTemp}度、最低${minTemp}度）`
+                //   }
+                //   
+                //   return description
+                // }
 
-                setTodayWeather({
-                  condition: weatherInfo.condition,
-                  icon: weatherInfo.icon,
-                  maxTemp: maxTemp,
-                  minTemp: minTemp,
-                  description: description,
-                  prefecture: prefecture,
-                  city: city
-                })
-                
-                window.dispatchEvent(new CustomEvent('weatherChanged', { 
-                  detail: { condition: weatherInfo.condition } 
-                }))
+                // 以前はここで今日の天気を画面に表示していたが、
+                // 現在はGeminiデバッグ専用表示のため状態更新のみコメントアウト
+                // setTodayWeather({
+                //   condition: weatherInfo.condition,
+                //   icon: weatherInfo.icon,
+                //   maxTemp: maxTemp,
+                //   minTemp: minTemp,
+                //   description: description,
+                //   prefecture: prefecture,
+                //   city: city
+                // })
+                // window.dispatchEvent(new CustomEvent('weatherChanged', { 
+                //   detail: { condition: weatherInfo.condition } 
+                // }))
               }
             }
           }
@@ -684,24 +671,8 @@ const Clock = () => {
           }
         }
         
-        // すべてのAPIが失敗した場合、エラーメッセージを表示
+        // すべてのAPIが失敗した場合、エラーメッセージのみログに出力
         console.error('すべての天気APIからのデータ取得に失敗しました')
-        
-        // 最低限の天気情報を表示（気温なし）
-        const generateFallbackDescription = (): string => {
-          return `【エラー】天気情報の取得に失敗しました。しばらくしてから再度お試しください。`
-        }
-        
-        setTodayWeather({
-          condition: '曇り',
-          icon: '☁️',
-          maxTemp: undefined,
-          minTemp: undefined,
-          description: generateFallbackDescription(),
-          prefecture: prefecture,
-          city: city
-        })
-        
         setHourlyForecast([])
       } catch (error) {
         console.error('天気情報の取得に失敗しました:', error)
@@ -814,70 +785,48 @@ const Clock = () => {
         </div>
       </div>
 
-      {/* 下: 天気 */}
-      {todayWeather && (
+      {/* 下: 天気（デバッグのため一時的に非表示） */}
+      {/* todayWeather && (
         <div className="clock-weather">
-          <div className="clock-weather-summary">
-            <div className="clock-weather-main">
-              <div className="clock-weather-header">
-                <div className="clock-weather-icon">{todayWeather.icon}</div>
-                <div className="clock-weather-info">
-                  <div className="clock-weather-location">
-                    {todayWeather.prefecture} {todayWeather.city}
-                  </div>
-                  <div className="clock-weather-condition">{todayWeather.condition}</div>
-                  {todayWeather.maxTemp !== undefined && todayWeather.minTemp !== undefined && (
-                    <div className="clock-weather-temp">
-                      <span className="temp-max">{todayWeather.maxTemp}°</span>
-                      <span className="temp-separator">/</span>
-                      <span className="temp-min">{todayWeather.minTemp}°</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-              {todayWeather.description && (
-                <div className="clock-weather-description">{todayWeather.description}</div>
-              )}
-            </div>
-          </div>
-
-          {/* 2時間ごとの天気・気温・降水確率（テストのため一時的に非表示） */}
-          <div className="clock-gemini-debug">
-            <div className="clock-gemini-debug-title">Gemini天気解説デバッグ</div>
-            <div className="clock-gemini-debug-status">
-              {geminiError && (
-                <div className="clock-gemini-debug-error">
-                  エラー: {geminiError}
-                </div>
-              )}
-              {geminiResponse && !geminiError && (
-                <div className="clock-gemini-debug-response">
-                  <strong>Gemini応答:</strong>
-                  <div>{geminiResponse}</div>
-                </div>
-              )}
-              {!geminiError && !geminiResponse && !geminiLoading && (
-                <div className="clock-gemini-debug-hint">
-                  Gemini API が正しく動作しているか確認するためのデバッグ用エリアです。
-                </div>
-              )}
-            </div>
-            <textarea
-              className="clock-gemini-debug-input"
-              placeholder="Gemini に送るプロンプトを入力（空の場合は現在の2時間予報から自動生成）"
-              value={geminiPrompt}
-              onChange={(e) => setGeminiPrompt(e.target.value)}
-            />
-            <button
-              className="clock-gemini-debug-button"
-              onClick={handleGeminiTest}
-              disabled={geminiLoading}
-            >
-              {geminiLoading ? '問い合わせ中...' : 'Geminiにテスト問い合わせ'}
-            </button>
-          </div>
+          ...天気カード...
         </div>
-      )}
+      ) */}
+
+      {/* Gemini デバッグ専用表示（天気と独立させて常に表示） */}
+      <div className="clock-gemini-debug">
+        <div className="clock-gemini-debug-title">Gemini天気解説デバッグ</div>
+        <div className="clock-gemini-debug-status">
+          {geminiError && (
+            <div className="clock-gemini-debug-error">
+              エラー: {geminiError}
+            </div>
+          )}
+          {geminiResponse && !geminiError && (
+            <div className="clock-gemini-debug-response">
+              <strong>Gemini応答:</strong>
+              <div>{geminiResponse}</div>
+            </div>
+          )}
+          {!geminiError && !geminiResponse && !geminiLoading && (
+            <div className="clock-gemini-debug-hint">
+              Gemini API が正しく動作しているか確認するためのデバッグ用エリアです。
+            </div>
+          )}
+        </div>
+        <textarea
+          className="clock-gemini-debug-input"
+          placeholder="Gemini に送るプロンプトを入力（空の場合は現在の2時間予報から自動生成）"
+          value={geminiPrompt}
+          onChange={(e) => setGeminiPrompt(e.target.value)}
+        />
+        <button
+          className="clock-gemini-debug-button"
+          onClick={handleGeminiTest}
+          disabled={geminiLoading}
+        >
+          {geminiLoading ? '問い合わせ中...' : 'Geminiにテスト問い合わせ'}
+        </button>
+      </div>
     </div>
   )
 }
