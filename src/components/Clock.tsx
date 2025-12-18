@@ -716,7 +716,7 @@ const Clock = () => {
       {/* 上: 日時 */}
       <div className="clock-datetime">
         <div className="clock-date">
-          {format(time, 'yyyy年MM月dd日')}
+          {format(time, 'yyyy年MM月dd日')} {['日', '月', '火', '水', '木', '金', '土'][time.getDay()]}曜日
         </div>
         <div className="clock-time">
           {format(time, 'HH:mm:ss')}

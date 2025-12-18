@@ -62,7 +62,7 @@ const EarthquakeAlert = () => {
                   id: quake.id || `eq-${index}`,
                   magnitude: eq.hypocenter?.magnitude || 0,
                   location: eq.hypocenter?.name || '不明',
-                  time: format(time, 'yyyy年MM月dd日 HH:mm'),
+                  time: `${format(time, 'yyyy年MM月dd日 HH:mm')} ${['日', '月', '火', '水', '木', '金', '土'][time.getDay()]}曜日`,
                   depth: eq.hypocenter?.depth ? `${eq.hypocenter.depth}km` : '不明',
                   intensity: intensity,
                   isAlert: isAlert
@@ -111,7 +111,7 @@ const EarthquakeAlert = () => {
                   id: item.id || `eew-${index}`,
                   magnitude: eq.hypocenter?.magnitude || 0,
                   location: eq.hypocenter?.name || '不明',
-                  time: format(time, 'yyyy年MM月dd日 HH:mm'),
+                  time: `${format(time, 'yyyy年MM月dd日 HH:mm')} ${['日', '月', '火', '水', '木', '金', '土'][time.getDay()]}曜日`,
                   depth: eq.hypocenter?.depth ? `${eq.hypocenter.depth}km` : '不明',
                   intensity: intensity,
                   isAlert: true

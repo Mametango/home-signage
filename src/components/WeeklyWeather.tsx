@@ -274,6 +274,20 @@ const WeeklyWeather = () => {
     )
   }
 
+  if (weeklyWeather.length === 0) {
+    return (
+      <div className="weekly-weather">
+        <div className="weekly-weather-header">
+          <h2 className="weekly-weather-title">{prefecture} {city} 1週間の天気予報</h2>
+        </div>
+        <div className="weekly-weather-loading" style={{ color: '#ff6b6b', fontSize: '1.2rem', padding: '2rem' }}>
+          天気予報データを取得できませんでした。<br />
+          しばらく待ってから再度お試しください。
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="weekly-weather">
       <div className="weekly-weather-header">
@@ -308,4 +322,3 @@ const WeeklyWeather = () => {
 }
 
 export default WeeklyWeather
-
