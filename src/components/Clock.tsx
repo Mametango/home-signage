@@ -321,15 +321,13 @@ const Clock = () => {
                   
                   setHourlyForecast(forecast)
                   
-                  // 今日の天気カードに降水確率を追加
-                  if (maxPrecipitationChance > 0) {
-                    setTodayWeather((prev) => {
-                      if (prev) {
-                        return { ...prev, precipitationChance: maxPrecipitationChance }
-                      }
-                      return prev
-                    })
-                  }
+                  // 今日の天気カードに降水確率を追加（0%でも表示する）
+                  setTodayWeather((prev) => {
+                    if (prev) {
+                      return { ...prev, precipitationChance: maxPrecipitationChance }
+                    }
+                    return prev
+                  })
                 }
               }
               
@@ -932,11 +930,17 @@ const Clock = () => {
                   </div>
                   <div className="clock-weather-condition">{todayWeather.condition}</div>
                   <div className="clock-weather-details">
-                    {todayWeather.maxTemp !== undefined && todayWeather.minTemp !== undefined && (
+                    {(todayWeather.maxTemp !== undefined || todayWeather.minTemp !== undefined) && (
                       <div className="clock-weather-temp">
-                        <span className="temp-max">{todayWeather.maxTemp}°</span>
-                        <span className="temp-separator">/</span>
-                        <span className="temp-min">{todayWeather.minTemp}°</span>
+                        {todayWeather.maxTemp !== undefined && (
+                          <span className="temp-max">{todayWeather.maxTemp}°</span>
+                        )}
+                        {todayWeather.maxTemp !== undefined && todayWeather.minTemp !== undefined && (
+                          <span className="temp-separator">/</span>
+                        )}
+                        {todayWeather.minTemp !== undefined && (
+                          <span className="temp-min">{todayWeather.minTemp}°</span>
+                        )}
                       </div>
                     )}
                     {todayWeather.precipitationChance !== undefined && (
