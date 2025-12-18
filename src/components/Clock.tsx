@@ -785,7 +785,14 @@ const Clock = () => {
         (json && typeof json.description === 'string' && json.description.trim()) ||
         '(description フィールドが空です)'
 
+      console.log('[Gemini Debug] final description string', description)
+
+      // 画面上で確実に見えるように、結果は
+      // 1) 上部の「Gemini応答」欄
+      // 2) テキストエリア本体
+      // の両方に反映する
       setGeminiResponse(description)
+      setGeminiPrompt(description)
     } catch (error) {
       console.error('[Gemini Debug] fetch to /api/gemini-weather failed', error)
       setGeminiError(String(error))
