@@ -837,19 +837,6 @@ const Clock = () => {
           {/* 2時間ごとの天気・気温・降水確率（テストのため一時的に非表示） */}
           <div className="clock-gemini-debug">
             <div className="clock-gemini-debug-title">Gemini天気解説デバッグ</div>
-            <textarea
-              className="clock-gemini-debug-input"
-              placeholder="Gemini に送るプロンプトを入力（空の場合は現在の2時間予報から自動生成）"
-              value={geminiPrompt}
-              onChange={(e) => setGeminiPrompt(e.target.value)}
-            />
-            <button
-              className="clock-gemini-debug-button"
-              onClick={handleGeminiTest}
-              disabled={geminiLoading}
-            >
-              {geminiLoading ? '問い合わせ中...' : 'Geminiにテスト問い合わせ'}
-            </button>
             <div className="clock-gemini-debug-status">
               {geminiError && (
                 <div className="clock-gemini-debug-error">
@@ -868,6 +855,19 @@ const Clock = () => {
                 </div>
               )}
             </div>
+            <textarea
+              className="clock-gemini-debug-input"
+              placeholder="Gemini に送るプロンプトを入力（空の場合は現在の2時間予報から自動生成）"
+              value={geminiPrompt}
+              onChange={(e) => setGeminiPrompt(e.target.value)}
+            />
+            <button
+              className="clock-gemini-debug-button"
+              onClick={handleGeminiTest}
+              disabled={geminiLoading}
+            >
+              {geminiLoading ? '問い合わせ中...' : 'Geminiにテスト問い合わせ'}
+            </button>
           </div>
         </div>
       )}
