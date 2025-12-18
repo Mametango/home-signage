@@ -276,7 +276,7 @@
 
 .clock-gemini-debug-input {
   width: 100%;
-  min-height: 3.5rem;
+  min-height: 6rem;
   resize: vertical;
   padding: 0.5rem;
   border-radius: 0.4rem;
@@ -320,7 +320,7 @@
 
 .clock-gemini-debug-response {
   margin-top: 0.25rem;
-  max-height: 6rem;
+  max-height: 10rem;
   overflow-y: auto;
 }
 
