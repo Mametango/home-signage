@@ -389,6 +389,26 @@
   border-color: transparent rgba(0, 0, 0, 0.55) transparent transparent;
 }
 
+.weather-ojisan-temps {
+  margin-top: 0.4rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.weather-ojisan-temps .temp-max {
+  color: #ff6b6b;
+}
+
+.weather-ojisan-temps .temp-min {
+  color: #4dabf7;
+}
+
+.weather-ojisan-temps .temp-separator {
+  margin: 0 0.25rem;
+  color: rgba(255, 255, 255, 0.85);
+}
+
 .clock-weather-hourly-item:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);

@@ -22,6 +22,8 @@ const Clock = () => {
   const [geminiResponse, setGeminiResponse] = useState<string | null>(null)
   const [geminiError, setGeminiError] = useState<string | null>(null)
   const [ojisanMessage, setOjisanMessage] = useState<string | null>(null)
+  const [ojisanMaxTemp, setOjisanMaxTemp] = useState<number | null>(null)
+  const [ojisanMinTemp, setOjisanMinTemp] = useState<number | null>(null)
   // const [geminiLoading, setGeminiLoading] = useState(false) // 自動問い合わせ状態の管理用（UIでは現在未使用）
   const geminiAutoTriggered = useRef(false)
 
@@ -171,6 +173,8 @@ const Clock = () => {
               }
 
               setOjisanMessage(generateRuleBasedDescription())
+              setOjisanMaxTemp(maxTemp ?? null)
+              setOjisanMinTemp(minTemp ?? null)
               
               // setTodayWeather({
               //   condition: weatherInfo.condition,
@@ -847,6 +851,19 @@ const Clock = () => {
             </span>
           ) : (
             <span>お天気おじさんが最新の天気を集めています…</span>
+          )}
+          {(ojisanMaxTemp !== null || ojisanMinTemp !== null) && (
+            <div className="weather-ojisan-temps">
+              {ojisanMaxTemp !== null && (
+                <span className="temp-max">{ojisanMaxTemp}°</span>
+              )}
+              {ojisanMaxTemp !== null && ojisanMinTemp !== null && (
+                <span className="temp-separator">/</span>
+              )}
+              {ojisanMinTemp !== null && (
+                <span className="temp-min">{ojisanMinTemp}°</span>
+              )}
+            </div>
           )}
         </div>
       </div>
