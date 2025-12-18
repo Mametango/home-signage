@@ -16,6 +16,7 @@ interface TodayWeatherData {
   icon: string
   maxTemp?: number
   minTemp?: number
+  precipitationChance?: number
   description?: string
   prefecture: string
   city: string
@@ -30,8 +31,6 @@ const Clock = () => {
   const [geminiPrompt, setGeminiPrompt] = useState<string>('')
   const [geminiError, setGeminiError] = useState<string | null>(null)
   const [ojisanMessage, setOjisanMessage] = useState<string | null>(null)
-  const [ojisanMaxTemp, setOjisanMaxTemp] = useState<number | null>(null)
-  const [ojisanMinTemp, setOjisanMinTemp] = useState<number | null>(null)
   const [ojisanHistory, setOjisanHistory] = useState<string[]>([])
   // const [geminiLoading, setGeminiLoading] = useState(false) // 自動問い合わせ状態の管理用（UIでは現在未使用）
   const geminiAutoTriggered = useRef(false)
@@ -248,8 +247,6 @@ const Clock = () => {
               const ruleText = generateRuleBasedDescription()
               setOjisanMessage(ruleText)
               setOjisanHistory((prev) => [...prev, ruleText])
-              setOjisanMaxTemp(finalMaxTemp ?? null)
-              setOjisanMinTemp(finalMinTemp ?? null)
               
               // 今日の天気を上段に常時表示するために状態をセット
               setTodayWeather({
@@ -303,20 +300,36 @@ const Clock = () => {
                   const forecast: HourlyForecast[] = []
                   
                   // 今日のデータから2時間ごとの予報を取得（最大6件）
+                  let maxPrecipitationChance = 0
                   for (let i = 0; i < Math.min(6, todayForecasts.length); i++) {
                     const item = todayForecasts[i]
                     const forecastTime = new Date(item.dt_txt)
+                    const pop = Math.round(item.pop * 100)
+                    
+                    if (pop > maxPrecipitationChance) {
+                      maxPrecipitationChance = pop
+                    }
                     
                     forecast.push({
                       time: forecastTime,
                       temp: Math.round(item.main.temp),
                       condition: getWeatherCondition(item.weather[0].main),
                       icon: getWeatherIcon(item.weather[0].main),
-                      precipitation: Math.round(item.pop * 100)
+                      precipitation: pop
                     })
                   }
                   
                   setHourlyForecast(forecast)
+                  
+                  // 今日の天気カードに降水確率を追加
+                  if (maxPrecipitationChance > 0) {
+                    setTodayWeather((prev) => {
+                      if (prev) {
+                        return { ...prev, precipitationChance: maxPrecipitationChance }
+                      }
+                      return prev
+                    })
+                  }
                 }
               }
               
@@ -918,13 +931,20 @@ const Clock = () => {
                     {todayWeather.prefecture} {todayWeather.city}
                   </div>
                   <div className="clock-weather-condition">{todayWeather.condition}</div>
-                  {todayWeather.maxTemp !== undefined && todayWeather.minTemp !== undefined && (
-                    <div className="clock-weather-temp">
-                      <span className="temp-max">{todayWeather.maxTemp}°</span>
-                      <span className="temp-separator">/</span>
-                      <span className="temp-min">{todayWeather.minTemp}°</span>
-                    </div>
-                  )}
+                  <div className="clock-weather-details">
+                    {todayWeather.maxTemp !== undefined && todayWeather.minTemp !== undefined && (
+                      <div className="clock-weather-temp">
+                        <span className="temp-max">{todayWeather.maxTemp}°</span>
+                        <span className="temp-separator">/</span>
+                        <span className="temp-min">{todayWeather.minTemp}°</span>
+                      </div>
+                    )}
+                    {todayWeather.precipitationChance !== undefined && (
+                      <div className="clock-weather-precipitation">
+                        降水確率 {todayWeather.precipitationChance}%
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -944,25 +964,11 @@ const Clock = () => {
               <span>お天気おじさんが最新の天気を集めています…</span>
             </div>
           )}
-          {ojisanHistory.map((text, index) => {
-            const isLast = index === ojisanHistory.length - 1
-            return (
-              <div key={index} className="weather-ojisan-bubble">
-                <span>{text}</span>
-                {isLast && (
-                  <div className="weather-ojisan-temps">
-                    <span className="temp-max">
-                      {ojisanMaxTemp !== null ? `${ojisanMaxTemp}°` : '--'}
-                    </span>
-                    <span className="temp-separator">/</span>
-                    <span className="temp-min">
-                      {ojisanMinTemp !== null ? `${ojisanMinTemp}°` : '--'}
-                    </span>
-                  </div>
-                )}
-              </div>
-            )
-          })}
+          {ojisanHistory.map((text, index) => (
+            <div key={index} className="weather-ojisan-bubble">
+              <span>{text}</span>
+            </div>
+          ))}
           {geminiError && (
             <div className="weather-ojisan-bubble">
               <span>
