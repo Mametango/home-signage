@@ -805,14 +805,12 @@ const Clock = () => {
     }
   }
 
-  // 2時間ごとの天気予報が取れたタイミングで、1回だけ自動でGeminiに問い合わせる
+  // 一度だけ自動でGeminiに問い合わせて、お天気おじさんにしゃべってもらう
   useEffect(() => {
     if (geminiAutoTriggered.current) return
-    if (hourlyForecast.length === 0) return
-
     geminiAutoTriggered.current = true
     handleGeminiTest()
-  }, [hourlyForecast])
+  }, [prefecture, city])
 
 
   return (
