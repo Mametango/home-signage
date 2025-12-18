@@ -377,10 +377,10 @@
 .weather-ojisan-bubble {
   position: relative;
   flex: 1;
-  background: rgba(0, 0, 0, 0.55);
+  background: rgba(255, 255, 255, 0.92);
   border-radius: 0.9rem;
   padding: 0.75rem 1rem;
-  color: #fff;
+  color: #000;
   font-size: 0.95rem;
   line-height: 1.6;
   font-family: 'Noto Sans JP', sans-serif;
@@ -394,7 +394,7 @@
   top: 1.1rem;
   border-width: 0.6rem;
   border-style: solid;
-  border-color: transparent rgba(0, 0, 0, 0.55) transparent transparent;
+  border-color: transparent rgba(255, 255, 255, 0.92) transparent transparent;
 }
 
 .weather-ojisan-temps {
