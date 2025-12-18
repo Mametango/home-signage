@@ -767,10 +767,15 @@ const Clock = () => {
           statusText: res.statusText,
           bodySample: text.slice(0, 300)
         })
-        const message =
-          (json && (json.error || json.message)) ||
-          `HTTP ${res.status} ${res.statusText || ''}`.trim()
-        setGeminiError(message)
+        const lines: string[] = []
+        lines.push(`HTTP ${res.status} ${res.statusText || ''}`.trim())
+        if (json && (json.error || json.message)) {
+          lines.push(`error: ${json.error || json.message}`)
+        }
+        if (text) {
+          lines.push(`body: ${text.slice(0, 200)}`)
+        }
+        setGeminiError(lines.join('\n'))
         return
       }
 
