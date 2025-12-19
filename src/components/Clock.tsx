@@ -11,7 +11,7 @@ interface HourlyForecast {
   precipitation: number
 }
 
-interface TodayWeatherData {
+interface WeatherData {
   condition: string
   icon: string
   maxTemp?: number
@@ -24,7 +24,8 @@ interface TodayWeatherData {
 
 const Clock = () => {
   const [time, setTime] = useState(new Date())
-  const [todayWeather, setTodayWeather] = useState<TodayWeatherData | null>(null)
+  const [todayWeather, setTodayWeather] = useState<WeatherData | null>(null)
+  const [tomorrowWeather, setTomorrowWeather] = useState<WeatherData | null>(null)
   const [hourlyForecast, setHourlyForecast] = useState<HourlyForecast[]>([])
   const [prefecture, setPrefecture] = useState<string>('新潟県')
   const [city, setCity] = useState<string>('新発田市')
@@ -258,6 +259,38 @@ const Clock = () => {
                 prefecture: prefecture,
                 city: city
               })
+
+              // 明日の天気予報を取得（forecasts[1]が明日）
+              if (tsukumijimaData.forecasts.length > 1) {
+                const tomorrowForecast = tsukumijimaData.forecasts[1]
+                const tomorrowWeatherInfo = getWeatherCondition(tomorrowForecast.telop || '')
+                
+                let tomorrowMaxTemp: number | undefined
+                let tomorrowMinTemp: number | undefined
+                
+                if (tomorrowForecast.temperature && tomorrowForecast.temperature.max) {
+                  const tomorrowMaxCelsius = tomorrowForecast.temperature.max.celsius
+                  if (tomorrowMaxCelsius !== null && tomorrowMaxCelsius !== undefined && tomorrowMaxCelsius !== '') {
+                    tomorrowMaxTemp = parseInt(String(tomorrowMaxCelsius))
+                  }
+                }
+                
+                if (tomorrowForecast.temperature && tomorrowForecast.temperature.min) {
+                  const tomorrowMinCelsius = tomorrowForecast.temperature.min.celsius
+                  if (tomorrowMinCelsius !== null && tomorrowMinCelsius !== undefined && tomorrowMinCelsius !== '') {
+                    tomorrowMinTemp = parseInt(String(tomorrowMinCelsius))
+                  }
+                }
+                
+                setTomorrowWeather({
+                  condition: tomorrowWeatherInfo.condition,
+                  icon: tomorrowWeatherInfo.icon,
+                  maxTemp: tomorrowMaxTemp,
+                  minTemp: tomorrowMinTemp,
+                  prefecture: prefecture,
+                  city: city
+                })
+              }
               
               window.dispatchEvent(new CustomEvent('weatherChanged', { 
                 detail: { condition: weatherInfo.condition } 
@@ -289,12 +322,21 @@ const Clock = () => {
                   
                   const today = new Date()
                   today.setHours(0, 0, 0, 0)
+                  const tomorrow = new Date(today)
+                  tomorrow.setDate(tomorrow.getDate() + 1)
                   
                   // 今日のデータのみをフィルタリング
                   const todayForecasts = data.list.filter((item: any) => {
                     const itemDate = new Date(item.dt_txt)
                     itemDate.setHours(0, 0, 0, 0)
                     return itemDate.getTime() === today.getTime()
+                  })
+                  
+                  // 明日のデータをフィルタリング
+                  const tomorrowForecasts = data.list.filter((item: any) => {
+                    const itemDate = new Date(item.dt_txt)
+                    itemDate.setHours(0, 0, 0, 0)
+                    return itemDate.getTime() === tomorrow.getTime()
                   })
                   
                   const forecast: HourlyForecast[] = []
@@ -325,6 +367,23 @@ const Clock = () => {
                   setTodayWeather((prev) => {
                     if (prev) {
                       return { ...prev, precipitationChance: maxPrecipitationChance }
+                    }
+                    return prev
+                  })
+                  
+                  // 明日の天気カードに降水確率を追加
+                  let maxTomorrowPrecipitationChance = 0
+                  for (let i = 0; i < Math.min(6, tomorrowForecasts.length); i++) {
+                    const item = tomorrowForecasts[i]
+                    const pop = Math.round(item.pop * 100)
+                    if (pop > maxTomorrowPrecipitationChance) {
+                      maxTomorrowPrecipitationChance = pop
+                    }
+                  }
+                  
+                  setTomorrowWeather((prev) => {
+                    if (prev) {
+                      return { ...prev, precipitationChance: maxTomorrowPrecipitationChance }
                     }
                     return prev
                   })
@@ -934,40 +993,82 @@ const Clock = () => {
         </div>
       </div>
 
-      {/* 中: 今日の天気（常時表示） */}
-      {todayWeather && (
+      {/* 中: 今日と明日の天気（常時表示） */}
+      {(todayWeather || tomorrowWeather) && (
         <div className="clock-weather">
           <div className="clock-weather-summary">
             <div className="clock-weather-main">
-              <div className="clock-weather-header">
-                <div className="clock-weather-icon">{todayWeather.icon}</div>
-                <div className="clock-weather-info">
-                  <div className="clock-weather-location">
-                    {todayWeather.prefecture} {todayWeather.city}
-                  </div>
-                  <div className="clock-weather-condition">{todayWeather.condition}</div>
-                  <div className="clock-weather-details">
-                    {(todayWeather.maxTemp !== undefined || todayWeather.minTemp !== undefined) && (
-                      <div className="clock-weather-temp">
-                        {todayWeather.maxTemp !== undefined && (
-                          <span className="temp-max">{todayWeather.maxTemp}°</span>
+              {/* 左側: 今日の天気 */}
+              {todayWeather && (
+                <div className="clock-weather-day">
+                  <div className="clock-weather-day-label">今日</div>
+                  <div className="clock-weather-header">
+                    <div className="clock-weather-icon">{todayWeather.icon}</div>
+                    <div className="clock-weather-info">
+                      <div className="clock-weather-location">
+                        {todayWeather.prefecture} {todayWeather.city}
+                      </div>
+                      <div className="clock-weather-condition">{todayWeather.condition}</div>
+                      <div className="clock-weather-details">
+                        {(todayWeather.maxTemp !== undefined || todayWeather.minTemp !== undefined) && (
+                          <div className="clock-weather-temp">
+                            {todayWeather.maxTemp !== undefined && (
+                              <span className="temp-max">{todayWeather.maxTemp}°</span>
+                            )}
+                            {todayWeather.maxTemp !== undefined && todayWeather.minTemp !== undefined && (
+                              <span className="temp-separator">/</span>
+                            )}
+                            {todayWeather.minTemp !== undefined && (
+                              <span className="temp-min">{todayWeather.minTemp}°</span>
+                            )}
+                          </div>
                         )}
-                        {todayWeather.maxTemp !== undefined && todayWeather.minTemp !== undefined && (
-                          <span className="temp-separator">/</span>
-                        )}
-                        {todayWeather.minTemp !== undefined && (
-                          <span className="temp-min">{todayWeather.minTemp}°</span>
+                        {todayWeather.precipitationChance !== undefined && (
+                          <div className="clock-weather-precipitation">
+                            降水確率 {todayWeather.precipitationChance}%
+                          </div>
                         )}
                       </div>
-                    )}
-                    {todayWeather.precipitationChance !== undefined && (
-                      <div className="clock-weather-precipitation">
-                        降水確率 {todayWeather.precipitationChance}%
-                      </div>
-                    )}
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
+              
+              {/* 右側: 明日の天気 */}
+              {tomorrowWeather && (
+                <div className="clock-weather-day">
+                  <div className="clock-weather-day-label">明日</div>
+                  <div className="clock-weather-header">
+                    <div className="clock-weather-icon">{tomorrowWeather.icon}</div>
+                    <div className="clock-weather-info">
+                      <div className="clock-weather-location">
+                        {tomorrowWeather.prefecture} {tomorrowWeather.city}
+                      </div>
+                      <div className="clock-weather-condition">{tomorrowWeather.condition}</div>
+                      <div className="clock-weather-details">
+                        {(tomorrowWeather.maxTemp !== undefined || tomorrowWeather.minTemp !== undefined) && (
+                          <div className="clock-weather-temp">
+                            {tomorrowWeather.maxTemp !== undefined && (
+                              <span className="temp-max">{tomorrowWeather.maxTemp}°</span>
+                            )}
+                            {tomorrowWeather.maxTemp !== undefined && tomorrowWeather.minTemp !== undefined && (
+                              <span className="temp-separator">/</span>
+                            )}
+                            {tomorrowWeather.minTemp !== undefined && (
+                              <span className="temp-min">{tomorrowWeather.minTemp}°</span>
+                            )}
+                          </div>
+                        )}
+                        {tomorrowWeather.precipitationChance !== undefined && (
+                          <div className="clock-weather-precipitation">
+                            降水確率 {tomorrowWeather.precipitationChance}%
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
