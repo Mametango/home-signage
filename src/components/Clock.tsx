@@ -1081,21 +1081,19 @@ const Clock = () => {
           <div className="weather-ojisan-name">お天気おじさん</div>
         </div>
         <div className="weather-ojisan-bubbles">
-          {ojisanHistory.length === 0 && !geminiError && (
-            <div className="weather-ojisan-bubble">
-              <span>お天気おじさんが最新の天気を集めています…</span>
-            </div>
-          )}
-          {ojisanHistory.map((text, index) => (
-            <div key={index} className="weather-ojisan-bubble">
-              <span>{text}</span>
-            </div>
-          ))}
-          {geminiError && (
+          {geminiError ? (
             <div className="weather-ojisan-bubble">
               <span>
                 今日はAIのお天気おじさんがうまく天気をしゃべれないみたいです。時間をおいてからまた見てみてください。
               </span>
+            </div>
+          ) : ojisanHistory.length > 0 ? (
+            <div className="weather-ojisan-bubble">
+              <span>{ojisanHistory[ojisanHistory.length - 1]}</span>
+            </div>
+          ) : (
+            <div className="weather-ojisan-bubble">
+              <span>お天気おじさんが最新の天気を集めています…</span>
             </div>
           )}
         </div>
