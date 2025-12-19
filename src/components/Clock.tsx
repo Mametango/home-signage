@@ -33,7 +33,7 @@ const Clock = () => {
   const [ojisanMessage, setOjisanMessage] = useState<string | null>(null)
   const [ojisanHistory, setOjisanHistory] = useState<string[]>([])
   // const [geminiLoading, setGeminiLoading] = useState(false) // 自動問い合わせ状態の管理用（UIでは現在未使用）
-  const geminiAutoTriggered = useRef(false)
+  const lastGeminiUpdate = useRef<number | null>(null)
 
   // 時刻更新
   useEffect(() => {
@@ -897,11 +897,28 @@ const Clock = () => {
     }
   }
 
-  // 一度だけ自動でGeminiに問い合わせて、お天気おじさんにしゃべってもらう
+  // 3時間ごとに自動でGeminiに問い合わせて、お天気おじさんにしゃべってもらう
   useEffect(() => {
-    if (geminiAutoTriggered.current) return
-    geminiAutoTriggered.current = true
-    handleGeminiTest()
+    if (!prefecture || !city) return
+
+    const checkAndUpdate = () => {
+      const now = Date.now()
+      const threeHours = 3 * 60 * 60 * 1000 // 3時間をミリ秒に変換
+
+      // 初回実行、または最後の更新から3時間以上経過している場合
+      if (lastGeminiUpdate.current === null || (now - lastGeminiUpdate.current) >= threeHours) {
+        lastGeminiUpdate.current = now
+        handleGeminiTest()
+      }
+    }
+
+    // 初回実行
+    checkAndUpdate()
+
+    // 1分ごとにチェックして、3時間経過していたら更新
+    const interval = setInterval(checkAndUpdate, 60 * 1000)
+
+    return () => clearInterval(interval)
   }, [prefecture, city])
 
 
