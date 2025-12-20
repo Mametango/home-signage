@@ -261,7 +261,6 @@ const Clock = () => {
                   
                   // 明日の天気コードを取得（最初の明日の日付のインデックスを見つける）
                   let tomorrowWeatherCode: string | null = null
-                  let tomorrowWeatherIndex: number | null = null
                   
                   // 各時間帯の天気と降水確率を取得
                   let prevWeather = ''
@@ -585,7 +584,7 @@ const Clock = () => {
                 }
                 
                 window.dispatchEvent(new CustomEvent('weatherChanged', { 
-                  detail: { condition: weatherInfo.condition } 
+                  detail: { condition: displayCondition } 
                 }))
                 return
               }
