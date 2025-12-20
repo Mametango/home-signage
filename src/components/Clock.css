@@ -180,6 +180,40 @@
   margin-right: 0.5rem;
 }
 
+.clock-weather-temp-right {
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  justify-content: flex-end;
+  margin-left: auto;
+  font-family: 'Noto Sans JP', sans-serif;
+  flex-shrink: 0;
+}
+
+.clock-weather-temp-right > *:not(:last-child) {
+  margin-right: 0.5rem;
+}
+
+.clock-weather-temp-right .temp-max {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #ff6b6b;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.clock-weather-temp-right .temp-separator {
+  font-size: 1.2rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin: 0 0.25rem;
+}
+
+.clock-weather-temp-right .temp-min {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #4dabf7;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
 .clock-weather-temp .temp-max {
   font-size: 1.6rem; /* フォントサイズを小さく */
   font-weight: 700;

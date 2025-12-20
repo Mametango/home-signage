@@ -846,9 +846,9 @@ const Clock = () => {
   const handleGeminiTest = async () => {
     try {
       const trimmed = geminiPrompt.trim()
-      // Gemini には常に「京都府京都市」の明日の天気予報を問い合わせる
-      const targetPrefecture = '京都府'
-      const targetCity = '京都市'
+      // Gemini には設定されている場所の今日と明日の天気予報を問い合わせる
+      const targetPrefecture = prefecture
+      const targetCity = city
 
       const hasForecast = hourlyForecast.length > 0
       const forecastDataForPrompt = hasForecast
@@ -863,20 +863,21 @@ const Clock = () => {
         : '（2時間ごとの天気データは取得できませんでした）'
 
       const userQuestion =
-        trimmed || '京都府京都市の明日の天気予報をわかりやすく教えてください。'
+        trimmed || `${targetPrefecture}${targetCity}の今日と明日の天気予報をわかりやすく教えてください。`
 
+      const tomorrowDate = new Date(time.getTime() + 24 * 60 * 60 * 1000)
       const promptToSend =
         `あなたは日本の気象予報士です。` +
         `以下の天気データとユーザーからの質問にもとづいて、` +
-        `京都府京都市の明日（${format(new Date(time.getTime() + 24 * 60 * 60 * 1000), 'MM月dd日')}）の天気予報を日本語で1行の短い文章で説明してください。` +
+        `${targetPrefecture}${targetCity}の今日（${format(time, 'MM月dd日')}）と明日（${format(tomorrowDate, 'MM月dd日')}）の天気予報を日本語で1行の短い文章で説明してください。` +
         `改行は入れず、全体を1行の文として出力してください。` +
-        `地名だけ（例:「京都」「京都市」など）で答えてはいけません。` +
-        `必ず「明日の天気の傾向」を含む説明文として40文字以上で出力してください。\n\n` +
+        `地名だけ（例:「${targetCity}」など）で答えてはいけません。` +
+        `必ず「今日と明日の天気の傾向」を含む説明文として40文字以上で出力してください。\n\n` +
         `【地点】${targetPrefecture}${targetCity}\n` +
         `【現在時刻】${format(time, 'yyyy年MM月dd日 HH:mm')}\n` +
         `【2時間ごとの天気データ】\n${forecastDataForPrompt}\n\n` +
         `【ユーザーからの質問】${userQuestion}\n\n` +
-        `必ず、京都府京都市の明日の天気として、気温の傾向（暑い・寒いなど）や雨・雪の可能性にも触れてください。`
+        `必ず、${targetPrefecture}${targetCity}の今日と明日の天気として、気温の傾向（暑い・寒いなど）や雨・雪の可能性にも触れてください。`
 
       if (!promptToSend) {
         setGeminiError('Geminiに送るプロンプトを入力してください。')
@@ -1009,27 +1010,25 @@ const Clock = () => {
                         {todayWeather.prefecture} {todayWeather.city}
                       </div>
                       <div className="clock-weather-condition">{todayWeather.condition}</div>
-                      <div className="clock-weather-details">
-                        {(todayWeather.maxTemp !== undefined || todayWeather.minTemp !== undefined) && (
-                          <div className="clock-weather-temp">
-                            {todayWeather.maxTemp !== undefined && (
-                              <span className="temp-max">{todayWeather.maxTemp}°</span>
-                            )}
-                            {todayWeather.maxTemp !== undefined && todayWeather.minTemp !== undefined && (
-                              <span className="temp-separator">/</span>
-                            )}
-                            {todayWeather.minTemp !== undefined && (
-                              <span className="temp-min">{todayWeather.minTemp}°</span>
-                            )}
-                          </div>
+                      {todayWeather.precipitationChance !== undefined && (
+                        <div className="clock-weather-precipitation">
+                          降水確率 {todayWeather.precipitationChance}%
+                        </div>
+                      )}
+                    </div>
+                    {(todayWeather.maxTemp !== undefined || todayWeather.minTemp !== undefined) && (
+                      <div className="clock-weather-temp-right">
+                        {todayWeather.maxTemp !== undefined && (
+                          <span className="temp-max">{todayWeather.maxTemp}°</span>
                         )}
-                        {todayWeather.precipitationChance !== undefined && (
-                          <div className="clock-weather-precipitation">
-                            降水確率 {todayWeather.precipitationChance}%
-                          </div>
+                        {todayWeather.maxTemp !== undefined && todayWeather.minTemp !== undefined && (
+                          <span className="temp-separator">/</span>
+                        )}
+                        {todayWeather.minTemp !== undefined && (
+                          <span className="temp-min">{todayWeather.minTemp}°</span>
                         )}
                       </div>
-                    </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -1045,27 +1044,25 @@ const Clock = () => {
                         {tomorrowWeather.prefecture} {tomorrowWeather.city}
                       </div>
                       <div className="clock-weather-condition">{tomorrowWeather.condition}</div>
-                      <div className="clock-weather-details">
-                        {(tomorrowWeather.maxTemp !== undefined || tomorrowWeather.minTemp !== undefined) && (
-                          <div className="clock-weather-temp">
-                            {tomorrowWeather.maxTemp !== undefined && (
-                              <span className="temp-max">{tomorrowWeather.maxTemp}°</span>
-                            )}
-                            {tomorrowWeather.maxTemp !== undefined && tomorrowWeather.minTemp !== undefined && (
-                              <span className="temp-separator">/</span>
-                            )}
-                            {tomorrowWeather.minTemp !== undefined && (
-                              <span className="temp-min">{tomorrowWeather.minTemp}°</span>
-                            )}
-                          </div>
+                      {tomorrowWeather.precipitationChance !== undefined && (
+                        <div className="clock-weather-precipitation">
+                          降水確率 {tomorrowWeather.precipitationChance}%
+                        </div>
+                      )}
+                    </div>
+                    {(tomorrowWeather.maxTemp !== undefined || tomorrowWeather.minTemp !== undefined) && (
+                      <div className="clock-weather-temp-right">
+                        {tomorrowWeather.maxTemp !== undefined && (
+                          <span className="temp-max">{tomorrowWeather.maxTemp}°</span>
                         )}
-                        {tomorrowWeather.precipitationChance !== undefined && (
-                          <div className="clock-weather-precipitation">
-                            降水確率 {tomorrowWeather.precipitationChance}%
-                          </div>
+                        {tomorrowWeather.maxTemp !== undefined && tomorrowWeather.minTemp !== undefined && (
+                          <span className="temp-separator">/</span>
+                        )}
+                        {tomorrowWeather.minTemp !== undefined && (
+                          <span className="temp-min">{tomorrowWeather.minTemp}°</span>
                         )}
                       </div>
-                    </div>
+                    )}
                   </div>
                 </div>
               )}
