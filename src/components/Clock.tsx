@@ -846,9 +846,9 @@ const Clock = () => {
   const handleGeminiTest = async () => {
     try {
       const trimmed = geminiPrompt.trim()
-      // Gemini には常に「新潟県新発田市」の天気予報を問い合わせる
-      const targetPrefecture = '新潟県'
-      const targetCity = '新発田市'
+      // Gemini には常に「京都府京都市」の明日の天気予報を問い合わせる
+      const targetPrefecture = '京都府'
+      const targetCity = '京都市'
 
       const hasForecast = hourlyForecast.length > 0
       const forecastDataForPrompt = hasForecast
@@ -863,20 +863,20 @@ const Clock = () => {
         : '（2時間ごとの天気データは取得できませんでした）'
 
       const userQuestion =
-        trimmed || '新潟県新発田市の今日と今後24時間の天気をわかりやすく教えてください。'
+        trimmed || '京都府京都市の明日の天気予報をわかりやすく教えてください。'
 
       const promptToSend =
         `あなたは日本の気象予報士です。` +
         `以下の天気データとユーザーからの質問にもとづいて、` +
-        `現在からおおよそ24時間程度の天気の概要を日本語で1行の短い文章で説明してください。` +
+        `京都府京都市の明日（${format(new Date(time.getTime() + 24 * 60 * 60 * 1000), 'MM月dd日')}）の天気予報を日本語で1行の短い文章で説明してください。` +
         `改行は入れず、全体を1行の文として出力してください。` +
-        `地名だけ（例:「新潟」「新発田市」など）で答えてはいけません。` +
-        `必ず「現在〜今後24時間の天気の傾向」を含む説明文として40文字以上で出力してください。\n\n` +
+        `地名だけ（例:「京都」「京都市」など）で答えてはいけません。` +
+        `必ず「明日の天気の傾向」を含む説明文として40文字以上で出力してください。\n\n` +
         `【地点】${targetPrefecture}${targetCity}\n` +
         `【現在時刻】${format(time, 'yyyy年MM月dd日 HH:mm')}\n` +
         `【2時間ごとの天気データ】\n${forecastDataForPrompt}\n\n` +
         `【ユーザーからの質問】${userQuestion}\n\n` +
-        `必ず、新潟県新発田市の天気として、気温の傾向（暑い・寒いなど）や雨・雪の可能性にも触れてください。`
+        `必ず、京都府京都市の明日の天気として、気温の傾向（暑い・寒いなど）や雨・雪の可能性にも触れてください。`
 
       if (!promptToSend) {
         setGeminiError('Geminiに送るプロンプトを入力してください。')
