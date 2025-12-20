@@ -28,3 +28,15 @@ dist-ssr
 .env.local
 .env.production.local
 .env.development.local
+
+# Android/Gradle
+.gradle
+*.iml
+.idea
+local.properties
+
+# Vercel
+.vercel
+
+# Vercel
+.vercel

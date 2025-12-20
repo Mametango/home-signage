@@ -35,38 +35,7 @@ const News = () => {
   // const [urgentDisplayStartTime, setUrgentDisplayStartTime] = useState<number | null>(null) // 未使用
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [hiddenNewsIds, setHiddenNewsIds] = useState<Set<number>>(new Set())
 
-  // localStorageから非表示記事のIDを読み込み
-  useEffect(() => {
-    const savedHiddenIds = localStorage.getItem('hiddenNewsIds')
-    if (savedHiddenIds) {
-      try {
-        const ids = JSON.parse(savedHiddenIds)
-        setHiddenNewsIds(new Set(ids))
-      } catch (e) {
-        console.error('非表示記事IDの読み込みに失敗しました:', e)
-      }
-    }
-  }, [])
-
-  // 記事を非表示にする関数
-  const hideNews = (newsId: number, e: React.MouseEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    
-    const newHiddenIds = new Set(hiddenNewsIds)
-    newHiddenIds.add(newsId)
-    setHiddenNewsIds(newHiddenIds)
-    
-    // localStorageに保存
-    localStorage.setItem('hiddenNewsIds', JSON.stringify(Array.from(newHiddenIds)))
-    
-    // 非表示にした記事をリストから除外
-    setNormalNews(prev => prev.filter(item => item.id !== newsId))
-    
-    console.log('記事を非表示にしました:', newsId)
-  }
 
   // P2P地震情報から緊急地震速報を取得（未使用のためコメントアウト）
   /*
@@ -261,14 +230,11 @@ const News = () => {
           setError('ニュースが取得できませんでした')
         } else {
           // 全て通常ニュースとして扱う（緊急ニュースは一切表示しない）
-          // 非表示にした記事を除外
-          const filteredNews = newsItems.filter(item => !hiddenNewsIds.has(item.id))
-          
           // 通常ニュースを設定
-          setNormalNews(filteredNews)
+          setNormalNews(newsItems)
           
           // 通常ニュースのインデックスをリセット（念のため）
-          if (filteredNews.length > 0 && currentNormalIndex >= filteredNews.length) {
+          if (newsItems.length > 0 && currentNormalIndex >= newsItems.length) {
             setCurrentNormalIndex(0)
           }
           
@@ -286,7 +252,7 @@ const News = () => {
     const interval = setInterval(fetchNews, 300000) // 5分ごとに自動更新
 
     return () => clearInterval(interval)
-  }, [hiddenNewsIds])
+  }, [])
 
   // 緊急ニュースの表示管理を完全に停止
   // useEffect(() => { ... }, []) // コメントアウト
@@ -391,12 +357,23 @@ const News = () => {
             )}
           </a>
           <button
-            className="news-delete-button"
-            onClick={(e) => hideNews(currentNews.id, e)}
-            title="この記事を非表示にする"
-            aria-label="記事を削除"
+            className="news-weather-button"
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              console.log('週間天気予報ボタンがクリックされました')
+              // 週間天気予報を表示するイベントを発火
+              const event = new CustomEvent('showWeeklyWeather', {
+                bubbles: true,
+                cancelable: true
+              })
+              window.dispatchEvent(event)
+              console.log('イベントを発火しました:', event)
+            }}
+            title="週間天気予報を表示"
+            aria-label="週間天気予報を表示"
           >
-            🗑️
+            🌤️
           </button>
         </div>
       ) : (

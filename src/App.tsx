@@ -12,6 +12,33 @@ function App() {
   const [countdown, setCountdown] = useState<number>(Math.floor(INTERVAL_MS / 1000))
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const showWeeklyWeatherRef = useRef(showWeeklyWeather)
+  
+  // showWeeklyWeatherの最新値をrefに保持
+  useEffect(() => {
+    showWeeklyWeatherRef.current = showWeeklyWeather
+  }, [showWeeklyWeather])
+
+  // 週間天気予報を表示するイベントをリッスン
+  useEffect(() => {
+    const handleShowWeeklyWeather = (event: Event) => {
+      console.log('週間天気予報を表示するイベントを受信しました', event)
+      setShowWeeklyWeather(true)
+      showWeeklyWeatherRef.current = true
+      // カウントダウンタイマーを停止
+      if (countdownRef.current) {
+        clearInterval(countdownRef.current)
+        countdownRef.current = null
+      }
+      setCountdown(0)
+    }
+
+    window.addEventListener('showWeeklyWeather', handleShowWeeklyWeather)
+
+    return () => {
+      window.removeEventListener('showWeeklyWeather', handleShowWeeklyWeather)
+    }
+  }, [])
 
   useEffect(() => {
     // 既存のタイマーをクリア
@@ -24,18 +51,25 @@ function App() {
       countdownRef.current = null
     }
     
-    // 3分（180秒）ごとに全画面で1週間の天気予報を表示
+    // 週間天気予報を表示する関数
     const showWeather = () => {
       console.log('週間天気予報を表示します:', new Date().toLocaleTimeString())
       setShowWeeklyWeather(true)
+      showWeeklyWeatherRef.current = true
       if (countdownRef.current) {
         clearInterval(countdownRef.current)
         countdownRef.current = null
       }
+      setCountdown(0)
     }
 
-    // カウントダウンを開始
+    // カウントダウンを開始する関数
     const startCountdown = () => {
+      // 既に表示中の場合はスキップ
+      if (showWeeklyWeatherRef.current) {
+        return
+      }
+      
       const seconds = Math.floor(INTERVAL_MS / 1000)
       console.log('カウントダウンを開始します:', seconds, '秒')
       setCountdown(seconds)
@@ -51,14 +85,17 @@ function App() {
             return seconds
           }
           const next = prev - 1
-          console.log('カウントダウン更新:', next)
+          console.log('カウントダウン更新:', next, 'showWeeklyWeather:', showWeeklyWeatherRef.current)
           if (next <= 0) {
             console.log('カウントダウン終了。週間天気予報を表示します')
             if (countdownRef.current) {
               clearInterval(countdownRef.current)
               countdownRef.current = null
             }
-            showWeather()
+            // 次のティックで実行されるようにする
+            setTimeout(() => {
+              showWeather()
+            }, 0)
             return 0
           }
           return next
@@ -71,13 +108,17 @@ function App() {
     console.log('現在時刻:', new Date().toLocaleTimeString())
     console.log('次の表示時刻:', new Date(Date.now() + INTERVAL_MS).toLocaleTimeString())
     
-    // 初回カウントダウンを開始
-    startCountdown()
+    // 初回カウントダウンを開始（表示中でない場合のみ）
+    if (!showWeeklyWeatherRef.current) {
+      startCountdown()
+    }
     
     // 定期的にカウントダウンをリセット
     intervalRef.current = setInterval(() => {
       console.log('タイマーが発火しました。カウントダウンをリセットします:', new Date().toLocaleTimeString())
-      startCountdown()
+      if (!showWeeklyWeatherRef.current) {
+        startCountdown()
+      }
     }, INTERVAL_MS)
 
     return () => {
@@ -100,41 +141,85 @@ function App() {
       const timer = setTimeout(() => {
         console.log('週間天気予報を閉じます:', new Date().toLocaleTimeString())
         setShowWeeklyWeather(false)
-        
-        // カウントダウンを再開
-        const INTERVAL_MS = 300000 // 5分ごと
-        const seconds = Math.floor(INTERVAL_MS / 1000)
-        setCountdown(seconds)
-        
-        // カウントダウンタイマーを再開
-        if (countdownRef.current) {
-          clearInterval(countdownRef.current)
-        }
-        
-        countdownRef.current = setInterval(() => {
-          setCountdown((prev) => {
-            if (prev === null || prev <= 1) {
-              console.log('カウントダウン終了。週間天気予報を表示します')
-              setShowWeeklyWeather(true)
-              return 0
-            }
-            return prev - 1
-          })
-        }, 1000)
       }, 60000) // 1分（60秒）後に閉じる
 
       return () => clearTimeout(timer)
     }
   }, [showWeeklyWeather])
 
+  // 週間天気予報が閉じられたときにカウントダウンを再開
+  const isFirstMount = useRef(true)
+  useEffect(() => {
+    // 初回マウント時はスキップ
+    if (isFirstMount.current) {
+      isFirstMount.current = false
+      return
+    }
+    
+    if (!showWeeklyWeather) {
+      // 既存のタイマーをクリア
+      if (countdownRef.current) {
+        clearInterval(countdownRef.current)
+        countdownRef.current = null
+      }
+      
+      // カウントダウンを再開
+      const seconds = Math.floor(INTERVAL_MS / 1000)
+      console.log('週間天気予報が閉じられました。カウントダウンを再開します:', seconds, '秒')
+      setCountdown(seconds)
+      
+      countdownRef.current = setInterval(() => {
+        setCountdown((prev) => {
+          if (prev === null || prev === undefined) {
+            return seconds
+          }
+          const next = prev - 1
+          console.log('カウントダウン更新（再開後）:', next, 'showWeeklyWeather:', showWeeklyWeatherRef.current)
+          if (next <= 0) {
+            console.log('カウントダウン終了（再開後）。週間天気予報を表示します')
+            if (countdownRef.current) {
+              clearInterval(countdownRef.current)
+              countdownRef.current = null
+            }
+            // 次のティックで実行されるようにする
+            setTimeout(() => {
+              setShowWeeklyWeather(true)
+              showWeeklyWeatherRef.current = true
+            }, 0)
+            return 0
+          }
+          return next
+        })
+      }, 1000)
+    }
+  }, [showWeeklyWeather, INTERVAL_MS])
+
   // 全画面表示の場合
   if (showWeeklyWeather) {
-    console.log('週間天気予報をレンダリング中...')
-    return (
-      <div className="app app-fullscreen">
-        <WeeklyWeather />
-      </div>
-    )
+    console.log('週間天気予報をレンダリング中...', showWeeklyWeather)
+    try {
+      return (
+        <div className="app app-fullscreen">
+          <WeeklyWeather />
+        </div>
+      )
+    } catch (error) {
+      console.error('週間天気予報のレンダリングエラー:', error)
+      return (
+        <div className="app app-fullscreen">
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center', 
+            height: '100%',
+            color: '#fff',
+            fontSize: '2rem'
+          }}>
+            週間天気予報の読み込み中...
+          </div>
+        </div>
+      )
+    }
   }
 
   // 通常表示
