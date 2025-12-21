@@ -830,11 +830,6 @@ const Clock = () => {
       </div>
       {weather && (
         <div className="clock-weather-summary">
-          <div className="clock-weather-header">
-            <div className="clock-weather-icon-large">{weather.icon}</div>
-            <div className="clock-weather-condition-large">{weather.condition}</div>
-          </div>
-          
           {/* 今日と明日の天気表示 */}
           <div className="clock-weather-today-tomorrow">
             {weather.today && (
