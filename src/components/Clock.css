@@ -241,10 +241,26 @@
   text-align: left;
 }
 
+.clock-weather-day-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.4rem;
+  flex-shrink: 0;
+}
+
 .clock-weather-day-temp {
   display: flex;
   align-items: baseline;
   gap: 0.25rem;
+  font-family: 'Noto Sans JP', sans-serif;
+}
+
+.clock-weather-day-precipitation {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: rgba(135, 206, 250, 0.95);
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
   font-family: 'Noto Sans JP', sans-serif;
 }
 

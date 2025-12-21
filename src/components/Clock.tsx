@@ -18,12 +18,14 @@ interface WeatherData {
     icon: string
     maxTemp?: number
     minTemp?: number
+    precipitation?: number
   }
   tomorrow?: {
     condition: string
     icon: string
     maxTemp?: number
     minTemp?: number
+    precipitation?: number
   }
 }
 
@@ -355,6 +357,32 @@ const Clock = () => {
                     tomorrowMinTemp = parseInt(temps[3])
                   }
                   
+                  // 今日と明日の降水確率を取得
+                  let todayPop = 0
+                  let tomorrowPop = 0
+                  if (pops && pops.length > 0 && timeDefines.length > 0) {
+                    const todayPops: number[] = []
+                    const tomorrowPops: number[] = []
+                    for (let i = 0; i < Math.min(pops.length, timeDefines.length); i++) {
+                      const timeDef = new Date(timeDefines[i])
+                      const timeDefDate = new Date(timeDef.getFullYear(), timeDef.getMonth(), timeDef.getDate())
+                      const popValue = parseInt(pops[i])
+                      if (!isNaN(popValue)) {
+                        if (timeDefDate.getTime() === today.getTime()) {
+                          todayPops.push(popValue)
+                        } else if (timeDefDate.getTime() === tomorrow.getTime()) {
+                          tomorrowPops.push(popValue)
+                        }
+                      }
+                    }
+                    if (todayPops.length > 0) {
+                      todayPop = Math.max(...todayPops)
+                    }
+                    if (tomorrowPops.length > 0) {
+                      tomorrowPop = Math.max(...tomorrowPops)
+                    }
+                  }
+                  
                   // 詳細な解説を組み立て
                   if (todayWeatherParts.length > 0) {
                     // 基本の天気情報（今日）
@@ -580,7 +608,8 @@ const Clock = () => {
                   condition: displayCondition,
                   icon: displayIcon,
                   maxTemp: maxTemp,
-                  minTemp: minTemp
+                  minTemp: minTemp,
+                  precipitation: todayPop
                 }
                 
                 // 明日の天気情報を構築
@@ -591,7 +620,8 @@ const Clock = () => {
                     condition: tomorrowWeatherInfo.text,
                     icon: tomorrowWeatherInfo.icon,
                     maxTemp: tomorrowMaxTemp,
-                    minTemp: tomorrowMinTemp
+                    minTemp: tomorrowMinTemp,
+                    precipitation: tomorrowPop
                   }
                 }
                 
@@ -837,11 +867,18 @@ const Clock = () => {
                 <div className="clock-weather-day-content">
                   <div className="clock-weather-day-label">今日</div>
                   <div className="clock-weather-day-condition">{weather.today.condition}</div>
+                </div>
+                <div className="clock-weather-day-right">
                   {weather.today.maxTemp !== undefined && weather.today.minTemp !== undefined && (
                     <div className="clock-weather-day-temp">
                       <span className="temp-max">{weather.today.maxTemp}°</span>
                       <span className="temp-separator">/</span>
                       <span className="temp-min">{weather.today.minTemp}°</span>
+                    </div>
+                  )}
+                  {weather.today.precipitation !== undefined && weather.today.precipitation > 0 && (
+                    <div className="clock-weather-day-precipitation">
+                      💧 {weather.today.precipitation}%
                     </div>
                   )}
                 </div>
@@ -853,11 +890,18 @@ const Clock = () => {
                 <div className="clock-weather-day-content">
                   <div className="clock-weather-day-label">明日</div>
                   <div className="clock-weather-day-condition">{weather.tomorrow.condition}</div>
+                </div>
+                <div className="clock-weather-day-right">
                   {weather.tomorrow.maxTemp !== undefined && weather.tomorrow.minTemp !== undefined && (
                     <div className="clock-weather-day-temp">
                       <span className="temp-max">{weather.tomorrow.maxTemp}°</span>
                       <span className="temp-separator">/</span>
                       <span className="temp-min">{weather.tomorrow.minTemp}°</span>
+                    </div>
+                  )}
+                  {weather.tomorrow.precipitation !== undefined && weather.tomorrow.precipitation > 0 && (
+                    <div className="clock-weather-day-precipitation">
+                      💧 {weather.tomorrow.precipitation}%
                     </div>
                   )}
                 </div>
