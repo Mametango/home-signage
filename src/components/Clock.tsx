@@ -823,23 +823,8 @@ const Clock = () => {
     fetchWeather()
     const interval = setInterval(fetchWeather, 600000)
 
-    return () => {
-      clearInterval(interval)
-      // クリーンアップ時に音声を停止
-      if (speechSynthesisRef.current) {
-        window.speechSynthesis.cancel()
-      }
-    }
+    return () => clearInterval(interval)
   }, [prefecture, city])
-  
-  // コンポーネントのアンマウント時に音声を停止
-  useEffect(() => {
-    return () => {
-      if (speechSynthesisRef.current) {
-        window.speechSynthesis.cancel()
-      }
-    }
-  }, [])
 
   return (
     <div className="clock clock-large">
