@@ -171,11 +171,6 @@ const WeeklyWeather = () => {
           <div key={index} className="weekly-weather-day">
             <div className="weekly-weather-date">
               {getDayLabel(day.date, index)}
-              {index < 2 && (
-                <div className="weekly-weather-location">
-                  {prefecture} {city}
-                </div>
-              )}
             </div>
             <div className="weekly-weather-icon">{day.icon}</div>
             <div className="weekly-weather-condition">{day.condition}</div>
