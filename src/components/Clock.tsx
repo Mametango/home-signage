@@ -270,6 +270,10 @@ const Clock = () => {
                 // 明日の天気コードを取得（スコープ外で定義）
                 let tomorrowWeatherCode: string | null = null
                 
+                // 今日と明日の降水確率を取得（スコープ外で定義）
+                let todayPop = 0
+                let tomorrowPop = 0
+                
                 // 天気の解説を作成（より詳細で自然な表現に）
                 let description = ''
                 if (weatherCodes.length > 0 && timeDefines.length > 0) {
@@ -356,8 +360,6 @@ const Clock = () => {
                   }
                   
                   // 今日と明日の降水確率を取得
-                  let todayPop = 0
-                  let tomorrowPop = 0
                   if (pops && pops.length > 0 && timeDefines.length > 0) {
                     const todayPops: number[] = []
                     const tomorrowPops: number[] = []
