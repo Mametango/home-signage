@@ -294,11 +294,39 @@
 .clock-weather-description-header {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 0.5rem;
   margin-bottom: 0.5rem;
   padding-bottom: 0.4rem;
   border-bottom: 2px solid rgba(255, 255, 255, 0.2);
   flex-wrap: wrap;
+}
+
+.clock-weather-description-header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.clock-weather-description-header-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.2rem;
+}
+
+.clock-weather-location-text {
+  font-size: 1rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.clock-weather-condition-text {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
 }
 
 .clock-weather-ojisan-icon {

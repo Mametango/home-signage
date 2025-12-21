@@ -898,8 +898,14 @@ const Clock = () => {
           {weather.description && (
             <div className="clock-weather-description-section">
               <div className="clock-weather-description-header">
-                <div className="clock-weather-ojisan-icon">👴</div>
-                <div className="clock-weather-ojisan-title">おじさんの解説</div>
+                <div className="clock-weather-description-header-left">
+                  <div className="clock-weather-ojisan-icon">👴</div>
+                  <div className="clock-weather-ojisan-title">おじさんの解説</div>
+                </div>
+                <div className="clock-weather-description-header-right">
+                  <div className="clock-weather-location-text">{prefecture} {city}</div>
+                  <div className="clock-weather-condition-text">{weather.condition}</div>
+                </div>
               </div>
               <div className="clock-weather-description-full">{weather.description}</div>
             </div>
