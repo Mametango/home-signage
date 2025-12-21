@@ -2,12 +2,14 @@ import { useState, useEffect } from 'react'
 import { format, addDays } from 'date-fns'
 import ja from 'date-fns/locale/ja'
 import { getSettings } from './Settings'
+import WeatherIcon from './WeatherIcon'
 import './WeeklyWeather.css'
 
 interface DayWeather {
   date: Date
   condition: string
   icon: string
+  weatherCode?: string // 天気コード（WeatherIcon用）
   maxTemp?: number
   minTemp?: number
 }
@@ -119,6 +121,7 @@ const WeeklyWeather = ({ onBack }: WeeklyWeatherProps) => {
                   date: date,
                   condition: weatherInfo.text,
                   icon: weatherInfo.icon,
+                  weatherCode: weatherCode,
                   maxTemp: maxTemp,
                   minTemp: minTemp
                 })
@@ -132,6 +135,7 @@ const WeeklyWeather = ({ onBack }: WeeklyWeatherProps) => {
                     date: addDays(lastDate, i - days.length + 1),
                     condition: '晴れ',
                     icon: '☀️',
+                    weatherCode: '100',
                     maxTemp: 20,
                     minTemp: 10
                   })
@@ -152,6 +156,7 @@ const WeeklyWeather = ({ onBack }: WeeklyWeatherProps) => {
             date: addDays(new Date(), i),
             condition: i % 2 === 0 ? '晴れ' : '曇り',
             icon: i % 2 === 0 ? '☀️' : '☁️',
+            weatherCode: i % 2 === 0 ? '100' : '200',
             maxTemp: 20 - i,
             minTemp: 10 - i
           })
@@ -167,6 +172,7 @@ const WeeklyWeather = ({ onBack }: WeeklyWeatherProps) => {
             date: addDays(new Date(), i),
             condition: i % 2 === 0 ? '晴れ' : '曇り',
             icon: i % 2 === 0 ? '☀️' : '☁️',
+            weatherCode: i % 2 === 0 ? '100' : '200',
             maxTemp: 20 - i,
             minTemp: 10 - i
           })
@@ -207,7 +213,9 @@ const WeeklyWeather = ({ onBack }: WeeklyWeatherProps) => {
             <div className="weekly-weather-date">
               {getDayLabel(day.date, index)}
             </div>
-            <div className="weekly-weather-icon">{day.icon}</div>
+            <div className="weekly-weather-icon">
+              <WeatherIcon code={day.weatherCode || '100'} size={56} />
+            </div>
             <div className="weekly-weather-condition">{day.condition}</div>
             {day.maxTemp !== undefined && day.minTemp !== undefined && (
               <div className="weekly-weather-temp">

@@ -80,8 +80,11 @@
 }
 
 .weekly-weather-icon {
-  font-size: 4rem;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   margin-bottom: 0.75rem;
 }
 
@@ -168,7 +171,8 @@
   }
   
   .weekly-weather-icon {
-    font-size: 3rem;
+    width: 48px;
+    height: 48px;
   }
   
   .weekly-weather-condition {

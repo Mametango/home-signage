@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { format } from 'date-fns'
 import ja from 'date-fns/locale/ja'
 import { getSettings } from './Settings'
+import WeatherIcon from './WeatherIcon'
 import './Clock.css'
 
 interface WeatherData {
@@ -10,12 +11,14 @@ interface WeatherData {
   minTemp?: number // 最低気温
   condition: string
   icon: string
+  weatherCode?: string // 天気コード（WeatherIcon用）
   precipitation: number // 降水確率（%）
   description?: string // 天気の解説
   // 今日と明日の天気
   today?: {
     condition: string
     icon: string
+    weatherCode?: string // 天気コード（WeatherIcon用）
     maxTemp?: number
     minTemp?: number
     precipitation?: number
@@ -23,6 +26,7 @@ interface WeatherData {
   tomorrow?: {
     condition: string
     icon: string
+    weatherCode?: string // 天気コード（WeatherIcon用）
     maxTemp?: number
     minTemp?: number
     precipitation?: number
@@ -122,7 +126,8 @@ const Clock = () => {
                   return { condition: '晴れ', icon: '☀️', text: '晴れ' }
                 }
                 
-                const weatherInfo = getWeatherCondition(currentForecast?.wx || todayForecast?.wx || 100)
+                const wxCode = currentForecast?.wx || todayForecast?.wx || 100
+                const weatherInfo = getWeatherCondition(wxCode)
                 const maxTemp = todayForecast?.maxtemp || currentForecast?.temp
                 const minTemp = todayForecast?.mintemp
                 const precipitation = todayForecast?.pop || 0
@@ -176,6 +181,7 @@ const Clock = () => {
                   minTemp: minTemp,
                   condition: weatherInfo.condition,
                   icon: weatherInfo.icon,
+                  weatherCode: String(wxCode),
                   precipitation: precipitation,
                   description: description
                 })
@@ -517,6 +523,7 @@ const Clock = () => {
                 // 今日の天気予報を取得（複数の時間帯を考慮）
                 let displayCondition = '晴れ'
                 let displayIcon = '☀️'
+                let todayWeatherCodeForIcon = '100' // デフォルトは晴れ
                 
                 // 今日の天気コードから表示用の天気を決定
                 if (weatherCodes.length > 0 && timeDefines.length > 0) {
@@ -569,15 +576,18 @@ const Clock = () => {
                       // 最後の天気のアイコンを使用
                       const lastWeatherInfo = getWeatherCondition(weatherTexts[weatherTexts.length - 1].code)
                       displayIcon = lastWeatherInfo.icon
+                      todayWeatherCodeForIcon = weatherTexts[weatherTexts.length - 1].code
                     } else if (uniqueWeathers.length === 1) {
                       displayCondition = uniqueWeathers[0]
                       const weatherInfo = getWeatherCondition(todayWeatherCodes[0])
                       displayIcon = weatherInfo.icon
+                      todayWeatherCodeForIcon = todayWeatherCodes[0]
                     } else {
                       // フォールバック
                       const firstWeatherInfo = getWeatherCondition(todayWeatherCodes[0])
                       displayCondition = firstWeatherInfo.condition
                       displayIcon = firstWeatherInfo.icon
+                      todayWeatherCodeForIcon = todayWeatherCodes[0]
                     }
                   } else {
                     // フォールバック: 最初の天気コードを使用
@@ -585,6 +595,7 @@ const Clock = () => {
                     const weatherInfo = todayWeatherCode ? getWeatherCondition(todayWeatherCode) : { condition: '晴れ', icon: '☀️', text: '晴れ' }
                     displayCondition = weatherInfo.condition
                     displayIcon = weatherInfo.icon
+                    todayWeatherCodeForIcon = todayWeatherCode || '100'
                   }
                 } else {
                   // フォールバック
@@ -592,6 +603,7 @@ const Clock = () => {
                   const weatherInfo = todayWeatherCode ? getWeatherCondition(todayWeatherCode) : { condition: '晴れ', icon: '☀️', text: '晴れ' }
                   displayCondition = weatherInfo.condition
                   displayIcon = weatherInfo.icon
+                  todayWeatherCodeForIcon = todayWeatherCode || '100'
                 }
                 
                 // 降水確率を取得（最大値を表示）
@@ -607,6 +619,7 @@ const Clock = () => {
                 const todayInfo = {
                   condition: displayCondition,
                   icon: displayIcon,
+                  weatherCode: todayWeatherCodeForIcon,
                   maxTemp: maxTemp,
                   minTemp: minTemp,
                   precipitation: todayPop
@@ -619,6 +632,7 @@ const Clock = () => {
                   tomorrowInfo = {
                     condition: tomorrowWeatherInfo.text,
                     icon: tomorrowWeatherInfo.icon,
+                    weatherCode: tomorrowWeatherCode,
                     maxTemp: tomorrowMaxTemp,
                     minTemp: tomorrowMinTemp,
                     precipitation: tomorrowPop
@@ -631,6 +645,7 @@ const Clock = () => {
                   minTemp: minTemp,
                   condition: displayCondition,
                   icon: displayIcon,
+                  weatherCode: todayWeatherCodeForIcon,
                   precipitation: pop,
                   description: description || undefined,
                   today: todayInfo,
@@ -676,6 +691,14 @@ const Clock = () => {
               if (condition.includes('Cloud') || condition.includes('曇')) return '☁️'
               if (condition.includes('Snow') || condition.includes('雪')) return '❄️'
               return '☀️'
+            }
+            
+            const getWeatherCodeFromOpenWeather = (main: string) => {
+              // OpenWeatherMapの天気状態から天気コードを推測
+              if (main.includes('Rain')) return '300'
+              if (main.includes('Snow')) return '400'
+              if (main.includes('Cloud')) return '200'
+              return '100' // デフォルトは晴れ
             }
             
             // 降水確率を取得（OpenWeatherMapの場合は3時間予報から取得）
@@ -765,9 +788,11 @@ const Clock = () => {
             }
             
             // 今日と明日の天気情報を構築（OpenWeatherMap APIでは簡易版）
+            const weatherCode = getWeatherCodeFromOpenWeather(data.weather[0].main)
             const todayInfo = {
               condition: conditionText,
               icon: getWeatherIcon(data.weather[0].main),
+              weatherCode: weatherCode,
               maxTemp: maxTemp,
               minTemp: minTemp
             }
@@ -778,6 +803,7 @@ const Clock = () => {
               minTemp: minTemp,
               condition: conditionText,
               icon: getWeatherIcon(data.weather[0].main),
+              weatherCode: weatherCode,
               precipitation: precipitation,
               description: description,
               today: todayInfo
@@ -808,6 +834,7 @@ const Clock = () => {
           temp: 12,
           condition: '曇り',
           icon: '☁️',
+          weatherCode: '200',
           precipitation: 30,
           description: '曇りがち。降水確率30%'
         })
@@ -817,6 +844,7 @@ const Clock = () => {
           temp: 12,
           condition: '曇り',
           icon: '☁️',
+          weatherCode: '200',
           precipitation: 30
         })
       }
@@ -848,7 +876,9 @@ const Clock = () => {
           <div className="clock-weather-today-tomorrow">
             {weather.today && (
               <div className="clock-weather-day-card today">
-                <div className="clock-weather-day-icon">{weather.today.icon}</div>
+                <div className="clock-weather-day-icon">
+                  <WeatherIcon code={weather.today.weatherCode || '100'} size={48} />
+                </div>
                 <div className="clock-weather-day-content">
                   <div className="clock-weather-day-label">今日</div>
                   <div className="clock-weather-day-condition">{weather.today.condition}</div>
@@ -871,7 +901,9 @@ const Clock = () => {
             )}
             {weather.tomorrow && (
               <div className="clock-weather-day-card tomorrow">
-                <div className="clock-weather-day-icon">{weather.tomorrow.icon}</div>
+                <div className="clock-weather-day-icon">
+                  <WeatherIcon code={weather.tomorrow.weatherCode || '100'} size={48} />
+                </div>
                 <div className="clock-weather-day-content">
                   <div className="clock-weather-day-label">明日</div>
                   <div className="clock-weather-day-condition">{weather.tomorrow.condition}</div>

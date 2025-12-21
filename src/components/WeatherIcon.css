@@ -1,0 +1,33 @@
+.weather-icon-container {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+.weather-icon-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* アニメーションの最適化 */
+.weather-icon-svg * {
+  transform-origin: center;
+}
+
+/* 太陽の光線アニメーション */
+.sun-rays line {
+  filter: drop-shadow(0 0 2px rgba(255, 215, 0, 0.5));
+}
+
+/* 雨のアニメーション強化 */
+.rain-drops line {
+  filter: drop-shadow(0 0 2px rgba(74, 144, 226, 0.5));
+}
+
+/* 雪のアニメーション強化 */
+.snowflakes line {
+  filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.8));
+}
+
