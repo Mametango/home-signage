@@ -45,418 +45,451 @@ const WeatherIcon = ({ code, size = 64, className = '' }: WeatherIconProps) => {
     switch (iconType) {
       case 'sunny':
         return (
-          <svg width={iconSize} height={iconSize} viewBox="0 0 100 100" className={`weather-icon-svg ${className}`}>
-            <circle cx="50" cy="50" r="25" fill="#FFD700" className="sun-circle">
-              <animate attributeName="opacity" values="1;0.8;1" dur="2s" repeatCount="indefinite" />
+          <svg width={iconSize} height={iconSize} viewBox="0 0 200 200" className={`weather-icon-svg ${className}`}>
+            <defs>
+              <radialGradient id="sunGradient" cx="50%" cy="50%">
+                <stop offset="0%" stopColor="#FFD700" stopOpacity="0.9" />
+                <stop offset="50%" stopColor="#FFA500" stopOpacity="0.7" />
+                <stop offset="100%" stopColor="#FF8C00" stopOpacity="0.3" />
+              </radialGradient>
+              <radialGradient id="sunRays" cx="50%" cy="50%">
+                <stop offset="0%" stopColor="#FFD700" stopOpacity="0.8" />
+                <stop offset="100%" stopColor="#FFA500" stopOpacity="0.2" />
+              </radialGradient>
+            </defs>
+            {/* 拡大された太陽の光の抽象表現 */}
+            <circle cx="100" cy="100" r="80" fill="url(#sunGradient)">
+              <animate attributeName="r" values="80;85;80" dur="3s" repeatCount="indefinite" />
             </circle>
-            <g className="sun-rays">
-              <line x1="50" y1="10" x2="50" y2="20" stroke="#FFD700" strokeWidth="3" strokeLinecap="round">
-                <animate attributeName="opacity" values="0.5;1;0.5" dur="2s" repeatCount="indefinite" />
-              </line>
-              <line x1="50" y1="80" x2="50" y2="90" stroke="#FFD700" strokeWidth="3" strokeLinecap="round">
-                <animate attributeName="opacity" values="0.5;1;0.5" dur="2s" repeatCount="indefinite" />
-              </line>
-              <line x1="10" y1="50" x2="20" y2="50" stroke="#FFD700" strokeWidth="3" strokeLinecap="round">
-                <animate attributeName="opacity" values="0.5;1;0.5" dur="2s" repeatCount="indefinite" begin="0.5s" />
-              </line>
-              <line x1="80" y1="50" x2="90" y2="50" stroke="#FFD700" strokeWidth="3" strokeLinecap="round">
-                <animate attributeName="opacity" values="0.5;1;0.5" dur="2s" repeatCount="indefinite" begin="0.5s" />
-              </line>
-              <line x1="25" y1="25" x2="30" y2="30" stroke="#FFD700" strokeWidth="3" strokeLinecap="round">
-                <animate attributeName="opacity" values="0.5;1;0.5" dur="2s" repeatCount="indefinite" begin="0.25s" />
-              </line>
-              <line x1="70" y1="70" x2="75" y2="75" stroke="#FFD700" strokeWidth="3" strokeLinecap="round">
-                <animate attributeName="opacity" values="0.5;1;0.5" dur="2s" repeatCount="indefinite" begin="0.25s" />
-              </line>
-              <line x1="75" y1="25" x2="70" y2="30" stroke="#FFD700" strokeWidth="3" strokeLinecap="round">
-                <animate attributeName="opacity" values="0.5;1;0.5" dur="2s" repeatCount="indefinite" begin="0.75s" />
-              </line>
-              <line x1="30" y1="70" x2="25" y2="75" stroke="#FFD700" strokeWidth="3" strokeLinecap="round">
-                <animate attributeName="opacity" values="0.5;1;0.5" dur="2s" repeatCount="indefinite" begin="0.75s" />
-              </line>
-            </g>
+            <circle cx="100" cy="100" r="60" fill="url(#sunRays)" opacity="0.6">
+              <animate attributeName="opacity" values="0.6;0.8;0.6" dur="2s" repeatCount="indefinite" />
+            </circle>
+            {/* 光の放射パターン */}
+            {Array.from({ length: 12 }).map((_, i) => {
+              const angle = (i * 30) * Math.PI / 180
+              const x1 = 100 + Math.cos(angle) * 70
+              const y1 = 100 + Math.sin(angle) * 70
+              const x2 = 100 + Math.cos(angle) * 90
+              const y2 = 100 + Math.sin(angle) * 90
+              return (
+                <line
+                  key={i}
+                  x1={x1}
+                  y1={y1}
+                  x2={x2}
+                  y2={y2}
+                  stroke="#FFD700"
+                  strokeWidth="4"
+                  strokeLinecap="round"
+                  opacity="0.6"
+                >
+                  <animate attributeName="opacity" values="0.4;0.8;0.4" dur="2s" repeatCount="indefinite" begin={`${i * 0.1}s`} />
+                </line>
+              )
+            })}
           </svg>
         )
 
       case 'cloudy':
         return (
-          <svg width={iconSize} height={iconSize} viewBox="0 0 100 100" className={`weather-icon-svg ${className}`}>
-            <ellipse cx="50" cy="50" rx="35" ry="20" fill="#E0E0E0" opacity="0.9">
-              <animate attributeName="cx" values="50;52;50" dur="3s" repeatCount="indefinite" />
+          <svg width={iconSize} height={iconSize} viewBox="0 0 200 200" className={`weather-icon-svg ${className}`}>
+            <defs>
+              <linearGradient id="cloudGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#E8E8E8" stopOpacity="0.9" />
+                <stop offset="50%" stopColor="#D0D0D0" stopOpacity="0.8" />
+                <stop offset="100%" stopColor="#B0B0B0" stopOpacity="0.7" />
+              </linearGradient>
+              <radialGradient id="cloudBlur1" cx="30%" cy="40%">
+                <stop offset="0%" stopColor="#F5F5F5" stopOpacity="0.8" />
+                <stop offset="100%" stopColor="#E0E0E0" stopOpacity="0.3" />
+              </radialGradient>
+              <radialGradient id="cloudBlur2" cx="70%" cy="40%">
+                <stop offset="0%" stopColor="#F5F5F5" stopOpacity="0.8" />
+                <stop offset="100%" stopColor="#E0E0E0" stopOpacity="0.3" />
+              </radialGradient>
+            </defs>
+            {/* 拡大された雲の抽象表現 */}
+            <ellipse cx="100" cy="100" rx="90" ry="50" fill="url(#cloudGradient)">
+              <animate attributeName="rx" values="90;95;90" dur="4s" repeatCount="indefinite" />
             </ellipse>
-            <ellipse cx="40" cy="45" rx="25" ry="15" fill="#D0D0D0" opacity="0.8">
-              <animate attributeName="cx" values="40;42;40" dur="3s" repeatCount="indefinite" begin="0.5s" />
+            <ellipse cx="80" cy="90" rx="70" ry="40" fill="url(#cloudBlur1)" opacity="0.8">
+              <animate attributeName="cx" values="80;82;80" dur="5s" repeatCount="indefinite" />
             </ellipse>
-            <ellipse cx="60" cy="45" rx="25" ry="15" fill="#D0D0D0" opacity="0.8">
-              <animate attributeName="cx" values="60;62;60" dur="3s" repeatCount="indefinite" begin="1s" />
+            <ellipse cx="120" cy="90" rx="70" ry="40" fill="url(#cloudBlur2)" opacity="0.8">
+              <animate attributeName="cx" values="120;122;120" dur="5s" repeatCount="indefinite" begin="1s" />
+            </ellipse>
+            <ellipse cx="100" cy="110" rx="60" ry="35" fill="url(#cloudGradient)" opacity="0.6">
+              <animate attributeName="ry" values="35;40;35" dur="3s" repeatCount="indefinite" />
             </ellipse>
           </svg>
         )
 
       case 'partly-cloudy':
         return (
-          <svg width={iconSize} height={iconSize} viewBox="0 0 100 100" className={`weather-icon-svg ${className}`}>
-            {/* 太陽 */}
-            <circle cx="30" cy="30" r="12" fill="#FFD700" opacity="0.9">
-              <animate attributeName="opacity" values="0.9;0.7;0.9" dur="2s" repeatCount="indefinite" />
+          <svg width={iconSize} height={iconSize} viewBox="0 0 200 200" className={`weather-icon-svg ${className}`}>
+            <defs>
+              <radialGradient id="partlySunGradient" cx="30%" cy="30%">
+                <stop offset="0%" stopColor="#FFD700" stopOpacity="0.7" />
+                <stop offset="100%" stopColor="#FFA500" stopOpacity="0.2" />
+              </radialGradient>
+              <linearGradient id="partlyCloudGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#E8E8E8" stopOpacity="0.8" />
+                <stop offset="100%" stopColor="#D0D0D0" stopOpacity="0.6" />
+              </linearGradient>
+            </defs>
+            {/* 太陽の光 */}
+            <circle cx="60" cy="60" r="50" fill="url(#partlySunGradient)">
+              <animate attributeName="r" values="50;55;50" dur="3s" repeatCount="indefinite" />
             </circle>
-            <g className="sun-rays-small">
-              <line x1="30" y1="15" x2="30" y2="20" stroke="#FFD700" strokeWidth="2" strokeLinecap="round" opacity="0.6" />
-              <line x1="30" y1="40" x2="30" y2="45" stroke="#FFD700" strokeWidth="2" strokeLinecap="round" opacity="0.6" />
-              <line x1="15" y1="30" x2="20" y2="30" stroke="#FFD700" strokeWidth="2" strokeLinecap="round" opacity="0.6" />
-              <line x1="40" y1="30" x2="45" y2="30" stroke="#FFD700" strokeWidth="2" strokeLinecap="round" opacity="0.6" />
-            </g>
             {/* 雲 */}
-            <ellipse cx="65" cy="50" rx="25" ry="15" fill="#E0E0E0" opacity="0.9">
-              <animate attributeName="cx" values="65;67;65" dur="3s" repeatCount="indefinite" />
+            <ellipse cx="140" cy="100" rx="80" ry="45" fill="url(#partlyCloudGradient)">
+              <animate attributeName="cx" values="140;142;140" dur="4s" repeatCount="indefinite" />
             </ellipse>
-            <ellipse cx="55" cy="45" rx="20" ry="12" fill="#D0D0D0" opacity="0.8">
-              <animate attributeName="cx" values="55;57;55" dur="3s" repeatCount="indefinite" begin="0.5s" />
+            <ellipse cx="120" cy="90" rx="60" ry="35" fill="url(#partlyCloudGradient)" opacity="0.7">
+              <animate attributeName="cx" values="120;122;120" dur="4s" repeatCount="indefinite" begin="0.5s" />
             </ellipse>
-            <ellipse cx="75" cy="45" rx="20" ry="12" fill="#D0D0D0" opacity="0.8">
-              <animate attributeName="cx" values="75;77;75" dur="3s" repeatCount="indefinite" begin="1s" />
+            <ellipse cx="160" cy="90" rx="60" ry="35" fill="url(#partlyCloudGradient)" opacity="0.7">
+              <animate attributeName="cx" values="160;162;160" dur="4s" repeatCount="indefinite" begin="1s" />
             </ellipse>
           </svg>
         )
 
       case 'sunny-cloudy':
         return (
-          <svg width={iconSize} height={iconSize} viewBox="0 0 100 100" className={`weather-icon-svg ${className}`}>
-            {/* 太陽 */}
-            <circle cx="35" cy="35" r="15" fill="#FFD700" opacity="0.8">
-              <animate attributeName="opacity" values="0.8;0.6;0.8" dur="2s" repeatCount="indefinite" />
+          <svg width={iconSize} height={iconSize} viewBox="0 0 200 200" className={`weather-icon-svg ${className}`}>
+            <defs>
+              <radialGradient id="sunnyCloudySun" cx="35%" cy="35%">
+                <stop offset="0%" stopColor="#FFD700" stopOpacity="0.8" />
+                <stop offset="100%" stopColor="#FFA500" stopOpacity="0.3" />
+              </radialGradient>
+              <linearGradient id="sunnyCloudyCloud" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#E8E8E8" stopOpacity="0.9" />
+                <stop offset="100%" stopColor="#D0D0D0" stopOpacity="0.7" />
+              </linearGradient>
+            </defs>
+            <circle cx="70" cy="70" r="60" fill="url(#sunnyCloudySun)">
+              <animate attributeName="r" values="60;65;60" dur="3s" repeatCount="indefinite" />
             </circle>
-            {/* 雲 */}
-            <ellipse cx="65" cy="50" rx="30" ry="18" fill="#E0E0E0" opacity="0.9">
-              <animate attributeName="cx" values="65;67;65" dur="3s" repeatCount="indefinite" />
+            <ellipse cx="140" cy="100" rx="90" ry="50" fill="url(#sunnyCloudyCloud)">
+              <animate attributeName="cx" values="140;142;140" dur="4s" repeatCount="indefinite" />
             </ellipse>
-            <ellipse cx="55" cy="45" rx="22" ry="14" fill="#D0D0D0" opacity="0.8">
-              <animate attributeName="cx" values="55;57;55" dur="3s" repeatCount="indefinite" begin="0.5s" />
+            <ellipse cx="120" cy="90" rx="70" ry="40" fill="url(#sunnyCloudyCloud)" opacity="0.8">
+              <animate attributeName="cx" values="120;122;120" dur="4s" repeatCount="indefinite" begin="0.5s" />
             </ellipse>
-            <ellipse cx="75" cy="45" rx="22" ry="14" fill="#D0D0D0" opacity="0.8">
-              <animate attributeName="cx" values="75;77;75" dur="3s" repeatCount="indefinite" begin="1s" />
+            <ellipse cx="160" cy="90" rx="70" ry="40" fill="url(#sunnyCloudyCloud)" opacity="0.8">
+              <animate attributeName="cx" values="160;162;160" dur="4s" repeatCount="indefinite" begin="1s" />
             </ellipse>
           </svg>
         )
 
       case 'rainy':
         return (
-          <svg width={iconSize} height={iconSize} viewBox="0 0 100 100" className={`weather-icon-svg ${className}`}>
-            {/* 雲 */}
-            <ellipse cx="50" cy="45" rx="35" ry="20" fill="#808080" opacity="0.9">
-              <animate attributeName="cx" values="50;52;50" dur="3s" repeatCount="indefinite" />
-            </ellipse>
-            <ellipse cx="40" cy="40" rx="25" ry="15" fill="#707070" opacity="0.8">
-              <animate attributeName="cx" values="40;42;40" dur="3s" repeatCount="indefinite" begin="0.5s" />
-            </ellipse>
-            <ellipse cx="60" cy="40" rx="25" ry="15" fill="#707070" opacity="0.8">
-              <animate attributeName="cx" values="60;62;60" dur="3s" repeatCount="indefinite" begin="1s" />
-            </ellipse>
-            {/* 雨 */}
-            <g className="rain-drops">
-              <line x1="40" y1="65" x2="40" y2="75" stroke="#4A90E2" strokeWidth="2" strokeLinecap="round">
-                <animate attributeName="y1" values="65;75;65" dur="0.5s" repeatCount="indefinite" />
-                <animate attributeName="y2" values="75;85;75" dur="0.5s" repeatCount="indefinite" />
-                <animate attributeName="opacity" values="1;0.3;1" dur="0.5s" repeatCount="indefinite" />
-              </line>
-              <line x1="50" y1="70" x2="50" y2="80" stroke="#4A90E2" strokeWidth="2" strokeLinecap="round">
-                <animate attributeName="y1" values="70;80;70" dur="0.5s" repeatCount="indefinite" begin="0.2s" />
-                <animate attributeName="y2" values="80;90;80" dur="0.5s" repeatCount="indefinite" begin="0.2s" />
-                <animate attributeName="opacity" values="1;0.3;1" dur="0.5s" repeatCount="indefinite" begin="0.2s" />
-              </line>
-              <line x1="60" y1="65" x2="60" y2="75" stroke="#4A90E2" strokeWidth="2" strokeLinecap="round">
-                <animate attributeName="y1" values="65;75;65" dur="0.5s" repeatCount="indefinite" begin="0.4s" />
-                <animate attributeName="y2" values="75;85;75" dur="0.5s" repeatCount="indefinite" begin="0.4s" />
-                <animate attributeName="opacity" values="1;0.3;1" dur="0.5s" repeatCount="indefinite" begin="0.4s" />
-              </line>
-            </g>
+          <svg width={iconSize} height={iconSize} viewBox="0 0 200 200" className={`weather-icon-svg ${className}`}>
+            <defs>
+              <linearGradient id="rainGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#6B9BD1" stopOpacity="0.9" />
+                <stop offset="50%" stopColor="#4A90E2" stopOpacity="0.8" />
+                <stop offset="100%" stopColor="#2E5C8A" stopOpacity="0.7" />
+              </linearGradient>
+              <linearGradient id="rainDropGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#87CEEB" stopOpacity="0.8" />
+                <stop offset="100%" stopColor="#4A90E2" stopOpacity="0.6" />
+              </linearGradient>
+            </defs>
+            {/* 拡大された雨の抽象表現 */}
+            <rect x="0" y="0" width="200" height="200" fill="url(#rainGradient)" />
+            {/* 雨の線のパターン（拡大） */}
+            {Array.from({ length: 20 }).map((_, i) => {
+              const x = (i * 10) + 5
+              const delay = (i * 0.1) % 1
+              return (
+                <line
+                  key={i}
+                  x1={x}
+                  y1="0"
+                  x2={x}
+                  y2="200"
+                  stroke="url(#rainDropGradient)"
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                  opacity="0.6"
+                >
+                  <animate attributeName="opacity" values="0.3;0.8;0.3" dur="1s" repeatCount="indefinite" begin={`${delay}s`} />
+                  <animate attributeName="y1" values="0;50;0" dur="1s" repeatCount="indefinite" begin={`${delay}s`} />
+                  <animate attributeName="y2" values="50;100;50" dur="1s" repeatCount="indefinite" begin={`${delay}s`} />
+                </line>
+              )
+            })}
+            {/* 雨滴のパターン */}
+            {Array.from({ length: 30 }).map((_, i) => {
+              const x = (i * 6.5) % 200
+              const y = (i * 7) % 200
+              const delay = (i * 0.05) % 1
+              return (
+                <circle
+                  key={i}
+                  cx={x}
+                  cy={y}
+                  r="2"
+                  fill="#87CEEB"
+                  opacity="0.7"
+                >
+                  <animate attributeName="cy" values={`${y};${y + 50};${y}`} dur="1.5s" repeatCount="indefinite" begin={`${delay}s`} />
+                  <animate attributeName="opacity" values="0.3;0.9;0.3" dur="1.5s" repeatCount="indefinite" begin={`${delay}s`} />
+                </circle>
+              )
+            })}
           </svg>
         )
 
       case 'cloudy-rain':
         return (
-          <svg width={iconSize} height={iconSize} viewBox="0 0 100 100" className={`weather-icon-svg ${className}`}>
+          <svg width={iconSize} height={iconSize} viewBox="0 0 200 200" className={`weather-icon-svg ${className}`}>
+            <defs>
+              <linearGradient id="cloudyRainGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#808080" stopOpacity="0.9" />
+                <stop offset="50%" stopColor="#6B9BD1" stopOpacity="0.8" />
+                <stop offset="100%" stopColor="#4A90E2" stopOpacity="0.7" />
+              </linearGradient>
+              <linearGradient id="cloudyRainDrop" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#87CEEB" stopOpacity="0.8" />
+                <stop offset="100%" stopColor="#4A90E2" stopOpacity="0.6" />
+              </linearGradient>
+            </defs>
             {/* 雲 */}
-            <ellipse cx="50" cy="45" rx="35" ry="20" fill="#808080" opacity="0.9">
-              <animate attributeName="cx" values="50;52;50" dur="3s" repeatCount="indefinite" />
+            <ellipse cx="100" cy="80" rx="90" ry="50" fill="url(#cloudyRainGradient)">
+              <animate attributeName="rx" values="90;95;90" dur="4s" repeatCount="indefinite" />
             </ellipse>
-            <ellipse cx="40" cy="40" rx="25" ry="15" fill="#707070" opacity="0.8">
-              <animate attributeName="cx" values="40;42;40" dur="3s" repeatCount="indefinite" begin="0.5s" />
+            <ellipse cx="80" cy="70" rx="70" ry="40" fill="url(#cloudyRainGradient)" opacity="0.8">
+              <animate attributeName="cx" values="80;82;80" dur="5s" repeatCount="indefinite" />
             </ellipse>
-            <ellipse cx="60" cy="40" rx="25" ry="15" fill="#707070" opacity="0.8">
-              <animate attributeName="cx" values="60;62;60" dur="3s" repeatCount="indefinite" begin="1s" />
+            <ellipse cx="120" cy="70" rx="70" ry="40" fill="url(#cloudyRainGradient)" opacity="0.8">
+              <animate attributeName="cx" values="120;122;120" dur="5s" repeatCount="indefinite" begin="1s" />
             </ellipse>
             {/* 雨 */}
-            <g className="rain-drops">
-              <line x1="40" y1="65" x2="40" y2="75" stroke="#4A90E2" strokeWidth="2" strokeLinecap="round">
-                <animate attributeName="y1" values="65;75;65" dur="0.5s" repeatCount="indefinite" />
-                <animate attributeName="y2" values="75;85;75" dur="0.5s" repeatCount="indefinite" />
-              </line>
-              <line x1="50" y1="70" x2="50" y2="80" stroke="#4A90E2" strokeWidth="2" strokeLinecap="round">
-                <animate attributeName="y1" values="70;80;70" dur="0.5s" repeatCount="indefinite" begin="0.2s" />
-                <animate attributeName="y2" values="80;90;80" dur="0.5s" repeatCount="indefinite" begin="0.2s" />
-              </line>
-              <line x1="60" y1="65" x2="60" y2="75" stroke="#4A90E2" strokeWidth="2" strokeLinecap="round">
-                <animate attributeName="y1" values="65;75;65" dur="0.5s" repeatCount="indefinite" begin="0.4s" />
-                <animate attributeName="y2" values="75;85;75" dur="0.5s" repeatCount="indefinite" begin="0.4s" />
-              </line>
-            </g>
+            {Array.from({ length: 15 }).map((_, i) => {
+              const x = 60 + (i * 6)
+              const delay = (i * 0.1) % 1
+              return (
+                <line
+                  key={i}
+                  x1={x}
+                  y1="130"
+                  x2={x}
+                  y2="200"
+                  stroke="url(#cloudyRainDrop)"
+                  strokeWidth="4"
+                  strokeLinecap="round"
+                  opacity="0.7"
+                >
+                  <animate attributeName="opacity" values="0.4;0.9;0.4" dur="1s" repeatCount="indefinite" begin={`${delay}s`} />
+                </line>
+              )
+            })}
           </svg>
         )
 
       case 'sunny-rain':
         return (
-          <svg width={iconSize} height={iconSize} viewBox="0 0 100 100" className={`weather-icon-svg ${className}`}>
-            {/* 太陽 */}
-            <circle cx="30" cy="30" r="12" fill="#FFD700" opacity="0.8">
-              <animate attributeName="opacity" values="0.8;0.6;0.8" dur="2s" repeatCount="indefinite" />
+          <svg width={iconSize} height={iconSize} viewBox="0 0 200 200" className={`weather-icon-svg ${className}`}>
+            <defs>
+              <radialGradient id="sunnyRainSun" cx="30%" cy="30%">
+                <stop offset="0%" stopColor="#FFD700" stopOpacity="0.7" />
+                <stop offset="100%" stopColor="#FFA500" stopOpacity="0.2" />
+              </radialGradient>
+              <linearGradient id="sunnyRainCloud" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#808080" stopOpacity="0.8" />
+                <stop offset="100%" stopColor="#6B9BD1" stopOpacity="0.7" />
+              </linearGradient>
+              <linearGradient id="sunnyRainDrop" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#87CEEB" stopOpacity="0.8" />
+                <stop offset="100%" stopColor="#4A90E2" stopOpacity="0.6" />
+              </linearGradient>
+            </defs>
+            <circle cx="60" cy="60" r="50" fill="url(#sunnyRainSun)">
+              <animate attributeName="r" values="50;55;50" dur="3s" repeatCount="indefinite" />
             </circle>
-            {/* 雲 */}
-            <ellipse cx="65" cy="50" rx="30" ry="18" fill="#808080" opacity="0.9">
-              <animate attributeName="cx" values="65;67;65" dur="3s" repeatCount="indefinite" />
+            <ellipse cx="140" cy="100" rx="90" ry="50" fill="url(#sunnyRainCloud)">
+              <animate attributeName="cx" values="140;142;140" dur="4s" repeatCount="indefinite" />
             </ellipse>
-            <ellipse cx="55" cy="45" rx="22" ry="14" fill="#707070" opacity="0.8">
-              <animate attributeName="cx" values="55;57;55" dur="3s" repeatCount="indefinite" begin="0.5s" />
+            <ellipse cx="120" cy="90" rx="70" ry="40" fill="url(#sunnyRainCloud)" opacity="0.8">
+              <animate attributeName="cx" values="120;122;120" dur="4s" repeatCount="indefinite" begin="0.5s" />
             </ellipse>
-            <ellipse cx="75" cy="45" rx="22" ry="14" fill="#707070" opacity="0.8">
-              <animate attributeName="cx" values="75;77;75" dur="3s" repeatCount="indefinite" begin="1s" />
+            <ellipse cx="160" cy="90" rx="70" ry="40" fill="url(#sunnyRainCloud)" opacity="0.8">
+              <animate attributeName="cx" values="160;162;160" dur="4s" repeatCount="indefinite" begin="1s" />
             </ellipse>
-            {/* 雨 */}
-            <g className="rain-drops">
-              <line x1="55" y1="68" x2="55" y2="78" stroke="#4A90E2" strokeWidth="2" strokeLinecap="round">
-                <animate attributeName="y1" values="68;78;68" dur="0.5s" repeatCount="indefinite" />
-                <animate attributeName="y2" values="78;88;78" dur="0.5s" repeatCount="indefinite" />
-              </line>
-              <line x1="65" y1="70" x2="65" y2="80" stroke="#4A90E2" strokeWidth="2" strokeLinecap="round">
-                <animate attributeName="y1" values="70;80;70" dur="0.5s" repeatCount="indefinite" begin="0.2s" />
-                <animate attributeName="y2" values="80;90;80" dur="0.5s" repeatCount="indefinite" begin="0.2s" />
-              </line>
-              <line x1="75" y1="68" x2="75" y2="78" stroke="#4A90E2" strokeWidth="2" strokeLinecap="round">
-                <animate attributeName="y1" values="68;78;68" dur="0.5s" repeatCount="indefinite" begin="0.4s" />
-                <animate attributeName="y2" values="78;88;78" dur="0.5s" repeatCount="indefinite" begin="0.4s" />
-              </line>
-            </g>
+            {Array.from({ length: 12 }).map((_, i) => {
+              const x = 110 + (i * 6)
+              const delay = (i * 0.1) % 1
+              return (
+                <line
+                  key={i}
+                  x1={x}
+                  y1="150"
+                  x2={x}
+                  y2="200"
+                  stroke="url(#sunnyRainDrop)"
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                  opacity="0.7"
+                >
+                  <animate attributeName="opacity" values="0.4;0.9;0.4" dur="1s" repeatCount="indefinite" begin={`${delay}s`} />
+                </line>
+              )
+            })}
           </svg>
         )
 
       case 'snowy':
         return (
-          <svg width={iconSize} height={iconSize} viewBox="0 0 100 100" className={`weather-icon-svg ${className}`}>
-            {/* 雲 */}
-            <ellipse cx="50" cy="45" rx="35" ry="20" fill="#E0E0E0" opacity="0.9">
-              <animate attributeName="cx" values="50;52;50" dur="3s" repeatCount="indefinite" />
-            </ellipse>
-            <ellipse cx="40" cy="40" rx="25" ry="15" fill="#D0D0D0" opacity="0.8">
-              <animate attributeName="cx" values="40;42;40" dur="3s" repeatCount="indefinite" begin="0.5s" />
-            </ellipse>
-            <ellipse cx="60" cy="40" rx="25" ry="15" fill="#D0D0D0" opacity="0.8">
-              <animate attributeName="cx" values="60;62;60" dur="3s" repeatCount="indefinite" begin="1s" />
-            </ellipse>
-            {/* 雪 */}
-            <g className="snowflakes">
-              <g transform="translate(40, 70)">
-                <line x1="0" y1="-5" x2="0" y2="5" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round">
-                  <animate attributeName="y1" values="-5;-8;-5" dur="1s" repeatCount="indefinite" />
-                  <animate attributeName="y2" values="5;8;5" dur="1s" repeatCount="indefinite" />
-                </line>
-                <line x1="-5" y1="0" x2="5" y2="0" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round">
-                  <animate attributeName="x1" values="-5;-8;-5" dur="1s" repeatCount="indefinite" />
-                  <animate attributeName="x2" values="5;8;5" dur="1s" repeatCount="indefinite" />
-                </line>
-                <line x1="-3.5" y1="-3.5" x2="3.5" y2="3.5" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round">
-                  <animate attributeName="x1" values="-3.5;-5;-3.5" dur="1s" repeatCount="indefinite" />
-                  <animate attributeName="x2" values="3.5;5;3.5" dur="1s" repeatCount="indefinite" />
-                </line>
-                <line x1="-3.5" y1="3.5" x2="3.5" y2="-3.5" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round">
-                  <animate attributeName="x1" values="-3.5;-5;-3.5" dur="1s" repeatCount="indefinite" />
-                  <animate attributeName="x2" values="3.5;5;3.5" dur="1s" repeatCount="indefinite" />
-                </line>
-                <animateTransform
-                  attributeName="transform"
-                  type="rotate"
-                  values="0 0 0;360 0 0"
-                  dur="3s"
-                  repeatCount="indefinite"
-                />
-              </g>
-              <g transform="translate(50, 75)">
-                <line x1="0" y1="-5" x2="0" y2="5" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round">
-                  <animate attributeName="y1" values="-5;-8;-5" dur="1s" repeatCount="indefinite" begin="0.3s" />
-                  <animate attributeName="y2" values="5;8;5" dur="1s" repeatCount="indefinite" begin="0.3s" />
-                </line>
-                <line x1="-5" y1="0" x2="5" y2="0" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round">
-                  <animate attributeName="x1" values="-5;-8;-5" dur="1s" repeatCount="indefinite" begin="0.3s" />
-                  <animate attributeName="x2" values="5;8;5" dur="1s" repeatCount="indefinite" begin="0.3s" />
-                </line>
-                <line x1="-3.5" y1="-3.5" x2="3.5" y2="3.5" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round">
-                  <animate attributeName="x1" values="-3.5;-5;-3.5" dur="1s" repeatCount="indefinite" begin="0.3s" />
-                  <animate attributeName="x2" values="3.5;5;3.5" dur="1s" repeatCount="indefinite" begin="0.3s" />
-                </line>
-                <line x1="-3.5" y1="3.5" x2="3.5" y2="-3.5" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round">
-                  <animate attributeName="x1" values="-3.5;-5;-3.5" dur="1s" repeatCount="indefinite" begin="0.3s" />
-                  <animate attributeName="x2" values="3.5;5;3.5" dur="1s" repeatCount="indefinite" begin="0.3s" />
-                </line>
-                <animateTransform
-                  attributeName="transform"
-                  type="rotate"
-                  values="0 0 0;-360 0 0"
-                  dur="2.5s"
-                  repeatCount="indefinite"
-                />
-              </g>
-              <g transform="translate(60, 70)">
-                <line x1="0" y1="-5" x2="0" y2="5" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round">
-                  <animate attributeName="y1" values="-5;-8;-5" dur="1s" repeatCount="indefinite" begin="0.6s" />
-                  <animate attributeName="y2" values="5;8;5" dur="1s" repeatCount="indefinite" begin="0.6s" />
-                </line>
-                <line x1="-5" y1="0" x2="5" y2="0" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round">
-                  <animate attributeName="x1" values="-5;-8;-5" dur="1s" repeatCount="indefinite" begin="0.6s" />
-                  <animate attributeName="x2" values="5;8;5" dur="1s" repeatCount="indefinite" begin="0.6s" />
-                </line>
-                <line x1="-3.5" y1="-3.5" x2="3.5" y2="3.5" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round">
-                  <animate attributeName="x1" values="-3.5;-5;-3.5" dur="1s" repeatCount="indefinite" begin="0.6s" />
-                  <animate attributeName="x2" values="3.5;5;3.5" dur="1s" repeatCount="indefinite" begin="0.6s" />
-                </line>
-                <line x1="-3.5" y1="3.5" x2="3.5" y2="-3.5" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round">
-                  <animate attributeName="x1" values="-3.5;-5;-3.5" dur="1s" repeatCount="indefinite" begin="0.6s" />
-                  <animate attributeName="x2" values="3.5;5;3.5" dur="1s" repeatCount="indefinite" begin="0.6s" />
-                </line>
-                <animateTransform
-                  attributeName="transform"
-                  type="rotate"
-                  values="0 0 0;360 0 0"
-                  dur="3.5s"
-                  repeatCount="indefinite"
-                />
-              </g>
-            </g>
+          <svg width={iconSize} height={iconSize} viewBox="0 0 200 200" className={`weather-icon-svg ${className}`}>
+            <defs>
+              <linearGradient id="snowGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#E8F4F8" stopOpacity="0.9" />
+                <stop offset="50%" stopColor="#D0E8F0" stopOpacity="0.8" />
+                <stop offset="100%" stopColor="#B0D0E0" stopOpacity="0.7" />
+              </linearGradient>
+              <radialGradient id="snowflakeGradient" cx="50%" cy="50%">
+                <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.9" />
+                <stop offset="100%" stopColor="#E0F0F8" stopOpacity="0.6" />
+              </radialGradient>
+            </defs>
+            {/* 拡大された雪の抽象表現 */}
+            <rect x="0" y="0" width="200" height="200" fill="url(#snowGradient)" />
+            {/* 雪の結晶パターン（拡大） */}
+            {Array.from({ length: 15 }).map((_, i) => {
+              const x = (i * 13) % 200
+              const y = (i * 15) % 200
+              const size = 8 + (i % 3) * 2
+              const delay = (i * 0.2) % 2
+              return (
+                <g key={i} transform={`translate(${x}, ${y})`}>
+                  <line x1="0" y1={`-${size}`} x2="0" y2={`${size}`} stroke="url(#snowflakeGradient)" strokeWidth="2" strokeLinecap="round" />
+                  <line x1={`-${size}`} y1="0" x2={`${size}`} y2="0" stroke="url(#snowflakeGradient)" strokeWidth="2" strokeLinecap="round" />
+                  <line x1={`-${size * 0.7}`} y1={`-${size * 0.7}`} x2={`${size * 0.7}`} y2={`${size * 0.7}`} stroke="url(#snowflakeGradient)" strokeWidth="2" strokeLinecap="round" />
+                  <line x1={`-${size * 0.7}`} y1={`${size * 0.7}`} x2={`${size * 0.7}`} y2={`-${size * 0.7}`} stroke="url(#snowflakeGradient)" strokeWidth="2" strokeLinecap="round" />
+                  <animateTransform
+                    attributeName="transform"
+                    type="rotate"
+                    values={`0 ${x} ${y};360 ${x} ${y}`}
+                    dur={`${3 + (i % 3)}s`}
+                    repeatCount="indefinite"
+                  />
+                  <animate attributeName="opacity" values="0.5;1;0.5" dur="2s" repeatCount="indefinite" begin={`${delay}s`} />
+                </g>
+              )
+            })}
           </svg>
         )
 
       case 'cloudy-snow':
         return (
-          <svg width={iconSize} height={iconSize} viewBox="0 0 100 100" className={`weather-icon-svg ${className}`}>
-            {/* 雲 */}
-            <ellipse cx="50" cy="45" rx="35" ry="20" fill="#E0E0E0" opacity="0.9">
-              <animate attributeName="cx" values="50;52;50" dur="3s" repeatCount="indefinite" />
+          <svg width={iconSize} height={iconSize} viewBox="0 0 200 200" className={`weather-icon-svg ${className}`}>
+            <defs>
+              <linearGradient id="cloudySnowGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#E0E0E0" stopOpacity="0.9" />
+                <stop offset="50%" stopColor="#D0E8F0" stopOpacity="0.8" />
+                <stop offset="100%" stopColor="#B0D0E0" stopOpacity="0.7" />
+              </linearGradient>
+              <radialGradient id="cloudySnowflake" cx="50%" cy="50%">
+                <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.9" />
+                <stop offset="100%" stopColor="#E0F0F8" stopOpacity="0.6" />
+              </radialGradient>
+            </defs>
+            <ellipse cx="100" cy="80" rx="90" ry="50" fill="url(#cloudySnowGradient)">
+              <animate attributeName="rx" values="90;95;90" dur="4s" repeatCount="indefinite" />
             </ellipse>
-            <ellipse cx="40" cy="40" rx="25" ry="15" fill="#D0D0D0" opacity="0.8">
-              <animate attributeName="cx" values="40;42;40" dur="3s" repeatCount="indefinite" begin="0.5s" />
+            <ellipse cx="80" cy="70" rx="70" ry="40" fill="url(#cloudySnowGradient)" opacity="0.8">
+              <animate attributeName="cx" values="80;82;80" dur="5s" repeatCount="indefinite" />
             </ellipse>
-            <ellipse cx="60" cy="40" rx="25" ry="15" fill="#D0D0D0" opacity="0.8">
-              <animate attributeName="cx" values="60;62;60" dur="3s" repeatCount="indefinite" begin="1s" />
+            <ellipse cx="120" cy="70" rx="70" ry="40" fill="url(#cloudySnowGradient)" opacity="0.8">
+              <animate attributeName="cx" values="120;122;120" dur="5s" repeatCount="indefinite" begin="1s" />
             </ellipse>
-            {/* 雪 */}
-            <g className="snowflakes">
-              <g transform="translate(40, 70)">
-                <line x1="0" y1="-5" x2="0" y2="5" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" />
-                <line x1="-5" y1="0" x2="5" y2="0" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" />
-                <line x1="-3.5" y1="-3.5" x2="3.5" y2="3.5" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" />
-                <line x1="-3.5" y1="3.5" x2="3.5" y2="-3.5" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" />
-                <animateTransform
-                  attributeName="transform"
-                  type="rotate"
-                  values="0 0 0;360 0 0"
-                  dur="3s"
-                  repeatCount="indefinite"
-                />
-              </g>
-              <g transform="translate(50, 75)">
-                <line x1="0" y1="-5" x2="0" y2="5" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" />
-                <line x1="-5" y1="0" x2="5" y2="0" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" />
-                <line x1="-3.5" y1="-3.5" x2="3.5" y2="3.5" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" />
-                <line x1="-3.5" y1="3.5" x2="3.5" y2="-3.5" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" />
-                <animateTransform
-                  attributeName="transform"
-                  type="rotate"
-                  values="0 0 0;-360 0 0"
-                  dur="2.5s"
-                  repeatCount="indefinite"
-                />
-              </g>
-              <g transform="translate(60, 70)">
-                <line x1="0" y1="-5" x2="0" y2="5" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" />
-                <line x1="-5" y1="0" x2="5" y2="0" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" />
-                <line x1="-3.5" y1="-3.5" x2="3.5" y2="3.5" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" />
-                <line x1="-3.5" y1="3.5" x2="3.5" y2="-3.5" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" />
-                <animateTransform
-                  attributeName="transform"
-                  type="rotate"
-                  values="0 0 0;360 0 0"
-                  dur="3.5s"
-                  repeatCount="indefinite"
-                />
-              </g>
-            </g>
+            {Array.from({ length: 12 }).map((_, i) => {
+              const x = 50 + (i * 8)
+              const y = 130 + (i * 6)
+              const size = 6 + (i % 2) * 2
+              return (
+                <g key={i} transform={`translate(${x}, ${y})`}>
+                  <line x1="0" y1={`-${size}`} x2="0" y2={`${size}`} stroke="url(#cloudySnowflake)" strokeWidth="2" strokeLinecap="round" />
+                  <line x1={`-${size}`} y1="0" x2={`${size}`} y2="0" stroke="url(#cloudySnowflake)" strokeWidth="2" strokeLinecap="round" />
+                  <line x1={`-${size * 0.7}`} y1={`-${size * 0.7}`} x2={`${size * 0.7}`} y2={`${size * 0.7}`} stroke="url(#cloudySnowflake)" strokeWidth="2" strokeLinecap="round" />
+                  <line x1={`-${size * 0.7}`} y1={`${size * 0.7}`} x2={`${size * 0.7}`} y2={`-${size * 0.7}`} stroke="url(#cloudySnowflake)" strokeWidth="2" strokeLinecap="round" />
+                  <animateTransform
+                    attributeName="transform"
+                    type="rotate"
+                    values={`0 ${x} ${y};360 ${x} ${y}`}
+                    dur={`${2.5 + (i % 2)}s`}
+                    repeatCount="indefinite"
+                  />
+                </g>
+              )
+            })}
           </svg>
         )
 
       case 'sunny-snow':
         return (
-          <svg width={iconSize} height={iconSize} viewBox="0 0 100 100" className={`weather-icon-svg ${className}`}>
-            {/* 太陽 */}
-            <circle cx="30" cy="30" r="12" fill="#FFD700" opacity="0.8">
-              <animate attributeName="opacity" values="0.8;0.6;0.8" dur="2s" repeatCount="indefinite" />
+          <svg width={iconSize} height={iconSize} viewBox="0 0 200 200" className={`weather-icon-svg ${className}`}>
+            <defs>
+              <radialGradient id="sunnySnowSun" cx="30%" cy="30%">
+                <stop offset="0%" stopColor="#FFD700" stopOpacity="0.7" />
+                <stop offset="100%" stopColor="#FFA500" stopOpacity="0.2" />
+              </radialGradient>
+              <linearGradient id="sunnySnowCloud" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#E0E0E0" stopOpacity="0.8" />
+                <stop offset="100%" stopColor="#D0E8F0" stopOpacity="0.7" />
+              </linearGradient>
+              <radialGradient id="sunnySnowflake" cx="50%" cy="50%">
+                <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.9" />
+                <stop offset="100%" stopColor="#E0F0F8" stopOpacity="0.6" />
+              </radialGradient>
+            </defs>
+            <circle cx="60" cy="60" r="50" fill="url(#sunnySnowSun)">
+              <animate attributeName="r" values="50;55;50" dur="3s" repeatCount="indefinite" />
             </circle>
-            {/* 雲 */}
-            <ellipse cx="65" cy="50" rx="30" ry="18" fill="#E0E0E0" opacity="0.9">
-              <animate attributeName="cx" values="65;67;65" dur="3s" repeatCount="indefinite" />
+            <ellipse cx="140" cy="100" rx="90" ry="50" fill="url(#sunnySnowCloud)">
+              <animate attributeName="cx" values="140;142;140" dur="4s" repeatCount="indefinite" />
             </ellipse>
-            <ellipse cx="55" cy="45" rx="22" ry="14" fill="#D0D0D0" opacity="0.8">
-              <animate attributeName="cx" values="55;57;55" dur="3s" repeatCount="indefinite" begin="0.5s" />
+            <ellipse cx="120" cy="90" rx="70" ry="40" fill="url(#sunnySnowCloud)" opacity="0.8">
+              <animate attributeName="cx" values="120;122;120" dur="4s" repeatCount="indefinite" begin="0.5s" />
             </ellipse>
-            <ellipse cx="75" cy="45" rx="22" ry="14" fill="#D0D0D0" opacity="0.8">
-              <animate attributeName="cx" values="75;77;75" dur="3s" repeatCount="indefinite" begin="1s" />
+            <ellipse cx="160" cy="90" rx="70" ry="40" fill="url(#sunnySnowCloud)" opacity="0.8">
+              <animate attributeName="cx" values="160;162;160" dur="4s" repeatCount="indefinite" begin="1s" />
             </ellipse>
-            {/* 雪 */}
-            <g className="snowflakes">
-              <g transform="translate(55, 70)">
-                <line x1="0" y1="-5" x2="0" y2="5" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" />
-                <line x1="-5" y1="0" x2="5" y2="0" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" />
-                <line x1="-3.5" y1="-3.5" x2="3.5" y2="3.5" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" />
-                <line x1="-3.5" y1="3.5" x2="3.5" y2="-3.5" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" />
-                <animateTransform
-                  attributeName="transform"
-                  type="rotate"
-                  values="0 0 0;360 0 0"
-                  dur="3s"
-                  repeatCount="indefinite"
-                />
-              </g>
-              <g transform="translate(65, 75)">
-                <line x1="0" y1="-5" x2="0" y2="5" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" />
-                <line x1="-5" y1="0" x2="5" y2="0" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" />
-                <line x1="-3.5" y1="-3.5" x2="3.5" y2="3.5" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" />
-                <line x1="-3.5" y1="3.5" x2="3.5" y2="-3.5" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" />
-                <animateTransform
-                  attributeName="transform"
-                  type="rotate"
-                  values="0 0 0;-360 0 0"
-                  dur="2.5s"
-                  repeatCount="indefinite"
-                />
-              </g>
-              <g transform="translate(75, 70)">
-                <line x1="0" y1="-5" x2="0" y2="5" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" />
-                <line x1="-5" y1="0" x2="5" y2="0" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" />
-                <line x1="-3.5" y1="-3.5" x2="3.5" y2="3.5" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" />
-                <line x1="-3.5" y1="3.5" x2="3.5" y2="-3.5" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" />
-                <animateTransform
-                  attributeName="transform"
-                  type="rotate"
-                  values="0 0 0;360 0 0"
-                  dur="3.5s"
-                  repeatCount="indefinite"
-                />
-              </g>
-            </g>
+            {Array.from({ length: 10 }).map((_, i) => {
+              const x = 110 + (i * 8)
+              const y = 150 + (i * 5)
+              const size = 6 + (i % 2) * 2
+              return (
+                <g key={i} transform={`translate(${x}, ${y})`}>
+                  <line x1="0" y1={`-${size}`} x2="0" y2={`${size}`} stroke="url(#sunnySnowflake)" strokeWidth="2" strokeLinecap="round" />
+                  <line x1={`-${size}`} y1="0" x2={`${size}`} y2="0" stroke="url(#sunnySnowflake)" strokeWidth="2" strokeLinecap="round" />
+                  <line x1={`-${size * 0.7}`} y1={`-${size * 0.7}`} x2={`${size * 0.7}`} y2={`${size * 0.7}`} stroke="url(#sunnySnowflake)" strokeWidth="2" strokeLinecap="round" />
+                  <line x1={`-${size * 0.7}`} y1={`${size * 0.7}`} x2={`${size * 0.7}`} y2={`-${size * 0.7}`} stroke="url(#sunnySnowflake)" strokeWidth="2" strokeLinecap="round" />
+                  <animateTransform
+                    attributeName="transform"
+                    type="rotate"
+                    values={`0 ${x} ${y};360 ${x} ${y}`}
+                    dur={`${3 + (i % 2)}s`}
+                    repeatCount="indefinite"
+                  />
+                </g>
+              )
+            })}
           </svg>
         )
 
       default:
         return (
-          <svg width={iconSize} height={iconSize} viewBox="0 0 100 100" className={`weather-icon-svg ${className}`}>
-            <circle cx="50" cy="50" r="25" fill="#FFD700" />
+          <svg width={iconSize} height={iconSize} viewBox="0 0 200 200" className={`weather-icon-svg ${className}`}>
+            <defs>
+              <radialGradient id="defaultGradient" cx="50%" cy="50%">
+                <stop offset="0%" stopColor="#FFD700" stopOpacity="0.8" />
+                <stop offset="100%" stopColor="#FFA500" stopOpacity="0.3" />
+              </radialGradient>
+            </defs>
+            <circle cx="100" cy="100" r="80" fill="url(#defaultGradient)" />
           </svg>
         )
     }
@@ -466,4 +499,3 @@ const WeatherIcon = ({ code, size = 64, className = '' }: WeatherIconProps) => {
 }
 
 export default WeatherIcon
-
