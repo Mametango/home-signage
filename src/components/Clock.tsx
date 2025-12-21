@@ -815,9 +815,8 @@ const Clock = () => {
 
   return (
     <div className="clock clock-large">
-      {/* 左上: 位置情報と日付 */}
+      {/* 左上: 日付 */}
       <div className="clock-location">
-        <div className="clock-location-text">{prefecture} {city}</div>
         <div className="clock-location-date">
           {format(time, 'yyyy年M月d日', { locale: ja })} {format(time, 'EEEE', { locale: ja })}
         </div>
