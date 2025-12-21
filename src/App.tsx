@@ -4,6 +4,11 @@ import News from './components/News'
 import WeeklyWeather from './components/WeeklyWeather'
 import './App.css'
 
+// バージョン情報（ビルド時に注入される）
+const APP_VERSION = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : 'dev'
+const GIT_HASH = typeof __GIT_HASH__ !== 'undefined' ? __GIT_HASH__ : 'dev'
+const BUILD_DATE = typeof __BUILD_DATE__ !== 'undefined' ? __BUILD_DATE__ : new Date().toISOString()
+
 function App() {
   // 週間天気予報の表示間隔（5分ごと）
   const INTERVAL_MS = 300000 // 5分ごと（300秒）
@@ -249,25 +254,6 @@ function App() {
         </div>
       </div>
       
-      {/* デバッグ用: カウントダウンの値を表示 */}
-      <div style={{ 
-        position: 'fixed', 
-        top: '5rem', 
-        right: '1rem', 
-        zIndex: 100000, 
-        background: 'rgba(255,0,0,0.9)', 
-        padding: '0.5rem 1rem', 
-        color: '#fff', 
-        fontSize: '0.9rem', 
-        borderRadius: '0.25rem',
-        border: '2px solid #fff',
-        fontFamily: 'monospace',
-        fontWeight: 'bold',
-        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.5)'
-      }}>
-        デバッグ: countdown = {String(countdown)}, showWeeklyWeather = {String(showWeeklyWeather)}
-      </div>
-      
       {/* 左側: 日時と天気 */}
       <div className="app-left">
         <Clock />
@@ -277,6 +263,22 @@ function App() {
       <div className="app-right">
         <div className="app-right-card">
           <News />
+        </div>
+      </div>
+      
+      {/* バージョン情報 */}
+      <div className="app-version">
+        <div className="app-version-text">
+          v{APP_VERSION} ({GIT_HASH})
+        </div>
+        <div className="app-version-date">
+          {new Date(BUILD_DATE).toLocaleDateString('ja-JP', { 
+            year: 'numeric', 
+            month: '2-digit', 
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit'
+          })}
         </div>
       </div>
     </div>
