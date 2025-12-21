@@ -205,7 +205,7 @@ function App() {
     try {
       return (
         <div className="app app-fullscreen">
-          <WeeklyWeather />
+          <WeeklyWeather onClose={() => setShowWeeklyWeather(false)} />
         </div>
       )
     } catch (error) {

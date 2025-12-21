@@ -12,7 +12,11 @@ interface DayWeather {
   minTemp?: number
 }
 
-const WeeklyWeather = () => {
+interface WeeklyWeatherProps {
+  onClose?: () => void
+}
+
+const WeeklyWeather = ({ onClose }: WeeklyWeatherProps) => {
   const [weatherData, setWeatherData] = useState<DayWeather[]>([])
   const [loading, setLoading] = useState(true)
   const [prefecture, setPrefecture] = useState<string>('新潟県')
@@ -184,6 +188,16 @@ const WeeklyWeather = () => {
           </div>
         ))}
       </div>
+      {onClose && (
+        <button
+          className="weekly-weather-close-button"
+          onClick={onClose}
+          title="通常画面に戻る"
+          aria-label="通常画面に戻る"
+        >
+          ← 戻る
+        </button>
+      )}
     </div>
   )
 }
