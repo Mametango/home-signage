@@ -186,6 +186,67 @@
   font-size: 2rem;
 }
 
+/* 天気表示の追加スタイル */
+.clock-weather-day-label {
+  font-size: 1rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.8);
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.clock-weather-icon {
+  font-size: 3rem;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+  flex-shrink: 0;
+}
+
+.clock-weather-location {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.clock-weather-condition {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.clock-weather-temp-right {
+  display: flex;
+  align-items: baseline;
+  gap: 0.25rem;
+}
+
+.clock-weather-temp-right .temp-max {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #ff6b6b;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.clock-weather-temp-right .temp-separator {
+  font-size: 1.5rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin: 0 0.25rem;
+}
+
+.clock-weather-temp-right .temp-min {
+  font-size: 1.6rem;
+  font-weight: 600;
+  color: #4dabf7;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.clock-weather-precipitation {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: rgba(135, 206, 250, 0.95);
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
 @media (max-width: 768px) {
   .clock-time {
     font-size: 2.5rem;
