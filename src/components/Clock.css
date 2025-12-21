@@ -118,6 +118,9 @@
   font-family: 'Noto Sans JP', sans-serif;
   margin-bottom: 0.25rem;
   text-align: right;
+  display: block;
+  visibility: visible;
+  opacity: 1;
 }
 
 .clock-large .clock-day {
@@ -128,6 +131,9 @@
   font-family: 'Noto Sans JP', sans-serif;
   margin-bottom: 0.5rem;
   text-align: right;
+  display: block;
+  visibility: visible;
+  opacity: 1;
 }
 
 .clock-weather-summary {
