@@ -143,6 +143,143 @@
   max-width: 100%;
 }
 
+/* 今日と明日の天気表示 */
+.clock-weather-today-tomorrow {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  width: 100%;
+}
+
+.clock-weather-day-card {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.clock-weather-day-card.today {
+  border-left: 4px solid #4dabf7;
+}
+
+.clock-weather-day-card.tomorrow {
+  border-left: 4px solid #ff6b6b;
+}
+
+.clock-weather-day-label {
+  font-size: 1rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.9);
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.clock-weather-day-icon {
+  font-size: 3rem;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+.clock-weather-day-condition {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #fff;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+  text-align: center;
+}
+
+.clock-weather-day-temp {
+  display: flex;
+  align-items: baseline;
+  gap: 0.25rem;
+  font-family: 'Noto Sans JP', sans-serif;
+}
+
+.clock-weather-day-temp .temp-max {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #ff6b6b;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.clock-weather-day-temp .temp-separator {
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin: 0 0.1rem;
+}
+
+.clock-weather-day-temp .temp-min {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #4dabf7;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* おじさんの解説セクション */
+.clock-weather-description-section {
+  margin-bottom: 1.5rem;
+  width: 100%;
+}
+
+.clock-weather-description-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.clock-weather-ojisan-icon {
+  font-size: 2rem;
+}
+
+.clock-weather-ojisan-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.95);
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+  flex: 1;
+}
+
+.clock-weather-speak-button {
+  background: rgba(77, 171, 247, 0.8);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 0.5rem;
+  padding: 0.5rem 1rem;
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  font-family: 'Noto Sans JP', sans-serif;
+}
+
+.clock-weather-speak-button:hover {
+  background: rgba(77, 171, 247, 1);
+  transform: scale(1.05);
+  box-shadow: 0 4px 8px rgba(77, 171, 247, 0.4);
+}
+
+.clock-weather-speak-button.speaking {
+  background: rgba(255, 107, 107, 0.8);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
 .clock-weather-description-full {
   font-size: 1.6rem;
   color: rgba(255, 255, 255, 0.95);

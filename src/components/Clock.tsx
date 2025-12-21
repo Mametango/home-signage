@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { format } from 'date-fns'
 import { getSettings } from './Settings'
 import './Clock.css'
@@ -11,6 +11,19 @@ interface WeatherData {
   icon: string
   precipitation: number // 降水確率（%）
   description?: string // 天気の解説
+  // 今日と明日の天気
+  today?: {
+    condition: string
+    icon: string
+    maxTemp?: number
+    minTemp?: number
+  }
+  tomorrow?: {
+    condition: string
+    icon: string
+    maxTemp?: number
+    minTemp?: number
+  }
 }
 
 const Clock = () => {
@@ -18,6 +31,8 @@ const Clock = () => {
   const [weather, setWeather] = useState<WeatherData | null>(null)
   const [prefecture, setPrefecture] = useState<string>('新潟県')
   const [city, setCity] = useState<string>('新発田市')
+  const [isSpeaking, setIsSpeaking] = useState(false)
+  const speechSynthesisRef = useRef<SpeechSynthesisUtterance | null>(null)
 
   // 設定を読み込み
   useEffect(() => {
@@ -559,6 +574,27 @@ const Clock = () => {
                   }
                 }
                 
+                // 今日の天気情報を構築
+                const todayWeatherInfo = getWeatherCondition(weatherCodes[0] || '100')
+                const todayInfo = {
+                  condition: displayCondition,
+                  icon: displayIcon,
+                  maxTemp: maxTemp,
+                  minTemp: minTemp
+                }
+                
+                // 明日の天気情報を構築
+                let tomorrowInfo = undefined
+                if (tomorrowWeatherCode) {
+                  const tomorrowWeatherInfo = getWeatherCondition(tomorrowWeatherCode)
+                  tomorrowInfo = {
+                    condition: tomorrowWeatherInfo.text,
+                    icon: tomorrowWeatherInfo.icon,
+                    maxTemp: tomorrowMaxTemp,
+                    minTemp: tomorrowMinTemp
+                  }
+                }
+                
                 setWeather({
                   temp: currentTemp,
                   maxTemp: maxTemp,
@@ -566,7 +602,9 @@ const Clock = () => {
                   condition: displayCondition,
                   icon: displayIcon,
                   precipitation: pop,
-                  description: description || undefined
+                  description: description || undefined,
+                  today: todayInfo,
+                  tomorrow: tomorrowInfo
                 })
                 
                 // 今日の気温をlocalStorageに保存（明日の比較用）
@@ -696,6 +734,14 @@ const Clock = () => {
               description += `。降水確率${precipitation}%`
             }
             
+            // 今日と明日の天気情報を構築（OpenWeatherMap APIでは簡易版）
+            const todayInfo = {
+              condition: conditionText,
+              icon: getWeatherIcon(data.weather[0].main),
+              maxTemp: maxTemp,
+              minTemp: minTemp
+            }
+            
             setWeather({
               temp: Math.round(data.main.temp),
               maxTemp: maxTemp,
@@ -703,7 +749,8 @@ const Clock = () => {
               condition: conditionText,
               icon: getWeatherIcon(data.weather[0].main),
               precipitation: precipitation,
-              description: description
+              description: description,
+              today: todayInfo
             })
             
             // 今日の気温をlocalStorageに保存（明日の比較用）
@@ -748,8 +795,23 @@ const Clock = () => {
     fetchWeather()
     const interval = setInterval(fetchWeather, 600000)
 
-    return () => clearInterval(interval)
+    return () => {
+      clearInterval(interval)
+      // クリーンアップ時に音声を停止
+      if (speechSynthesisRef.current) {
+        window.speechSynthesis.cancel()
+      }
+    }
   }, [prefecture, city])
+  
+  // コンポーネントのアンマウント時に音声を停止
+  useEffect(() => {
+    return () => {
+      if (speechSynthesisRef.current) {
+        window.speechSynthesis.cancel()
+      }
+    }
+  }, [])
 
   return (
     <div className="clock clock-large">
@@ -765,8 +827,76 @@ const Clock = () => {
             <div className="clock-weather-condition-large">{weather.condition}</div>
           </div>
           
+          {/* 今日と明日の天気表示 */}
+          <div className="clock-weather-today-tomorrow">
+            {weather.today && (
+              <div className="clock-weather-day-card today">
+                <div className="clock-weather-day-label">今日</div>
+                <div className="clock-weather-day-icon">{weather.today.icon}</div>
+                <div className="clock-weather-day-condition">{weather.today.condition}</div>
+                {weather.today.maxTemp !== undefined && weather.today.minTemp !== undefined && (
+                  <div className="clock-weather-day-temp">
+                    <span className="temp-max">{weather.today.maxTemp}°</span>
+                    <span className="temp-separator">/</span>
+                    <span className="temp-min">{weather.today.minTemp}°</span>
+                  </div>
+                )}
+              </div>
+            )}
+            {weather.tomorrow && (
+              <div className="clock-weather-day-card tomorrow">
+                <div className="clock-weather-day-label">明日</div>
+                <div className="clock-weather-day-icon">{weather.tomorrow.icon}</div>
+                <div className="clock-weather-day-condition">{weather.tomorrow.condition}</div>
+                {weather.tomorrow.maxTemp !== undefined && weather.tomorrow.minTemp !== undefined && (
+                  <div className="clock-weather-day-temp">
+                    <span className="temp-max">{weather.tomorrow.maxTemp}°</span>
+                    <span className="temp-separator">/</span>
+                    <span className="temp-min">{weather.tomorrow.minTemp}°</span>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+          
+          {/* おじさんの音声解説とテキスト解説 */}
           {weather.description && (
-            <div className="clock-weather-description-full">{weather.description}</div>
+            <div className="clock-weather-description-section">
+              <div className="clock-weather-description-header">
+                <div className="clock-weather-ojisan-icon">👴</div>
+                <div className="clock-weather-ojisan-title">おじさんの解説</div>
+                <button
+                  className={`clock-weather-speak-button ${isSpeaking ? 'speaking' : ''}`}
+                  onClick={() => {
+                    if (isSpeaking) {
+                      // 音声を停止
+                      if (speechSynthesisRef.current) {
+                        window.speechSynthesis.cancel()
+                        setIsSpeaking(false)
+                      }
+                    } else {
+                      // 音声を再生
+                      if (weather.description && 'speechSynthesis' in window) {
+                        const utterance = new SpeechSynthesisUtterance(weather.description)
+                        utterance.lang = 'ja-JP'
+                        utterance.rate = 0.9
+                        utterance.pitch = 0.9
+                        utterance.volume = 1.0
+                        speechSynthesisRef.current = utterance
+                        utterance.onend = () => setIsSpeaking(false)
+                        utterance.onerror = () => setIsSpeaking(false)
+                        window.speechSynthesis.speak(utterance)
+                        setIsSpeaking(true)
+                      }
+                    }
+                  }}
+                  title={isSpeaking ? '音声を停止' : '音声で聞く'}
+                >
+                  {isSpeaking ? '🔊 停止' : '🔊 再生'}
+                </button>
+              </div>
+              <div className="clock-weather-description-full">{weather.description}</div>
+            </div>
           )}
           
           <div className="clock-weather-info-grid">
