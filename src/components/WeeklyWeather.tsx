@@ -210,11 +210,11 @@ const WeeklyWeather = ({ onBack }: WeeklyWeatherProps) => {
       <div className="weekly-weather-grid">
         {weatherData.map((day, index) => (
           <div key={index} className="weekly-weather-day">
+            <div className="weekly-weather-background">
+              <WeatherIcon code={day.weatherCode || '100'} size={200} className="weather-background-icon" />
+            </div>
             <div className="weekly-weather-date">
               {getDayLabel(day.date, index)}
-            </div>
-            <div className="weekly-weather-icon">
-              <WeatherIcon code={day.weatherCode || '100'} size={56} />
             </div>
             <div className="weekly-weather-condition">{day.condition}</div>
             {day.maxTemp !== undefined && day.minTemp !== undefined && (

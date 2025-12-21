@@ -876,8 +876,8 @@ const Clock = () => {
           <div className="clock-weather-today-tomorrow">
             {weather.today && (
               <div className="clock-weather-day-card today">
-                <div className="clock-weather-day-icon">
-                  <WeatherIcon code={weather.today.weatherCode || '100'} size={48} />
+                <div className="clock-weather-day-background">
+                  <WeatherIcon code={weather.today.weatherCode || '100'} size={200} className="weather-background-icon" />
                 </div>
                 <div className="clock-weather-day-content">
                   <div className="clock-weather-day-label">今日</div>
@@ -901,8 +901,8 @@ const Clock = () => {
             )}
             {weather.tomorrow && (
               <div className="clock-weather-day-card tomorrow">
-                <div className="clock-weather-day-icon">
-                  <WeatherIcon code={weather.tomorrow.weatherCode || '100'} size={48} />
+                <div className="clock-weather-day-background">
+                  <WeatherIcon code={weather.tomorrow.weatherCode || '100'} size={200} className="weather-background-icon" />
                 </div>
                 <div className="clock-weather-day-content">
                   <div className="clock-weather-day-label">明日</div>
