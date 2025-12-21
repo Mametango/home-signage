@@ -833,30 +833,34 @@ const Clock = () => {
           <div className="clock-weather-today-tomorrow">
             {weather.today && (
               <div className="clock-weather-day-card today">
-                <div className="clock-weather-day-label">今日</div>
                 <div className="clock-weather-day-icon">{weather.today.icon}</div>
-                <div className="clock-weather-day-condition">{weather.today.condition}</div>
-                {weather.today.maxTemp !== undefined && weather.today.minTemp !== undefined && (
-                  <div className="clock-weather-day-temp">
-                    <span className="temp-max">{weather.today.maxTemp}°</span>
-                    <span className="temp-separator">/</span>
-                    <span className="temp-min">{weather.today.minTemp}°</span>
-                  </div>
-                )}
+                <div className="clock-weather-day-content">
+                  <div className="clock-weather-day-label">今日</div>
+                  <div className="clock-weather-day-condition">{weather.today.condition}</div>
+                  {weather.today.maxTemp !== undefined && weather.today.minTemp !== undefined && (
+                    <div className="clock-weather-day-temp">
+                      <span className="temp-max">{weather.today.maxTemp}°</span>
+                      <span className="temp-separator">/</span>
+                      <span className="temp-min">{weather.today.minTemp}°</span>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
             {weather.tomorrow && (
               <div className="clock-weather-day-card tomorrow">
-                <div className="clock-weather-day-label">明日</div>
                 <div className="clock-weather-day-icon">{weather.tomorrow.icon}</div>
-                <div className="clock-weather-day-condition">{weather.tomorrow.condition}</div>
-                {weather.tomorrow.maxTemp !== undefined && weather.tomorrow.minTemp !== undefined && (
-                  <div className="clock-weather-day-temp">
-                    <span className="temp-max">{weather.tomorrow.maxTemp}°</span>
-                    <span className="temp-separator">/</span>
-                    <span className="temp-min">{weather.tomorrow.minTemp}°</span>
-                  </div>
-                )}
+                <div className="clock-weather-day-content">
+                  <div className="clock-weather-day-label">明日</div>
+                  <div className="clock-weather-day-condition">{weather.tomorrow.condition}</div>
+                  {weather.tomorrow.maxTemp !== undefined && weather.tomorrow.minTemp !== undefined && (
+                    <div className="clock-weather-day-temp">
+                      <span className="temp-max">{weather.tomorrow.maxTemp}°</span>
+                      <span className="temp-separator">/</span>
+                      <span className="temp-min">{weather.tomorrow.minTemp}°</span>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
           </div>
