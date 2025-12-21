@@ -824,12 +824,6 @@ const Clock = () => {
       </div>
       
       <div className="clock-time-section">
-        <div className="clock-date">
-          {format(time, 'yyyy年M月d日', { locale: ja })}
-        </div>
-        <div className="clock-day">
-          {format(time, 'EEEE', { locale: ja })}
-        </div>
         <div className="clock-time">
           {format(time, 'HH:mm:ss')}
         </div>
