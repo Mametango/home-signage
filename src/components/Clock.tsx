@@ -263,6 +263,13 @@ const Clock = () => {
                 const tomorrow = new Date(today)
                 tomorrow.setDate(tomorrow.getDate() + 1)
                 
+                // 今日と明日の気温を取得（スコープ外で定義）
+                let tomorrowMaxTemp: number | undefined
+                let tomorrowMinTemp: number | undefined
+                
+                // 明日の天気コードを取得（スコープ外で定義）
+                let tomorrowWeatherCode: string | null = null
+                
                 // 天気の解説を作成（より詳細で自然な表現に）
                 let description = ''
                 if (weatherCodes.length > 0 && timeDefines.length > 0) {
@@ -270,13 +277,6 @@ const Clock = () => {
                   const tomorrowWeatherParts: string[] = []
                   const popDetails: string[] = []
                   const weatherChanges: string[] = []
-                  
-                  // 今日と明日の気温を取得
-                  let tomorrowMaxTemp: number | undefined
-                  let tomorrowMinTemp: number | undefined
-                  
-                  // 明日の天気コードを取得（最初の明日の日付のインデックスを見つける）
-                  let tomorrowWeatherCode: string | null = null
                   
                   // 各時間帯の天気と降水確率を取得
                   let prevWeather = ''
@@ -576,7 +576,6 @@ const Clock = () => {
                 }
                 
                 // 今日の天気情報を構築
-                const todayWeatherInfo = getWeatherCondition(weatherCodes[0] || '100')
                 const todayInfo = {
                   condition: displayCondition,
                   icon: displayIcon,
