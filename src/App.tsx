@@ -24,6 +24,13 @@ function App() {
     showWeeklyWeatherRef.current = showWeeklyWeather
   }, [showWeeklyWeather])
 
+  // 週間天気予報からメイン画面に戻るハンドラ
+  const handleBackToMain = () => {
+    console.log('メイン画面に戻ります')
+    setShowWeeklyWeather(false)
+    showWeeklyWeatherRef.current = false
+  }
+
   // 週間天気予報を表示するイベントをリッスン
   useEffect(() => {
     const handleShowWeeklyWeather = (event: Event) => {
