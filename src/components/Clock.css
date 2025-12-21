@@ -107,7 +107,7 @@
   flex-direction: column;
   gap: 1.5rem;
   margin-top: 1rem;
-  padding: 1.5rem;
+  padding: 2rem;
   background: rgba(255, 255, 255, 0.15);
   border-radius: 0.75rem;
   border: 1px solid rgba(255, 255, 255, 0.2);
@@ -121,20 +121,20 @@
 .clock-weather-header {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 1.5rem;
   padding-bottom: 1rem;
   border-bottom: 2px solid rgba(255, 255, 255, 0.2);
   flex-wrap: wrap;
 }
 
 .clock-weather-icon-large {
-  font-size: 3.5rem;
+  font-size: 5rem;
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
   flex-shrink: 0;
 }
 
 .clock-weather-condition-large {
-  font-size: 1.8rem;
+  font-size: 2.5rem;
   color: rgba(255, 255, 255, 0.95);
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
   font-weight: 700;
@@ -144,12 +144,12 @@
 }
 
 .clock-weather-description-full {
-  font-size: 1.2rem;
+  font-size: 1.6rem;
   color: rgba(255, 255, 255, 0.95);
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
   font-weight: 500;
-  line-height: 1.6;
-  padding: 0.75rem;
+  line-height: 1.8;
+  padding: 1rem;
   background: rgba(255, 255, 255, 0.08);
   border-radius: 0.5rem;
   border-left: 4px solid rgba(255, 255, 255, 0.3);
@@ -161,8 +161,8 @@
 
 .clock-weather-info-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
   width: 100%;
   box-sizing: border-box;
 }
@@ -171,7 +171,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  padding: 0.75rem;
+  padding: 1rem;
   background: rgba(255, 255, 255, 0.1);
   border-radius: 0.5rem;
   border: 1px solid rgba(255, 255, 255, 0.15);
@@ -187,7 +187,7 @@
 }
 
 .clock-weather-info-value {
-  font-size: 1.5rem;
+  font-size: 2rem;
   font-weight: 700;
   color: #fff;
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
@@ -196,17 +196,17 @@
 
 .clock-weather-info-value.temp-max {
   color: #ff6b6b;
-  font-size: 1.6rem;
+  font-size: 2.2rem;
 }
 
 .clock-weather-info-value.temp-min {
   color: #4dabf7;
-  font-size: 1.6rem;
+  font-size: 2.2rem;
 }
 
 .clock-weather-info-value.precipitation {
   color: rgba(135, 206, 250, 0.95);
-  font-size: 1.5rem;
+  font-size: 2rem;
 }
 
 /* 天気表示の追加スタイル */
