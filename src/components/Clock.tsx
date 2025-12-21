@@ -277,7 +277,6 @@ const Clock = () => {
                     // 明日の最初の天気コードを取得
                     if (isTomorrow && tomorrowWeatherCode === null) {
                       tomorrowWeatherCode = weatherCodes[i]
-                      tomorrowWeatherIndex = i
                     }
                     
                     let timeLabel = ''
