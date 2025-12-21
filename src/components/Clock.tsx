@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { format } from 'date-fns'
+import ja from 'date-fns/locale/ja'
 import { getSettings } from './Settings'
 import './Clock.css'
 
@@ -816,6 +817,12 @@ const Clock = () => {
   return (
     <div className="clock clock-large">
       <div className="clock-time-section">
+        <div className="clock-date">
+          {format(time, 'yyyy年M月d日', { locale: ja })}
+        </div>
+        <div className="clock-day">
+          {format(time, 'EEEE', { locale: ja })}
+        </div>
         <div className="clock-time">
           {format(time, 'HH:mm:ss')}
         </div>

@@ -95,11 +95,23 @@
 }
 
 .clock-large .clock-date {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.95);
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+  font-family: 'Noto Sans JP', sans-serif;
+  margin-bottom: 0.25rem;
+  text-align: right;
+}
+
+.clock-large .clock-day {
   font-size: 1.3rem;
   font-weight: 500;
   color: rgba(255, 255, 255, 0.9);
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
   font-family: 'Noto Sans JP', sans-serif;
+  margin-bottom: 0.5rem;
+  text-align: right;
 }
 
 .clock-weather-summary {
@@ -427,7 +439,11 @@
   }
   
   .clock-large .clock-date {
-    font-size: 1.5rem;
+    font-size: 1.2rem;
+  }
+  
+  .clock-large .clock-day {
+    font-size: 1rem;
   }
   
   .clock-weather-summary {
