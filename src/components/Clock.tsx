@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { format } from 'date-fns'
 import ja from 'date-fns/locale/ja'
 import { getSettings } from './Settings'
@@ -34,8 +34,6 @@ const Clock = () => {
   const [weather, setWeather] = useState<WeatherData | null>(null)
   const [prefecture, setPrefecture] = useState<string>('新潟県')
   const [city, setCity] = useState<string>('新発田市')
-  const [isSpeaking, setIsSpeaking] = useState(false)
-  const speechSynthesisRef = useRef<SpeechSynthesisUtterance | null>(null)
 
   // 設定を読み込み
   useEffect(() => {
@@ -909,41 +907,12 @@ const Clock = () => {
             )}
           </div>
           
-          {/* おじさんの音声解説とテキスト解説 */}
+          {/* おじさんの解説 */}
           {weather.description && (
             <div className="clock-weather-description-section">
               <div className="clock-weather-description-header">
                 <div className="clock-weather-ojisan-icon">👴</div>
                 <div className="clock-weather-ojisan-title">おじさんの解説</div>
-                <button
-                  className={`clock-weather-speak-button ${isSpeaking ? 'speaking' : ''}`}
-                  onClick={() => {
-                    if (isSpeaking) {
-                      // 音声を停止
-                      if (speechSynthesisRef.current) {
-                        window.speechSynthesis.cancel()
-                        setIsSpeaking(false)
-                      }
-                    } else {
-                      // 音声を再生
-                      if (weather.description && 'speechSynthesis' in window) {
-                        const utterance = new SpeechSynthesisUtterance(weather.description)
-                        utterance.lang = 'ja-JP'
-                        utterance.rate = 0.9
-                        utterance.pitch = 0.9
-                        utterance.volume = 1.0
-                        speechSynthesisRef.current = utterance
-                        utterance.onend = () => setIsSpeaking(false)
-                        utterance.onerror = () => setIsSpeaking(false)
-                        window.speechSynthesis.speak(utterance)
-                        setIsSpeaking(true)
-                      }
-                    }
-                  }}
-                  title={isSpeaking ? '音声を停止' : '音声で聞く'}
-                >
-                  {isSpeaking ? '🔊 停止' : '🔊 再生'}
-                </button>
               </div>
               <div className="clock-weather-description-full">{weather.description}</div>
             </div>
