@@ -13,10 +13,10 @@ interface DayWeather {
 }
 
 interface WeeklyWeatherProps {
-  onClose?: () => void
+  onBack?: () => void
 }
 
-const WeeklyWeather = ({ onClose }: WeeklyWeatherProps) => {
+const WeeklyWeather = ({ onBack }: WeeklyWeatherProps) => {
   const [weatherData, setWeatherData] = useState<DayWeather[]>([])
   const [loading, setLoading] = useState(true)
   const [prefecture, setPrefecture] = useState<string>('新潟県')
@@ -52,59 +52,90 @@ const WeeklyWeather = ({ onClose }: WeeklyWeatherProps) => {
         if (forecastResponse.ok) {
           const forecastData = await forecastResponse.json()
           
-          if (forecastData && forecastData.length > 0) {
-            const areaData = forecastData[0]
-            const timeSeries = areaData.timeSeries?.[0]
+          // 週間天気予報はforecastData[1]から取得
+          if (forecastData && forecastData.length > 1) {
+            const weeklyData = forecastData[1]
+            const timeSeries = weeklyData.timeSeries?.[0] // 週間天気予報のデータ
+            const tempsSeries = weeklyData.timeSeries?.[1] // 週間気温のデータ
             
             if (timeSeries && timeSeries.areas && timeSeries.areas.length > 0) {
               const area = timeSeries.areas[0]
               const weatherCodes = area.weatherCodes || []
-              const temps = area.temps || []
               const timeDefines = timeSeries.timeDefines || []
               
+              // 気温データ
+              const tempsMax = tempsSeries?.areas?.[0]?.tempsMax || []
+              const tempsMin = tempsSeries?.areas?.[0]?.tempsMin || []
+              
+              // 詳細な天気コードマッピング（Clock.tsxと同じ）
               const getWeatherCondition = (code: string) => {
-                const codeNum = parseInt(code)
-                if (codeNum >= 100 && codeNum < 200) return { condition: '晴れ', icon: '☀️' }
-                if (codeNum >= 200 && codeNum < 300) return { condition: '曇り', icon: '☁️' }
-                if (codeNum >= 300 && codeNum < 400) return { condition: '雨', icon: '🌧️' }
-                if (codeNum >= 400 && codeNum < 500) return { condition: '雪', icon: '❄️' }
-                return { condition: '晴れ', icon: '☀️' }
+                switch (code) {
+                  case '100': return { condition: '晴れ', icon: '☀️', text: '晴れ' }
+                  case '101': return { condition: '曇り時々晴れ', icon: '⛅', text: '曇り時々晴れ' }
+                  case '102': return { condition: '晴れ時々曇り', icon: '🌤️', text: '晴れ時々曇り' }
+                  case '103': return { condition: '晴れのち曇り', icon: '🌥️', text: '晴れのち曇り' }
+                  case '104': return { condition: '晴れ時々雨', icon: '🌦️', text: '晴れ時々雨' }
+                  case '105': return { condition: '晴れのち雨', icon: '🌧️', text: '晴れのち雨' }
+                  case '106': return { condition: '晴れ時々雪', icon: '🌨️', text: '晴れ時々雪' }
+                  case '107': return { condition: '晴れのち雪', icon: '❄️', text: '晴れのち雪' }
+                  case '200': return { condition: '曇り', icon: '☁️', text: '曇り' }
+                  case '201': return { condition: '曇り時々晴れ', icon: '⛅', text: '曇り時々晴れ' }
+                  case '202': return { condition: '曇り時々雨', icon: '🌧️', text: '曇り時々雨' }
+                  case '203': return { condition: '曇りのち雨', icon: '☔', text: '曇りのち雨' }
+                  case '204': return { condition: '曇り時々雪', icon: '🌨️', text: '曇り時々雪' }
+                  case '205': return { condition: '曇りのち雪', icon: '❄️', text: '曇りのち雪' }
+                  case '300': return { condition: '雨', icon: '☔', text: '雨' }
+                  case '301': return { condition: '雨時々曇り', icon: '🌧️', text: '雨時々曇り' }
+                  case '302': return { condition: '雨のち曇り', icon: '🌧️', text: '雨のち曇り' }
+                  case '303': return { condition: '雨時々晴れ', icon: '🌦️', text: '雨時々晴れ' }
+                  case '304': return { condition: '雨のち晴れ', icon: '🌦️', text: '雨のち晴れ' }
+                  case '400': return { condition: '雪', icon: '❄️', text: '雪' }
+                  case '401': return { condition: '雪時々曇り', icon: '🌨️', text: '雪時々曇り' }
+                  case '402': return { condition: '雪のち曇り', icon: '🌨️', text: '雪のち曇り' }
+                  case '403': return { condition: '雪時々晴れ', icon: '🌨️', text: '雪時々晴れ' }
+                  case '404': return { condition: '雪のち晴れ', icon: '🌨️', text: '雪のち晴れ' }
+                  default: return { condition: '不明', icon: '❓', text: '不明' }
+                }
               }
               
               const days: DayWeather[] = []
               
-              // 今日と明日のデータを取得
-              for (let i = 0; i < Math.min(2, weatherCodes.length); i++) {
-                const weatherInfo = getWeatherCondition(weatherCodes[i])
-                const date = timeDefines[i] ? new Date(timeDefines[i]) : addDays(new Date(), i)
+              // 週間天気予報のデータを取得（最大7日分）
+              for (let i = 0; i < Math.min(7, weatherCodes.length, timeDefines.length); i++) {
+                const weatherCode = weatherCodes[i]
+                const weatherInfo = getWeatherCondition(weatherCode)
+                const date = new Date(timeDefines[i])
                 
                 let maxTemp: number | undefined
                 let minTemp: number | undefined
                 
-                // 気温データの処理（temps配列は[最高, 最低, 最高, 最低...]の形式）
-                if (temps && temps.length >= (i + 1) * 2) {
-                  maxTemp = parseInt(temps[i * 2])
-                  minTemp = parseInt(temps[i * 2 + 1])
+                // 気温データの処理（tempsMaxとtempsMinは日ごとに対応）
+                if (tempsMax && tempsMax[i] && tempsMin && tempsMin[i]) {
+                  maxTemp = parseInt(tempsMax[i])
+                  minTemp = parseInt(tempsMin[i])
                 }
                 
                 days.push({
                   date: date,
-                  condition: weatherInfo.condition,
+                  condition: weatherInfo.text,
                   icon: weatherInfo.icon,
                   maxTemp: maxTemp,
                   minTemp: minTemp
                 })
               }
               
-              // 残りの日を追加（モックデータ）
-              for (let i = days.length; i < 7; i++) {
-                days.push({
-                  date: addDays(new Date(), i),
-                  condition: '晴れ',
-                  icon: '☀️',
-                  maxTemp: 20,
-                  minTemp: 10
-                })
+              // データが7日分ない場合は残りを追加（モックデータ）
+              if (days.length < 7) {
+                const lastDate = days.length > 0 ? days[days.length - 1].date : new Date()
+                for (let i = days.length; i < 7; i++) {
+                  days.push({
+                    date: addDays(lastDate, i - days.length + 1),
+                    condition: '晴れ',
+                    icon: '☀️',
+                    maxTemp: 20,
+                    minTemp: 10
+                  })
+                }
               }
               
               setWeatherData(days)
@@ -128,7 +159,7 @@ const WeeklyWeather = ({ onClose }: WeeklyWeatherProps) => {
         setWeatherData(mockData)
         setLoading(false)
       } catch (error) {
-        console.error('天気情報の取得に失敗しました:', error)
+        console.error('週間天気予報の取得に失敗しました:', error)
         // エラー時もモックデータを表示
         const mockData: DayWeather[] = []
         for (let i = 0; i < 7; i++) {
@@ -188,10 +219,10 @@ const WeeklyWeather = ({ onClose }: WeeklyWeatherProps) => {
           </div>
         ))}
       </div>
-      {onClose && (
+      {onBack && (
         <button
-          className="weekly-weather-close-button"
-          onClick={onClose}
+          className="weekly-weather-back-button"
+          onClick={onBack}
           title="通常画面に戻る"
           aria-label="通常画面に戻る"
         >
