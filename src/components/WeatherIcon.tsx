@@ -53,16 +53,16 @@ const WeatherIcon = ({ code, size = 64, className = '' }: WeatherIconProps) => {
               </radialGradient>
             </defs>
             {/* 青空背景 */}
-            <rect x="0" y="0" width="100" height="100" fill="#87CEEB" />
+            <rect x="0" y="0" width="100" height="100" fill="#4A90E2" />
             {/* 太陽 */}
-            <circle cx="50" cy="50" r="20" fill="url(#sunGradient)" />
+            <circle cx="50" cy="50" r="22" fill="url(#sunGradient)" stroke="#FF8C00" strokeWidth="2" />
             {/* 太陽の光線 */}
             {Array.from({ length: 8 }).map((_, i) => {
               const angle = (i * 45) * Math.PI / 180
               const x1 = 50 + Math.cos(angle) * 25
               const y1 = 50 + Math.sin(angle) * 25
-              const x2 = 50 + Math.cos(angle) * 32
-              const y2 = 50 + Math.sin(angle) * 32
+              const x2 = 50 + Math.cos(angle) * 35
+              const y2 = 50 + Math.sin(angle) * 35
               return (
                 <line
                   key={i}
@@ -71,7 +71,7 @@ const WeatherIcon = ({ code, size = 64, className = '' }: WeatherIconProps) => {
                   x2={x2}
                   y2={y2}
                   stroke="#FFD700"
-                  strokeWidth="2"
+                  strokeWidth="3"
                   strokeLinecap="round"
                 />
               )
@@ -89,11 +89,11 @@ const WeatherIcon = ({ code, size = 64, className = '' }: WeatherIconProps) => {
               </linearGradient>
             </defs>
             {/* グレー空背景 */}
-            <rect x="0" y="0" width="100" height="100" fill="#D3D3D3" />
+            <rect x="0" y="0" width="100" height="100" fill="#708090" />
             {/* 雲 */}
-            <ellipse cx="50" cy="50" rx="30" ry="18" fill="url(#cloudGradient)" />
-            <ellipse cx="40" cy="45" rx="22" ry="14" fill="url(#cloudGradient)" />
-            <ellipse cx="60" cy="45" rx="22" ry="14" fill="url(#cloudGradient)" />
+            <ellipse cx="50" cy="50" rx="32" ry="20" fill="url(#cloudGradient)" stroke="#555" strokeWidth="1.5" />
+            <ellipse cx="40" cy="45" rx="24" ry="16" fill="url(#cloudGradient)" stroke="#555" strokeWidth="1.5" />
+            <ellipse cx="60" cy="45" rx="24" ry="16" fill="url(#cloudGradient)" stroke="#555" strokeWidth="1.5" />
           </svg>
         )
 
@@ -111,15 +111,15 @@ const WeatherIcon = ({ code, size = 64, className = '' }: WeatherIconProps) => {
               </linearGradient>
             </defs>
             {/* 青空背景 */}
-            <rect x="0" y="0" width="100" height="100" fill="#87CEEB" />
+            <rect x="0" y="0" width="100" height="100" fill="#4A90E2" />
             {/* 太陽（左側） */}
-            <circle cx="30" cy="30" r="15" fill="url(#partlySunGradient)" />
+            <circle cx="30" cy="30" r="17" fill="url(#partlySunGradient)" stroke="#FF8C00" strokeWidth="2" />
             {Array.from({ length: 6 }).map((_, i) => {
               const angle = (i * 60) * Math.PI / 180
-              const x1 = 30 + Math.cos(angle) * 18
-              const y1 = 30 + Math.sin(angle) * 18
-              const x2 = 30 + Math.cos(angle) * 23
-              const y2 = 30 + Math.sin(angle) * 23
+              const x1 = 30 + Math.cos(angle) * 20
+              const y1 = 30 + Math.sin(angle) * 20
+              const x2 = 30 + Math.cos(angle) * 28
+              const y2 = 30 + Math.sin(angle) * 28
               return (
                 <line
                   key={i}
@@ -128,15 +128,15 @@ const WeatherIcon = ({ code, size = 64, className = '' }: WeatherIconProps) => {
                   x2={x2}
                   y2={y2}
                   stroke="#FFD700"
-                  strokeWidth="1.5"
+                  strokeWidth="2.5"
                   strokeLinecap="round"
                 />
               )
             })}
             {/* 雲（右側） */}
-            <ellipse cx="70" cy="50" rx="25" ry="15" fill="url(#partlyCloudGradient)" />
-            <ellipse cx="60" cy="45" rx="18" ry="12" fill="url(#partlyCloudGradient)" />
-            <ellipse cx="80" cy="45" rx="18" ry="12" fill="url(#partlyCloudGradient)" />
+            <ellipse cx="70" cy="50" rx="27" ry="17" fill="url(#partlyCloudGradient)" stroke="#555" strokeWidth="1.5" />
+            <ellipse cx="60" cy="45" rx="20" ry="14" fill="url(#partlyCloudGradient)" stroke="#555" strokeWidth="1.5" />
+            <ellipse cx="80" cy="45" rx="20" ry="14" fill="url(#partlyCloudGradient)" stroke="#555" strokeWidth="1.5" />
           </svg>
         )
 
@@ -154,15 +154,15 @@ const WeatherIcon = ({ code, size = 64, className = '' }: WeatherIconProps) => {
               </linearGradient>
             </defs>
             {/* 青空背景 */}
-            <rect x="0" y="0" width="100" height="100" fill="#87CEEB" />
+            <rect x="0" y="0" width="100" height="100" fill="#4A90E2" />
             {/* 太陽 */}
-            <circle cx="35" cy="35" r="18" fill="url(#sunnyCloudySun)" />
+            <circle cx="35" cy="35" r="20" fill="url(#sunnyCloudySun)" stroke="#FF8C00" strokeWidth="2" />
             {Array.from({ length: 6 }).map((_, i) => {
               const angle = (i * 60) * Math.PI / 180
-              const x1 = 35 + Math.cos(angle) * 21
-              const y1 = 35 + Math.sin(angle) * 21
-              const x2 = 35 + Math.cos(angle) * 26
-              const y2 = 35 + Math.sin(angle) * 26
+              const x1 = 35 + Math.cos(angle) * 23
+              const y1 = 35 + Math.sin(angle) * 23
+              const x2 = 35 + Math.cos(angle) * 30
+              const y2 = 35 + Math.sin(angle) * 30
               return (
                 <line
                   key={i}
@@ -171,15 +171,15 @@ const WeatherIcon = ({ code, size = 64, className = '' }: WeatherIconProps) => {
                   x2={x2}
                   y2={y2}
                   stroke="#FFD700"
-                  strokeWidth="1.5"
+                  strokeWidth="2.5"
                   strokeLinecap="round"
                 />
               )
             })}
             {/* 雲 */}
-            <ellipse cx="70" cy="50" rx="28" ry="16" fill="url(#sunnyCloudyCloud)" />
-            <ellipse cx="60" cy="45" rx="20" ry="13" fill="url(#sunnyCloudyCloud)" />
-            <ellipse cx="80" cy="45" rx="20" ry="13" fill="url(#sunnyCloudyCloud)" />
+            <ellipse cx="70" cy="50" rx="30" ry="18" fill="url(#sunnyCloudyCloud)" stroke="#555" strokeWidth="1.5" />
+            <ellipse cx="60" cy="45" rx="22" ry="15" fill="url(#sunnyCloudyCloud)" stroke="#555" strokeWidth="1.5" />
+            <ellipse cx="80" cy="45" rx="22" ry="15" fill="url(#sunnyCloudyCloud)" stroke="#555" strokeWidth="1.5" />
           </svg>
         )
 
@@ -193,23 +193,23 @@ const WeatherIcon = ({ code, size = 64, className = '' }: WeatherIconProps) => {
               </linearGradient>
             </defs>
             {/* グレー空背景 */}
-            <rect x="0" y="0" width="100" height="100" fill="#A0A0A0" />
+            <rect x="0" y="0" width="100" height="100" fill="#5F7A8C" />
             {/* 雲 */}
-            <ellipse cx="50" cy="45" rx="30" ry="18" fill="url(#rainCloudGradient)" />
-            <ellipse cx="40" cy="40" rx="22" ry="14" fill="url(#rainCloudGradient)" />
-            <ellipse cx="60" cy="40" rx="22" ry="14" fill="url(#rainCloudGradient)" />
+            <ellipse cx="50" cy="45" rx="32" ry="20" fill="url(#rainCloudGradient)" stroke="#333" strokeWidth="2" />
+            <ellipse cx="40" cy="40" rx="24" ry="16" fill="url(#rainCloudGradient)" stroke="#333" strokeWidth="2" />
+            <ellipse cx="60" cy="40" rx="24" ry="16" fill="url(#rainCloudGradient)" stroke="#333" strokeWidth="2" />
             {/* 雨 */}
-            {Array.from({ length: 5 }).map((_, i) => {
-              const x = 40 + (i * 5)
+            {Array.from({ length: 6 }).map((_, i) => {
+              const x = 35 + (i * 6)
               return (
                 <line
                   key={i}
                   x1={x}
-                  y1="65"
+                  y1="60"
                   x2={x}
-                  y2="85"
-                  stroke="#4A90E2"
-                  strokeWidth="2"
+                  y2="90"
+                  stroke="#1E90FF"
+                  strokeWidth="3"
                   strokeLinecap="round"
                 />
               )
@@ -227,23 +227,23 @@ const WeatherIcon = ({ code, size = 64, className = '' }: WeatherIconProps) => {
               </linearGradient>
             </defs>
             {/* グレー空背景 */}
-            <rect x="0" y="0" width="100" height="100" fill="#A0A0A0" />
+            <rect x="0" y="0" width="100" height="100" fill="#5F7A8C" />
             {/* 雲 */}
-            <ellipse cx="50" cy="45" rx="30" ry="18" fill="url(#cloudyRainCloud)" />
-            <ellipse cx="40" cy="40" rx="22" ry="14" fill="url(#cloudyRainCloud)" />
-            <ellipse cx="60" cy="40" rx="22" ry="14" fill="url(#cloudyRainCloud)" />
+            <ellipse cx="50" cy="45" rx="32" ry="20" fill="url(#cloudyRainCloud)" stroke="#333" strokeWidth="2" />
+            <ellipse cx="40" cy="40" rx="24" ry="16" fill="url(#cloudyRainCloud)" stroke="#333" strokeWidth="2" />
+            <ellipse cx="60" cy="40" rx="24" ry="16" fill="url(#cloudyRainCloud)" stroke="#333" strokeWidth="2" />
             {/* 雨 */}
-            {Array.from({ length: 5 }).map((_, i) => {
-              const x = 40 + (i * 5)
+            {Array.from({ length: 6 }).map((_, i) => {
+              const x = 35 + (i * 6)
               return (
                 <line
                   key={i}
                   x1={x}
-                  y1="65"
+                  y1="60"
                   x2={x}
-                  y2="85"
-                  stroke="#4A90E2"
-                  strokeWidth="2"
+                  y2="90"
+                  stroke="#1E90FF"
+                  strokeWidth="3"
                   strokeLinecap="round"
                 />
               )
@@ -265,15 +265,15 @@ const WeatherIcon = ({ code, size = 64, className = '' }: WeatherIconProps) => {
               </linearGradient>
             </defs>
             {/* 青空背景 */}
-            <rect x="0" y="0" width="100" height="100" fill="#87CEEB" />
+            <rect x="0" y="0" width="100" height="100" fill="#4A90E2" />
             {/* 太陽 */}
-            <circle cx="30" cy="30" r="15" fill="url(#sunnyRainSun)" />
+            <circle cx="30" cy="30" r="17" fill="url(#sunnyRainSun)" stroke="#FF8C00" strokeWidth="2" />
             {Array.from({ length: 6 }).map((_, i) => {
               const angle = (i * 60) * Math.PI / 180
-              const x1 = 30 + Math.cos(angle) * 18
-              const y1 = 30 + Math.sin(angle) * 18
-              const x2 = 30 + Math.cos(angle) * 23
-              const y2 = 30 + Math.sin(angle) * 23
+              const x1 = 30 + Math.cos(angle) * 20
+              const y1 = 30 + Math.sin(angle) * 20
+              const x2 = 30 + Math.cos(angle) * 28
+              const y2 = 30 + Math.sin(angle) * 28
               return (
                 <line
                   key={i}
@@ -282,27 +282,27 @@ const WeatherIcon = ({ code, size = 64, className = '' }: WeatherIconProps) => {
                   x2={x2}
                   y2={y2}
                   stroke="#FFD700"
-                  strokeWidth="1.5"
+                  strokeWidth="2.5"
                   strokeLinecap="round"
                 />
               )
             })}
             {/* 雲 */}
-            <ellipse cx="70" cy="50" rx="28" ry="16" fill="url(#sunnyRainCloud)" />
-            <ellipse cx="60" cy="45" rx="20" ry="13" fill="url(#sunnyRainCloud)" />
-            <ellipse cx="80" cy="45" rx="20" ry="13" fill="url(#sunnyRainCloud)" />
+            <ellipse cx="70" cy="50" rx="30" ry="18" fill="url(#sunnyRainCloud)" stroke="#333" strokeWidth="2" />
+            <ellipse cx="60" cy="45" rx="22" ry="15" fill="url(#sunnyRainCloud)" stroke="#333" strokeWidth="2" />
+            <ellipse cx="80" cy="45" rx="22" ry="15" fill="url(#sunnyRainCloud)" stroke="#333" strokeWidth="2" />
             {/* 雨 */}
-            {Array.from({ length: 4 }).map((_, i) => {
-              const x = 60 + (i * 5)
+            {Array.from({ length: 5 }).map((_, i) => {
+              const x = 58 + (i * 5)
               return (
                 <line
                   key={i}
                   x1={x}
-                  y1="68"
+                  y1="65"
                   x2={x}
-                  y2="88"
-                  stroke="#4A90E2"
-                  strokeWidth="2"
+                  y2="90"
+                  stroke="#1E90FF"
+                  strokeWidth="3"
                   strokeLinecap="round"
                 />
               )
@@ -320,21 +320,21 @@ const WeatherIcon = ({ code, size = 64, className = '' }: WeatherIconProps) => {
               </linearGradient>
             </defs>
             {/* グレー空背景 */}
-            <rect x="0" y="0" width="100" height="100" fill="#D3D3D3" />
+            <rect x="0" y="0" width="100" height="100" fill="#708090" />
             {/* 雲 */}
-            <ellipse cx="50" cy="45" rx="30" ry="18" fill="url(#snowCloudGradient)" />
-            <ellipse cx="40" cy="40" rx="22" ry="14" fill="url(#snowCloudGradient)" />
-            <ellipse cx="60" cy="40" rx="22" ry="14" fill="url(#snowCloudGradient)" />
+            <ellipse cx="50" cy="45" rx="32" ry="20" fill="url(#snowCloudGradient)" stroke="#555" strokeWidth="2" />
+            <ellipse cx="40" cy="40" rx="24" ry="16" fill="url(#snowCloudGradient)" stroke="#555" strokeWidth="2" />
+            <ellipse cx="60" cy="40" rx="24" ry="16" fill="url(#snowCloudGradient)" stroke="#555" strokeWidth="2" />
             {/* 雪の結晶 */}
-            {Array.from({ length: 4 }).map((_, i) => {
-              const x = 35 + (i * 10)
-              const y = 70 + (i % 2) * 10
+            {Array.from({ length: 5 }).map((_, i) => {
+              const x = 30 + (i * 10)
+              const y = 65 + (i % 2) * 12
               return (
                 <g key={i} transform={`translate(${x}, ${y})`}>
-                  <line x1="0" y1="-4" x2="0" y2="4" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" />
-                  <line x1="-4" y1="0" x2="4" y2="0" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" />
-                  <line x1="-3" y1="-3" x2="3" y2="3" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" />
-                  <line x1="-3" y1="3" x2="3" y2="-3" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" />
+                  <line x1="0" y1="-6" x2="0" y2="6" stroke="#FFFFFF" strokeWidth="2.5" strokeLinecap="round" />
+                  <line x1="-6" y1="0" x2="6" y2="0" stroke="#FFFFFF" strokeWidth="2.5" strokeLinecap="round" />
+                  <line x1="-4" y1="-4" x2="4" y2="4" stroke="#FFFFFF" strokeWidth="2.5" strokeLinecap="round" />
+                  <line x1="-4" y1="4" x2="4" y2="-4" stroke="#FFFFFF" strokeWidth="2.5" strokeLinecap="round" />
                 </g>
               )
             })}
@@ -351,21 +351,21 @@ const WeatherIcon = ({ code, size = 64, className = '' }: WeatherIconProps) => {
               </linearGradient>
             </defs>
             {/* グレー空背景 */}
-            <rect x="0" y="0" width="100" height="100" fill="#D3D3D3" />
+            <rect x="0" y="0" width="100" height="100" fill="#708090" />
             {/* 雲 */}
-            <ellipse cx="50" cy="45" rx="30" ry="18" fill="url(#cloudySnowCloud)" />
-            <ellipse cx="40" cy="40" rx="22" ry="14" fill="url(#cloudySnowCloud)" />
-            <ellipse cx="60" cy="40" rx="22" ry="14" fill="url(#cloudySnowCloud)" />
+            <ellipse cx="50" cy="45" rx="32" ry="20" fill="url(#cloudySnowCloud)" stroke="#555" strokeWidth="2" />
+            <ellipse cx="40" cy="40" rx="24" ry="16" fill="url(#cloudySnowCloud)" stroke="#555" strokeWidth="2" />
+            <ellipse cx="60" cy="40" rx="24" ry="16" fill="url(#cloudySnowCloud)" stroke="#555" strokeWidth="2" />
             {/* 雪の結晶 */}
-            {Array.from({ length: 4 }).map((_, i) => {
-              const x = 35 + (i * 10)
-              const y = 70 + (i % 2) * 10
+            {Array.from({ length: 5 }).map((_, i) => {
+              const x = 30 + (i * 10)
+              const y = 65 + (i % 2) * 12
               return (
                 <g key={i} transform={`translate(${x}, ${y})`}>
-                  <line x1="0" y1="-4" x2="0" y2="4" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" />
-                  <line x1="-4" y1="0" x2="4" y2="0" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" />
-                  <line x1="-3" y1="-3" x2="3" y2="3" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" />
-                  <line x1="-3" y1="3" x2="3" y2="-3" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" />
+                  <line x1="0" y1="-6" x2="0" y2="6" stroke="#FFFFFF" strokeWidth="2.5" strokeLinecap="round" />
+                  <line x1="-6" y1="0" x2="6" y2="0" stroke="#FFFFFF" strokeWidth="2.5" strokeLinecap="round" />
+                  <line x1="-4" y1="-4" x2="4" y2="4" stroke="#FFFFFF" strokeWidth="2.5" strokeLinecap="round" />
+                  <line x1="-4" y1="4" x2="4" y2="-4" stroke="#FFFFFF" strokeWidth="2.5" strokeLinecap="round" />
                 </g>
               )
             })}
@@ -386,15 +386,15 @@ const WeatherIcon = ({ code, size = 64, className = '' }: WeatherIconProps) => {
               </linearGradient>
             </defs>
             {/* 青空背景 */}
-            <rect x="0" y="0" width="100" height="100" fill="#87CEEB" />
+            <rect x="0" y="0" width="100" height="100" fill="#4A90E2" />
             {/* 太陽 */}
-            <circle cx="30" cy="30" r="15" fill="url(#sunnySnowSun)" />
+            <circle cx="30" cy="30" r="17" fill="url(#sunnySnowSun)" stroke="#FF8C00" strokeWidth="2" />
             {Array.from({ length: 6 }).map((_, i) => {
               const angle = (i * 60) * Math.PI / 180
-              const x1 = 30 + Math.cos(angle) * 18
-              const y1 = 30 + Math.sin(angle) * 18
-              const x2 = 30 + Math.cos(angle) * 23
-              const y2 = 30 + Math.sin(angle) * 23
+              const x1 = 30 + Math.cos(angle) * 20
+              const y1 = 30 + Math.sin(angle) * 20
+              const x2 = 30 + Math.cos(angle) * 28
+              const y2 = 30 + Math.sin(angle) * 28
               return (
                 <line
                   key={i}
@@ -403,25 +403,25 @@ const WeatherIcon = ({ code, size = 64, className = '' }: WeatherIconProps) => {
                   x2={x2}
                   y2={y2}
                   stroke="#FFD700"
-                  strokeWidth="1.5"
+                  strokeWidth="2.5"
                   strokeLinecap="round"
                 />
               )
             })}
             {/* 雲 */}
-            <ellipse cx="70" cy="50" rx="28" ry="16" fill="url(#sunnySnowCloud)" />
-            <ellipse cx="60" cy="45" rx="20" ry="13" fill="url(#sunnySnowCloud)" />
-            <ellipse cx="80" cy="45" rx="20" ry="13" fill="url(#sunnySnowCloud)" />
+            <ellipse cx="70" cy="50" rx="30" ry="18" fill="url(#sunnySnowCloud)" stroke="#555" strokeWidth="2" />
+            <ellipse cx="60" cy="45" rx="22" ry="15" fill="url(#sunnySnowCloud)" stroke="#555" strokeWidth="2" />
+            <ellipse cx="80" cy="45" rx="22" ry="15" fill="url(#sunnySnowCloud)" stroke="#555" strokeWidth="2" />
             {/* 雪の結晶 */}
-            {Array.from({ length: 3 }).map((_, i) => {
-              const x = 60 + (i * 8)
-              const y = 70 + (i % 2) * 8
+            {Array.from({ length: 4 }).map((_, i) => {
+              const x = 58 + (i * 7)
+              const y = 68 + (i % 2) * 10
               return (
                 <g key={i} transform={`translate(${x}, ${y})`}>
-                  <line x1="0" y1="-4" x2="0" y2="4" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" />
-                  <line x1="-4" y1="0" x2="4" y2="0" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" />
-                  <line x1="-3" y1="-3" x2="3" y2="3" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" />
-                  <line x1="-3" y1="3" x2="3" y2="-3" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" />
+                  <line x1="0" y1="-6" x2="0" y2="6" stroke="#FFFFFF" strokeWidth="2.5" strokeLinecap="round" />
+                  <line x1="-6" y1="0" x2="6" y2="0" stroke="#FFFFFF" strokeWidth="2.5" strokeLinecap="round" />
+                  <line x1="-4" y1="-4" x2="4" y2="4" stroke="#FFFFFF" strokeWidth="2.5" strokeLinecap="round" />
+                  <line x1="-4" y1="4" x2="4" y2="-4" stroke="#FFFFFF" strokeWidth="2.5" strokeLinecap="round" />
                 </g>
               )
             })}
@@ -437,8 +437,8 @@ const WeatherIcon = ({ code, size = 64, className = '' }: WeatherIconProps) => {
                 <stop offset="100%" stopColor="#FFA500" stopOpacity="0.9" />
               </radialGradient>
             </defs>
-            <rect x="0" y="0" width="100" height="100" fill="#87CEEB" />
-            <circle cx="50" cy="50" r="20" fill="url(#defaultGradient)" />
+            <rect x="0" y="0" width="100" height="100" fill="#4A90E2" />
+            <circle cx="50" cy="50" r="22" fill="url(#defaultGradient)" stroke="#FF8C00" strokeWidth="2" />
           </svg>
         )
     }
