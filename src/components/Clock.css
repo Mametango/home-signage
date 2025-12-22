@@ -146,9 +146,11 @@
   font-family: 'Noto Sans JP', sans-serif;
   width: 100%;
   box-sizing: border-box;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
   flex: 1;
   min-height: 0;
+  max-height: 100%;
 }
 
 .clock-weather-header {
@@ -464,11 +466,11 @@
 }
 
 .clock-weather-description-full {
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   color: rgba(255, 255, 255, 0.95);
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
   font-weight: 500;
-  line-height: 1.6;
+  line-height: 1.5;
   padding: 0.75rem;
   background: rgba(255, 255, 255, 0.08);
   border-radius: 0.5rem;
@@ -477,8 +479,9 @@
   overflow-wrap: break-word;
   max-width: 100%;
   box-sizing: border-box;
-  max-height: 8rem;
+  max-height: 6rem;
   overflow-y: auto;
+  flex-shrink: 1;
 }
 
 .clock-weather-info-grid {
@@ -488,6 +491,7 @@
   width: 100%;
   box-sizing: border-box;
   flex-shrink: 0;
+  margin-top: auto;
 }
 
 .clock-weather-info-item {
