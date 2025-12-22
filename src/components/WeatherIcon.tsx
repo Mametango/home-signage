@@ -45,32 +45,52 @@ const WeatherIcon = ({ code, size = 64, className = '' }: WeatherIconProps) => {
     switch (iconType) {
       case 'sunny':
         return (
+          // 晴れ：参考イメージのような「青空＋太陽＋ふわふわ雲」の抽象イラスト
           <svg width={iconSize} height={iconSize} viewBox="0 0 200 200" className={`weather-icon-svg ${className}`}>
             <defs>
-              <radialGradient id="sunGradient" cx="50%" cy="50%">
-                <stop offset="0%" stopColor="#FFD700" stopOpacity="0.9" />
-                <stop offset="50%" stopColor="#FFA500" stopOpacity="0.7" />
-                <stop offset="100%" stopColor="#FF8C00" stopOpacity="0.3" />
+              {/* 空のグラデーション */}
+              <linearGradient id="sunnySkyGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#87CEFA" stopOpacity="1" />
+                <stop offset="60%" stopColor="#B0E0FF" stopOpacity="0.9" />
+                <stop offset="100%" stopColor="#E0F6FF" stopOpacity="0.9" />
+              </linearGradient>
+              {/* 太陽のグラデーション */}
+              <radialGradient id="sunCoreGradient" cx="50%" cy="50%">
+                <stop offset="0%" stopColor="#FFF9C4" stopOpacity="1" />
+                <stop offset="50%" stopColor="#FFD54F" stopOpacity="0.95" />
+                <stop offset="100%" stopColor="#FFB300" stopOpacity="0.8" />
               </radialGradient>
-              <radialGradient id="sunRays" cx="50%" cy="50%">
-                <stop offset="0%" stopColor="#FFD700" stopOpacity="0.8" />
-                <stop offset="100%" stopColor="#FFA500" stopOpacity="0.2" />
+              <radialGradient id="sunHaloGradient" cx="50%" cy="50%">
+                <stop offset="0%" stopColor="#FFE082" stopOpacity="0.8" />
+                <stop offset="100%" stopColor="#FFB300" stopOpacity="0" />
               </radialGradient>
+              {/* 雲のグラデーション */}
+              <linearGradient id="sunnyCloudGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.95" />
+                <stop offset="100%" stopColor="#E0E6F0" stopOpacity="0.95" />
+              </linearGradient>
             </defs>
-            {/* 拡大された太陽の光の抽象表現 */}
-            <circle cx="100" cy="100" r="80" fill="url(#sunGradient)">
-              <animate attributeName="r" values="80;85;80" dur="3s" repeatCount="indefinite" />
+            {/* 空全体 */}
+            <rect x="0" y="0" width="200" height="200" fill="url(#sunnySkyGradient)" />
+
+            {/* 太陽（右上寄り） */}
+            <circle cx="145" cy="55" r="34" fill="url(#sunCoreGradient)">
+              <animate attributeName="r" values="32;36;32" dur="4s" repeatCount="indefinite" />
             </circle>
-            <circle cx="100" cy="100" r="60" fill="url(#sunRays)" opacity="0.6">
-              <animate attributeName="opacity" values="0.6;0.8;0.6" dur="2s" repeatCount="indefinite" />
+            {/* 太陽のハロー */}
+            <circle cx="145" cy="55" r="55" fill="url(#sunHaloGradient)" opacity="0.9">
+              <animate attributeName="opacity" values="0.5;0.9;0.5" dur="4s" repeatCount="indefinite" />
             </circle>
-            {/* 光の放射パターン */}
-            {Array.from({ length: 12 }).map((_, i) => {
-              const angle = (i * 30) * Math.PI / 180
-              const x1 = 100 + Math.cos(angle) * 70
-              const y1 = 100 + Math.sin(angle) * 70
-              const x2 = 100 + Math.cos(angle) * 90
-              const y2 = 100 + Math.sin(angle) * 90
+
+            {/* 太陽の光の抽象的な放射（短いライン） */}
+            {Array.from({ length: 10 }).map((_, i) => {
+              const angle = (i * 36) * Math.PI / 180
+              const inner = 45
+              const outer = 60
+              const x1 = 145 + Math.cos(angle) * inner
+              const y1 = 55 + Math.sin(angle) * inner
+              const x2 = 145 + Math.cos(angle) * outer
+              const y2 = 55 + Math.sin(angle) * outer
               return (
                 <line
                   key={i}
@@ -78,15 +98,37 @@ const WeatherIcon = ({ code, size = 64, className = '' }: WeatherIconProps) => {
                   y1={y1}
                   x2={x2}
                   y2={y2}
-                  stroke="#FFD700"
-                  strokeWidth="4"
+                  stroke="#FFE082"
+                  strokeWidth="3"
                   strokeLinecap="round"
-                  opacity="0.6"
+                  opacity="0.7"
                 >
-                  <animate attributeName="opacity" values="0.4;0.8;0.4" dur="2s" repeatCount="indefinite" begin={`${i * 0.1}s`} />
+                  <animate attributeName="opacity" values="0.4;0.9;0.4" dur="3s" repeatCount="indefinite" begin={`${i * 0.15}s`} />
                 </line>
               )
             })}
+
+            {/* 手前のふわふわ雲（左下） */}
+            <g opacity="0.96">
+              <ellipse cx="55" cy="115" rx="36" ry="20" fill="url(#sunnyCloudGradient)">
+                <animate attributeName="cx" values="55;58;55" dur="6s" repeatCount="indefinite" />
+              </ellipse>
+              <ellipse cx="35" cy="118" rx="24" ry="15" fill="url(#sunnyCloudGradient)">
+                <animate attributeName="cx" values="35;37;35" dur="6s" repeatCount="indefinite" begin="1s" />
+              </ellipse>
+              <ellipse cx="75" cy="118" rx="26" ry="16" fill="url(#sunnyCloudGradient)">
+                <animate attributeName="cx" values="75;78;75" dur="6s" repeatCount="indefinite" begin="0.5s" />
+              </ellipse>
+            </g>
+
+            {/* 中央寄りの雲（太陽とのバランス用） */}
+            <g opacity="0.9">
+              <ellipse cx="115" cy="125" rx="40" ry="22" fill="url(#sunnyCloudGradient)">
+                <animate attributeName="cx" values="115;118;115" dur="7s" repeatCount="indefinite" />
+              </ellipse>
+              <ellipse cx="95" cy="120" rx="26" ry="16" fill="url(#sunnyCloudGradient)" />
+              <ellipse cx="135" cy="122" rx="28" ry="17" fill="url(#sunnyCloudGradient)" />
+            </g>
           </svg>
         )
 
