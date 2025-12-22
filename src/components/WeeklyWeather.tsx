@@ -202,6 +202,17 @@ const WeeklyWeather = ({ onBack }: WeeklyWeatherProps) => {
     return format(date, 'M/d(E)', { locale: ja })
   }
 
+  // 天気コードから天気タイプを取得する関数
+  const getWeatherTypeClass = (code?: string) => {
+    if (!code) return 'weather-sunny'
+    const codeNum = parseInt(code)
+    if (codeNum >= 100 && codeNum < 200) return 'weather-sunny'
+    if (codeNum >= 200 && codeNum < 300) return 'weather-cloudy'
+    if (codeNum >= 300 && codeNum < 400) return 'weather-rainy'
+    if (codeNum >= 400 && codeNum < 500) return 'weather-snowy'
+    return 'weather-sunny'
+  }
+
   return (
     <div className="weekly-weather">
       <div className="weekly-weather-header">
@@ -209,7 +220,7 @@ const WeeklyWeather = ({ onBack }: WeeklyWeatherProps) => {
       </div>
       <div className="weekly-weather-grid">
         {weatherData.map((day, index) => (
-          <div key={index} className="weekly-weather-day">
+          <div key={index} className={`weekly-weather-day ${getWeatherTypeClass(day.weatherCode)}`}>
             <div className="weekly-weather-background">
               <WeatherIcon code={day.weatherCode || '100'} size={200} className="weather-background-icon" />
             </div>

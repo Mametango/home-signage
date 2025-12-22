@@ -856,6 +856,17 @@ const Clock = () => {
     return () => clearInterval(interval)
   }, [prefecture, city])
 
+  // 天気コードから天気タイプを取得する関数
+  const getWeatherTypeClass = (code?: string) => {
+    if (!code) return 'weather-sunny'
+    const codeNum = parseInt(code)
+    if (codeNum >= 100 && codeNum < 200) return 'weather-sunny'
+    if (codeNum >= 200 && codeNum < 300) return 'weather-cloudy'
+    if (codeNum >= 300 && codeNum < 400) return 'weather-rainy'
+    if (codeNum >= 400 && codeNum < 500) return 'weather-snowy'
+    return 'weather-sunny'
+  }
+
   return (
     <div className="clock clock-large">
       {/* 左上: 日付 */}
@@ -875,7 +886,7 @@ const Clock = () => {
           {/* 今日と明日の天気表示 */}
           <div className="clock-weather-today-tomorrow">
             {weather.today && (
-              <div className="clock-weather-day-card today">
+              <div className={`clock-weather-day-card today ${getWeatherTypeClass(weather.today.weatherCode)}`}>
                 <div className="clock-weather-day-background">
                   <WeatherIcon code={weather.today.weatherCode || '100'} size={200} className="weather-background-icon" />
                 </div>
@@ -900,7 +911,7 @@ const Clock = () => {
               </div>
             )}
             {weather.tomorrow && (
-              <div className="clock-weather-day-card tomorrow">
+              <div className={`clock-weather-day-card tomorrow ${getWeatherTypeClass(weather.tomorrow.weatherCode)}`}>
                 <div className="clock-weather-day-background">
                   <WeatherIcon code={weather.tomorrow.weatherCode || '100'} size={200} className="weather-background-icon" />
                 </div>

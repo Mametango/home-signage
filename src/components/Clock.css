@@ -200,6 +200,7 @@
   min-width: 0;
   position: relative;
   overflow: hidden;
+  transition: all 0.3s ease;
 }
 
 .clock-weather-day-card.today {
@@ -208,6 +209,66 @@
 
 .clock-weather-day-card.tomorrow {
   border-left: 4px solid #ff6b6b;
+}
+
+/* 晴れの天気カード */
+.clock-weather-day-card.weather-sunny {
+  background: linear-gradient(135deg, rgba(135, 206, 250, 0.3) 0%, rgba(255, 215, 0, 0.2) 100%);
+  border-color: rgba(255, 215, 0, 0.4);
+  box-shadow: 0 2px 8px rgba(255, 215, 0, 0.2);
+}
+
+.clock-weather-day-card.weather-sunny.today {
+  border-left-color: #FFD700;
+}
+
+.clock-weather-day-card.weather-sunny.tomorrow {
+  border-left-color: #FFA500;
+}
+
+/* 曇りの天気カード */
+.clock-weather-day-card.weather-cloudy {
+  background: linear-gradient(135deg, rgba(192, 192, 192, 0.3) 0%, rgba(169, 169, 169, 0.2) 100%);
+  border-color: rgba(192, 192, 192, 0.4);
+  box-shadow: 0 2px 8px rgba(128, 128, 128, 0.2);
+}
+
+.clock-weather-day-card.weather-cloudy.today {
+  border-left-color: #A9A9A9;
+}
+
+.clock-weather-day-card.weather-cloudy.tomorrow {
+  border-left-color: #808080;
+}
+
+/* 雨の天気カード */
+.clock-weather-day-card.weather-rainy {
+  background: linear-gradient(135deg, rgba(70, 130, 180, 0.3) 0%, rgba(65, 105, 225, 0.2) 100%);
+  border-color: rgba(70, 130, 180, 0.4);
+  box-shadow: 0 2px 8px rgba(70, 130, 180, 0.2);
+}
+
+.clock-weather-day-card.weather-rainy.today {
+  border-left-color: #4682B4;
+}
+
+.clock-weather-day-card.weather-rainy.tomorrow {
+  border-left-color: #4169E1;
+}
+
+/* 雪の天気カード */
+.clock-weather-day-card.weather-snowy {
+  background: linear-gradient(135deg, rgba(230, 230, 250, 0.3) 0%, rgba(176, 196, 222, 0.2) 100%);
+  border-color: rgba(230, 230, 250, 0.4);
+  box-shadow: 0 2px 8px rgba(176, 196, 222, 0.2);
+}
+
+.clock-weather-day-card.weather-snowy.today {
+  border-left-color: #E6E6FA;
+}
+
+.clock-weather-day-card.weather-snowy.tomorrow {
+  border-left-color: #B0C4DE;
 }
 
 .clock-weather-day-background {
