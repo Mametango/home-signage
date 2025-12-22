@@ -211,6 +211,103 @@ const Clock = () => {
           }
         }
         
+        // 気象庁のXMLフィードから新潟の天気予報を取得
+        try {
+          const feedResponse = await fetch('https://www.data.jma.go.jp/developer/xml/feed/regular_l.xml')
+          if (feedResponse.ok) {
+            const feedText = await feedResponse.text()
+            const parser = new DOMParser()
+            const feedDoc = parser.parseFromString(feedText, 'text/xml')
+            
+            // 新潟県の府県天気予報のリンクを探す
+            const entries = feedDoc.querySelectorAll('entry')
+            let niigataForecastUrl: string | null = null
+            
+            for (const entry of Array.from(entries)) {
+              const title = entry.querySelector('title')?.textContent
+              const link = entry.querySelector('link[type="application/xml"]')?.getAttribute('href')
+              
+              if (title?.includes('府県天気予報') && link?.includes('_150000.xml')) {
+                niigataForecastUrl = link
+                break
+              }
+            }
+            
+            // 新潟県の天気予報XMLを取得
+            if (niigataForecastUrl) {
+              const forecastXmlResponse = await fetch(niigataForecastUrl)
+              if (forecastXmlResponse.ok) {
+                const forecastXmlText = await forecastXmlResponse.text()
+                const forecastDoc = parser.parseFromString(forecastXmlText, 'text/xml')
+                
+                // XMLから天気情報を抽出
+                const timeSeries = forecastDoc.querySelector('TimeSeries')
+                if (timeSeries) {
+                  const weatherParts = timeSeries.querySelectorAll('WeatherPart')
+                  const temps = timeSeries.querySelectorAll('Temperature')
+                  
+                  // 今日の天気を取得
+                  if (weatherParts.length > 0) {
+                    const todayWeather = weatherParts[0]
+                    const weatherCode = todayWeather.querySelector('WeatherCode')?.textContent || '100'
+                    const weatherText = todayWeather.querySelector('Weather')?.textContent || '晴れ'
+                    
+                    // 気温を取得
+                    let maxTemp: number | undefined
+                    let minTemp: number | undefined
+                    temps.forEach((temp) => {
+                      const type = temp.querySelector('Type')?.textContent
+                      const value = temp.querySelector('Value')?.textContent
+                      if (type === '最高' && value) {
+                        maxTemp = parseInt(value)
+                      } else if (type === '最低' && value) {
+                        minTemp = parseInt(value)
+                      }
+                    })
+                    
+                    const getWeatherCondition = (code: string) => {
+                      const codeNum = parseInt(code)
+                      if (codeNum >= 100 && codeNum < 200) return { condition: '晴れ', icon: '☀️', text: '晴れ' }
+                      if (codeNum >= 200 && codeNum < 300) return { condition: '曇り', icon: '☁️', text: '曇り' }
+                      if (codeNum >= 300 && codeNum < 400) return { condition: '雨', icon: '🌧️', text: '雨' }
+                      if (codeNum >= 400 && codeNum < 500) return { condition: '雪', icon: '❄️', text: '雪' }
+                      return { condition: '晴れ', icon: '☀️', text: '晴れ' }
+                    }
+                    
+                    const weatherInfo = getWeatherCondition(weatherCode)
+                    
+                    // 解説を取得
+                    const headline = forecastDoc.querySelector('Headline')?.textContent || ''
+                    let description = weatherText
+                    if (headline) {
+                      description = headline
+                    }
+                    
+                    setWeather({
+                      temp: maxTemp || minTemp || 12,
+                      maxTemp: maxTemp,
+                      minTemp: minTemp,
+                      condition: weatherInfo.condition,
+                      icon: weatherInfo.icon,
+                      weatherCode: weatherCode,
+                      precipitation: 0,
+                      description: description
+                    })
+                    
+                    window.dispatchEvent(new CustomEvent('weatherChanged', { 
+                      detail: { condition: weatherInfo.condition } 
+                    }))
+                    return
+                  }
+                }
+              }
+            }
+          }
+        } catch (xmlError) {
+          console.log('XMLフィードからの取得エラー:', xmlError)
+          // フォールバック処理に進む
+        }
+        
         try {
           const forecastResponse = await fetch(`https://www.jma.go.jp/bosai/forecast/data/forecast/${areaCode}.json`)
           
