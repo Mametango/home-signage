@@ -302,7 +302,6 @@ const WeatherIcon = ({ code, size = 64, className = '' }: WeatherIconProps) => {
             {/* 雨 */}
             {Array.from({ length: 4 }).map((_, i) => {
               const x = 60 + (i * 5)
-              const delay = (i * 0.1) % 1
               return (
                 <line
                   key={i}
@@ -313,10 +312,7 @@ const WeatherIcon = ({ code, size = 64, className = '' }: WeatherIconProps) => {
                   stroke="#4A90E2"
                   strokeWidth="2"
                   strokeLinecap="round"
-                >
-                  <animate attributeName="y1" values="68;78;68" dur="0.8s" repeatCount="indefinite" begin={`${delay}s`} />
-                  <animate attributeName="y2" values="88;98;88" dur="0.8s" repeatCount="indefinite" begin={`${delay}s`} />
-                </line>
+                />
               )
             })}
           </svg>
@@ -448,13 +444,6 @@ const WeatherIcon = ({ code, size = 64, className = '' }: WeatherIconProps) => {
                   <line x1="-4" y1="0" x2="4" y2="0" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" />
                   <line x1="-3" y1="-3" x2="3" y2="3" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" />
                   <line x1="-3" y1="3" x2="3" y2="-3" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" />
-                  <animateTransform
-                    attributeName="transform"
-                    type="rotate"
-                    values={`0 ${x} ${y};360 ${x} ${y}`}
-                    dur={`${2 + (i % 2)}s`}
-                    repeatCount="indefinite"
-                  />
                 </g>
               )
             })}
