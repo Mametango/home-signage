@@ -32,7 +32,7 @@
 }
 
 .clock-time-large {
-  font-size: 8rem;
+  font-size: 6.5rem; /* 2cmほど小さく（8rem → 6.5rem） */
   font-weight: 900;
   color: #fff;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
