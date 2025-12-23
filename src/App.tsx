@@ -14,8 +14,9 @@ function App() {
   const INTERVAL_MS = 300000 // 5分ごと（300秒）
   
   const [showWeeklyWeather, setShowWeeklyWeather] = useState(false)
-  const [rightContentIndex, setRightContentIndex] = useState(0) // 0: 天気, 1: ニュース
+  const [rightContentIndex, setRightContentIndex] = useState(1) // 0: 天気, 1: ニュース（初期はニュース）
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const rightContentIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const showWeeklyWeatherRef = useRef(showWeeklyWeather)
   const touchStartX = useRef<number | null>(null)
   const touchStartY = useRef<number | null>(null)
@@ -98,6 +99,49 @@ function App() {
       }, 60000) // 1分（60秒）後に閉じる
 
       return () => clearTimeout(timer)
+    }
+  }, [showWeeklyWeather])
+
+  // 右側のコンテンツ（天気とニュース）を自動切り替え（5分ごと）
+  useEffect(() => {
+    // 既存のタイマーをクリア
+    if (rightContentIntervalRef.current) {
+      clearInterval(rightContentIntervalRef.current)
+      rightContentIntervalRef.current = null
+    }
+
+    // 週間天気予報が表示されている場合は自動切り替えを停止
+    if (showWeeklyWeather) {
+      return
+    }
+
+    // 5分（300秒）ごとに切り替え
+    const SWITCH_INTERVAL_MS = 300000 // 5分
+
+    // 初回はニュースから開始（既に設定済み）
+    console.log('右側コンテンツの自動切り替えを開始します（5分ごと）')
+    
+    // 5分後に天気に切り替え（ニュース → 天気）
+    const firstTimer = setTimeout(() => {
+      console.log('ニュースから天気に切り替えます:', new Date().toLocaleTimeString())
+      setRightContentIndex(0)
+    }, SWITCH_INTERVAL_MS)
+
+    // その後、10分ごとに交互に切り替え
+    rightContentIntervalRef.current = setInterval(() => {
+      setRightContentIndex((prev) => {
+        const next = prev === 0 ? 1 : 0
+        console.log(`右側コンテンツを切り替えます: ${prev === 0 ? '天気' : 'ニュース'} → ${next === 0 ? '天気' : 'ニュース'}`, new Date().toLocaleTimeString())
+        return next
+      })
+    }, SWITCH_INTERVAL_MS * 2) // 10分ごと（ニュース5分 + 天気5分）
+
+    return () => {
+      clearTimeout(firstTimer)
+      if (rightContentIntervalRef.current) {
+        clearInterval(rightContentIntervalRef.current)
+        rightContentIntervalRef.current = null
+      }
     }
   }, [showWeeklyWeather])
 
