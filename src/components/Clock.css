@@ -22,7 +22,7 @@
 }
 
 .clock-date-large {
-  font-size: 1.8rem;
+  font-size: 2rem; /* 1.8rem → 2rem に大きく */
   font-weight: 600;
   color: rgba(255, 255, 255, 0.9);
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
