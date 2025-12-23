@@ -185,6 +185,37 @@
   opacity: 1 !important;
 }
 
+/* 週間天気予報ボタン */
+.app-weekly-weather-button {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 1000;
+  background: rgba(77, 171, 247, 0.9);
+  backdrop-filter: blur(10px);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  font-family: 'Noto Sans JP', sans-serif;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.app-weekly-weather-button:hover {
+  background: rgba(77, 171, 247, 1);
+  transform: scale(1.05);
+  box-shadow: 0 6px 16px rgba(77, 171, 247, 0.4);
+}
+
+.app-weekly-weather-button:active {
+  transform: scale(0.98);
+}
+
 /* 全画面表示（1週間の天気予報） */
 .app-fullscreen {
   display: flex;

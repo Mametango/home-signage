@@ -48,46 +48,12 @@ function App() {
     }
   }, [])
 
-  useEffect(() => {
-    // 既存のタイマーをクリア
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current)
-      intervalRef.current = null
-    }
-    
-    // 週間天気予報を表示する関数
-    const showWeather = () => {
-      console.log('週間天気予報を表示します:', new Date().toLocaleTimeString())
-      setShowWeeklyWeather(true)
-      showWeeklyWeatherRef.current = true
-    }
-    
-    // タイマーを開始
-    console.log('週間天気予報タイマーを開始します（', INTERVAL_MS / 1000, '秒ごと）')
-    console.log('現在時刻:', new Date().toLocaleTimeString())
-    console.log('次の表示時刻:', new Date(Date.now() + INTERVAL_MS).toLocaleTimeString())
-    
-    // 初回表示（表示中でない場合のみ）
-    if (!showWeeklyWeatherRef.current) {
-      showWeather()
-    }
-    
-    // 定期的に週間天気予報を表示
-    intervalRef.current = setInterval(() => {
-      console.log('タイマーが発火しました。週間天気予報を表示します:', new Date().toLocaleTimeString())
-      if (!showWeeklyWeatherRef.current) {
-        showWeather()
-      }
-    }, INTERVAL_MS)
-
-    return () => {
-      console.log('週間天気予報タイマーを停止します')
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current)
-        intervalRef.current = null
-      }
-    }
-  }, [INTERVAL_MS])
+  // 週間天気予報を表示する関数（ボタン用）
+  const handleShowWeeklyWeather = () => {
+    console.log('週間天気予報を表示します:', new Date().toLocaleTimeString())
+    setShowWeeklyWeather(true)
+    showWeeklyWeatherRef.current = true
+  }
 
   // 全画面表示を閉じる（1分後に自動で閉じる）
   useEffect(() => {
@@ -182,6 +148,16 @@ function App() {
         <Clock showTimeOnly={true} />
       </div>
       
+      {/* 週間天気予報ボタン */}
+      <button
+        className="app-weekly-weather-button"
+        onClick={handleShowWeeklyWeather}
+        title="週間天気予報を表示"
+        aria-label="週間天気予報を表示"
+      >
+        週間天気予報
+      </button>
+
       {/* 右側: 天気とニュース（スワイプで切り替え） */}
       <div 
         className="app-right"
