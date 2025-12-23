@@ -30,7 +30,7 @@
 
 .clock-weather-today-tomorrow-compact {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   gap: 0.75rem;
   width: 100%;
 }
