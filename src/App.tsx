@@ -14,8 +14,11 @@ function App() {
   const INTERVAL_MS = 300000 // 5分ごと（300秒）
   
   const [showWeeklyWeather, setShowWeeklyWeather] = useState(false)
+  const [rightContentIndex, setRightContentIndex] = useState(0) // 0: 天気, 1: ニュース
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const showWeeklyWeatherRef = useRef(showWeeklyWeather)
+  const touchStartX = useRef<number | null>(null)
+  const touchStartY = useRef<number | null>(null)
   
   // showWeeklyWeatherの最新値をrefに保持
   useEffect(() => {
@@ -135,15 +138,93 @@ function App() {
         <Clock showTimeOnly={true} />
       </div>
       
-      {/* 右側: 天気とニュース */}
-      <div className="app-right">
+      {/* 右側: 天気とニュース（スワイプで切り替え） */}
+      <div 
+        className="app-right"
+        onTouchStart={(e) => {
+          touchStartX.current = e.touches[0].clientX
+          touchStartY.current = e.touches[0].clientY
+        }}
+        onTouchMove={(e) => {
+          if (touchStartX.current === null || touchStartY.current === null) return
+          const deltaX = e.touches[0].clientX - touchStartX.current
+          const deltaY = e.touches[0].clientY - touchStartY.current
+          
+          // 横方向のスワイプが縦方向より大きい場合のみ処理
+          if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 50) {
+            if (deltaX > 0 && rightContentIndex === 1) {
+              // 右にスワイプ（ニュース → 天気）
+              setRightContentIndex(0)
+              touchStartX.current = null
+              touchStartY.current = null
+            } else if (deltaX < 0 && rightContentIndex === 0) {
+              // 左にスワイプ（天気 → ニュース）
+              setRightContentIndex(1)
+              touchStartX.current = null
+              touchStartY.current = null
+            }
+          }
+        }}
+        onTouchEnd={() => {
+          touchStartX.current = null
+          touchStartY.current = null
+        }}
+        onMouseDown={(e) => {
+          touchStartX.current = e.clientX
+          touchStartY.current = e.clientY
+        }}
+        onMouseMove={(e) => {
+          if (touchStartX.current === null || touchStartY.current === null) return
+          if (e.buttons === 0) {
+            touchStartX.current = null
+            touchStartY.current = null
+            return
+          }
+          const deltaX = e.clientX - touchStartX.current
+          const deltaY = e.clientY - touchStartY.current
+          
+          // 横方向のスワイプが縦方向より大きい場合のみ処理
+          if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 50) {
+            if (deltaX > 0 && rightContentIndex === 1) {
+              // 右にスワイプ（ニュース → 天気）
+              setRightContentIndex(0)
+              touchStartX.current = null
+              touchStartY.current = null
+            } else if (deltaX < 0 && rightContentIndex === 0) {
+              // 左にスワイプ（天気 → ニュース）
+              setRightContentIndex(1)
+              touchStartX.current = null
+              touchStartY.current = null
+            }
+          }
+        }}
+        onMouseUp={() => {
+          touchStartX.current = null
+          touchStartY.current = null
+        }}
+        onMouseLeave={() => {
+          touchStartX.current = null
+          touchStartY.current = null
+        }}
+      >
         <div className="app-right-content">
-          <div className="app-right-weather">
+          <div 
+            className={`app-right-weather ${rightContentIndex === 0 ? 'active' : ''}`}
+            style={{ display: rightContentIndex === 0 ? 'block' : 'none' }}
+          >
             <Clock showWeatherOnly={true} />
           </div>
-          <div className="app-right-news">
+          <div 
+            className={`app-right-news ${rightContentIndex === 1 ? 'active' : ''}`}
+            style={{ display: rightContentIndex === 1 ? 'block' : 'none' }}
+          >
             <News />
           </div>
+        </div>
+        {/* インジケーター */}
+        <div className="app-right-indicator">
+          <div className={`app-right-indicator-dot ${rightContentIndex === 0 ? 'active' : ''}`}></div>
+          <div className={`app-right-indicator-dot ${rightContentIndex === 1 ? 'active' : ''}`}></div>
         </div>
       </div>
       
