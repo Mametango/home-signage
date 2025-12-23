@@ -130,15 +130,20 @@ function App() {
   // 通常表示
   return (
     <div className="app">
-      {/* 左側: 日時と天気 */}
+      {/* 左側: 時刻のみ */}
       <div className="app-left">
-        <Clock />
+        <Clock showTimeOnly={true} />
       </div>
       
-      {/* 右側: ニュース */}
+      {/* 右側: 天気とニュース */}
       <div className="app-right">
-        <div className="app-right-card">
-          <News />
+        <div className="app-right-content">
+          <div className="app-right-weather">
+            <Clock showWeatherOnly={true} />
+          </div>
+          <div className="app-right-news">
+            <News />
+          </div>
         </div>
       </div>
       

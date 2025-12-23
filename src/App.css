@@ -12,7 +12,19 @@
 }
 
 .app-left {
-  width: 40%; /* 横サイズを広げる */
+  width: 35%; /* 左側を少し小さく */
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  position: relative;
+  z-index: 2;
+  overflow: hidden;
+  justify-content: center;
+  align-items: center;
+}
+
+.app-right {
+  width: 65%; /* 右側を広げる */
   display: flex;
   flex-direction: column;
   min-width: 0;
@@ -21,13 +33,23 @@
   overflow: hidden;
 }
 
-.app-right {
-  width: 60%; /* 右側のサイズを調整 */
+.app-right-content {
+  width: 100%;
+  height: 100%;
   display: flex;
   flex-direction: column;
-  min-width: 0;
-  position: relative;
-  z-index: 2;
+  gap: 1rem;
+}
+
+.app-right-weather {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.app-right-news {
+  flex: 1;
+  min-height: 0;
   overflow: hidden;
 }
 
