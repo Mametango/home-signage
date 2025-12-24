@@ -987,50 +987,62 @@ const Clock = ({ showTimeOnly = false, showWeatherOnly = false }: ClockProps = {
               {weather.today && (
                 <div className={`clock-weather-day-card-compact today ${getWeatherTypeClass(weather.today.weatherCode)}`}>
                   <div className="clock-weather-day-background-compact">
-                    <WeatherIcon code={weather.today.weatherCode || '100'} size={120} className="weather-background-icon" />
+                    <WeatherIcon code={weather.today.weatherCode || '100'} size={150} className="weather-background-icon" />
                   </div>
                   <div className="clock-weather-day-content-compact">
                     <div className="clock-weather-day-label-compact">今日</div>
                     <div className="clock-weather-day-condition-compact">{weather.today.condition}</div>
-                  </div>
-                  <div className="clock-weather-day-right-compact">
-                    {weather.today.maxTemp !== undefined && weather.today.minTemp !== undefined && (
-                      <div className="clock-weather-day-temp-compact">
-                        <span className="temp-max-compact">{weather.today.maxTemp}°</span>
-                        <span className="temp-separator-compact">/</span>
-                        <span className="temp-min-compact">{weather.today.minTemp}°</span>
-                      </div>
-                    )}
-                    {weather.today.precipitation !== undefined && weather.today.precipitation > 0 && (
-                      <div className="clock-weather-day-precipitation-compact">
-                        💧 {weather.today.precipitation}%
-                      </div>
-                    )}
+                    <div className="clock-weather-day-details-compact">
+                      {weather.today.maxTemp !== undefined && weather.today.minTemp !== undefined && (
+                        <div className="clock-weather-day-temp-detail-compact">
+                          <div className="temp-item-compact">
+                            <span className="temp-label-compact">最高</span>
+                            <span className="temp-max-compact">{weather.today.maxTemp}°</span>
+                          </div>
+                          <div className="temp-item-compact">
+                            <span className="temp-label-compact">最低</span>
+                            <span className="temp-min-compact">{weather.today.minTemp}°</span>
+                          </div>
+                        </div>
+                      )}
+                      {weather.today.precipitation !== undefined && (
+                        <div className="clock-weather-day-precipitation-detail-compact">
+                          <span className="precipitation-label-compact">💧 降水確率</span>
+                          <span className="precipitation-value-compact">{weather.today.precipitation}%</span>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               )}
               {weather.tomorrow && (
                 <div className={`clock-weather-day-card-compact tomorrow ${getWeatherTypeClass(weather.tomorrow.weatherCode)}`}>
                   <div className="clock-weather-day-background-compact">
-                    <WeatherIcon code={weather.tomorrow.weatherCode || '100'} size={120} className="weather-background-icon" />
+                    <WeatherIcon code={weather.tomorrow.weatherCode || '100'} size={150} className="weather-background-icon" />
                   </div>
                   <div className="clock-weather-day-content-compact">
                     <div className="clock-weather-day-label-compact">明日</div>
                     <div className="clock-weather-day-condition-compact">{weather.tomorrow.condition}</div>
-                  </div>
-                  <div className="clock-weather-day-right-compact">
-                    {weather.tomorrow.maxTemp !== undefined && weather.tomorrow.minTemp !== undefined && (
-                      <div className="clock-weather-day-temp-compact">
-                        <span className="temp-max-compact">{weather.tomorrow.maxTemp}°</span>
-                        <span className="temp-separator-compact">/</span>
-                        <span className="temp-min-compact">{weather.tomorrow.minTemp}°</span>
-                      </div>
-                    )}
-                    {weather.tomorrow.precipitation !== undefined && weather.tomorrow.precipitation > 0 && (
-                      <div className="clock-weather-day-precipitation-compact">
-                        💧 {weather.tomorrow.precipitation}%
-                      </div>
-                    )}
+                    <div className="clock-weather-day-details-compact">
+                      {weather.tomorrow.maxTemp !== undefined && weather.tomorrow.minTemp !== undefined && (
+                        <div className="clock-weather-day-temp-detail-compact">
+                          <div className="temp-item-compact">
+                            <span className="temp-label-compact">最高</span>
+                            <span className="temp-max-compact">{weather.tomorrow.maxTemp}°</span>
+                          </div>
+                          <div className="temp-item-compact">
+                            <span className="temp-label-compact">最低</span>
+                            <span className="temp-min-compact">{weather.tomorrow.minTemp}°</span>
+                          </div>
+                        </div>
+                      )}
+                      {weather.tomorrow.precipitation !== undefined && (
+                        <div className="clock-weather-day-precipitation-detail-compact">
+                          <span className="precipitation-label-compact">💧 降水確率</span>
+                          <span className="precipitation-value-compact">{weather.tomorrow.precipitation}%</span>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               )}
