@@ -29,6 +29,9 @@ const NHK_CATEGORIES = [
   { name: 'スポーツ', url: 'https://news.web.nhk/n-data/conf/na/rss/cat7.xml' }
 ]
 
+// Google News RSS URL
+const GOOGLE_NEWS_URL = 'https://news.google.com/rss?hl=ja&gl=JP&ceid=JP:ja'
+
 const News = () => {
   const [normalNews, setNormalNews] = useState<NewsItem[]>([])
   const [currentNormalIndex, setCurrentNormalIndex] = useState(0)
