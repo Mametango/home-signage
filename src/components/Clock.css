@@ -694,8 +694,6 @@
   overflow-wrap: break-word;
   max-width: 100%;
   box-sizing: border-box;
-  max-height: 6rem;
-  overflow-y: auto;
   flex-shrink: 1;
   font-family: 'Noto Sans JP', sans-serif;
 }
