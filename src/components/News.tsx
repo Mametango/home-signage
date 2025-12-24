@@ -155,7 +155,6 @@ const News = () => {
         const link = item.querySelector('link')?.textContent || ''
         const pubDate = item.querySelector('pubDate')?.textContent || ''
         const description = item.querySelector('description')?.textContent || ''
-        const source = item.querySelector('source')?.textContent || 'Google News'
         
         if (title && link) {
           const trimmedTitle = title.trim()
