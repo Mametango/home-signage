@@ -48,28 +48,22 @@ const WeatherIcon = ({ code, size = 64, className = '' }: WeatherIconProps) => {
           <svg width={iconSize} height={iconSize} viewBox="0 0 100 100" className={`weather-icon-svg ${className}`}>
             <defs>
               <radialGradient id="sunGradient" cx="50%" cy="50%">
-                <stop offset="0%" stopColor="#FFEB3B" stopOpacity="1" />
-                <stop offset="100%" stopColor="#FF6F00" stopOpacity="1" />
+                <stop offset="0%" stopColor="#FFD700" stopOpacity="1" />
+                <stop offset="70%" stopColor="#FFA500" stopOpacity="1" />
+                <stop offset="100%" stopColor="#FF8C00" stopOpacity="1" />
               </radialGradient>
-              <filter id="sunGlow">
-                <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
-                <feMerge>
-                  <feMergeNode in="coloredBlur"/>
-                  <feMergeNode in="SourceGraphic"/>
-                </feMerge>
-              </filter>
             </defs>
             {/* 青空背景 */}
-            <rect x="0" y="0" width="100" height="100" fill="#1976D2" />
+            <rect x="0" y="0" width="100" height="100" fill="#4FC3F7" />
             {/* 太陽 */}
-            <circle cx="50" cy="50" r="26" fill="url(#sunGradient)" stroke="#E65100" strokeWidth="4" filter="url(#sunGlow)" />
-            {/* 太陽の光線 */}
-            {Array.from({ length: 8 }).map((_, i) => {
-              const angle = (i * 45) * Math.PI / 180
-              const x1 = 50 + Math.cos(angle) * 27
-              const y1 = 50 + Math.sin(angle) * 27
-              const x2 = 50 + Math.cos(angle) * 40
-              const y2 = 50 + Math.sin(angle) * 40
+            <circle cx="50" cy="50" r="28" fill="url(#sunGradient)" stroke="#FF6F00" strokeWidth="3" />
+            {/* 太陽の光線（12本） */}
+            {Array.from({ length: 12 }).map((_, i) => {
+              const angle = (i * 30) * Math.PI / 180
+              const x1 = 50 + Math.cos(angle) * 30
+              const y1 = 50 + Math.sin(angle) * 30
+              const x2 = 50 + Math.cos(angle) * 42
+              const y2 = 50 + Math.sin(angle) * 42
               return (
                 <line
                   key={i}
@@ -77,10 +71,9 @@ const WeatherIcon = ({ code, size = 64, className = '' }: WeatherIconProps) => {
                   y1={y1}
                   x2={x2}
                   y2={y2}
-                  stroke="#FFEB3B"
-                  strokeWidth="5"
+                  stroke="#FFD700"
+                  strokeWidth="4"
                   strokeLinecap="round"
-                  filter="url(#sunGlow)"
                 />
               )
             })}
@@ -92,19 +85,17 @@ const WeatherIcon = ({ code, size = 64, className = '' }: WeatherIconProps) => {
           <svg width={iconSize} height={iconSize} viewBox="0 0 100 100" className={`weather-icon-svg ${className}`}>
             <defs>
               <linearGradient id="cloudGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor="#FFFFFF" stopOpacity="1" />
-                <stop offset="100%" stopColor="#757575" stopOpacity="1" />
+                <stop offset="0%" stopColor="#E0E0E0" stopOpacity="1" />
+                <stop offset="100%" stopColor="#9E9E9E" stopOpacity="1" />
               </linearGradient>
-              <filter id="cloudShadow">
-                <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="#000000" floodOpacity="0.3"/>
-              </filter>
             </defs>
             {/* グレー空背景 */}
-            <rect x="0" y="0" width="100" height="100" fill="#546E7A" />
-            {/* 雲 */}
-            <ellipse cx="50" cy="50" rx="36" ry="24" fill="url(#cloudGradient)" stroke="#212121" strokeWidth="3.5" filter="url(#cloudShadow)" />
-            <ellipse cx="40" cy="45" rx="28" ry="20" fill="url(#cloudGradient)" stroke="#212121" strokeWidth="3.5" filter="url(#cloudShadow)" />
-            <ellipse cx="60" cy="45" rx="28" ry="20" fill="url(#cloudGradient)" stroke="#212121" strokeWidth="3.5" filter="url(#cloudShadow)" />
+            <rect x="0" y="0" width="100" height="100" fill="#90A4AE" />
+            {/* 雲（大きく、はっきりと） */}
+            <ellipse cx="50" cy="50" rx="38" ry="26" fill="url(#cloudGradient)" stroke="#616161" strokeWidth="3" />
+            <ellipse cx="38" cy="44" rx="30" ry="22" fill="url(#cloudGradient)" stroke="#616161" strokeWidth="3" />
+            <ellipse cx="62" cy="44" rx="30" ry="22" fill="url(#cloudGradient)" stroke="#616161" strokeWidth="3" />
+            <ellipse cx="50" cy="40" rx="24" ry="18" fill="url(#cloudGradient)" stroke="#616161" strokeWidth="3" />
           </svg>
         )
 
@@ -167,34 +158,25 @@ const WeatherIcon = ({ code, size = 64, className = '' }: WeatherIconProps) => {
           <svg width={iconSize} height={iconSize} viewBox="0 0 100 100" className={`weather-icon-svg ${className}`}>
             <defs>
               <radialGradient id="sunnyCloudySun" cx="50%" cy="50%">
-                <stop offset="0%" stopColor="#FFEB3B" stopOpacity="1" />
-                <stop offset="100%" stopColor="#FF6F00" stopOpacity="1" />
+                <stop offset="0%" stopColor="#FFD700" stopOpacity="1" />
+                <stop offset="70%" stopColor="#FFA500" stopOpacity="1" />
+                <stop offset="100%" stopColor="#FF8C00" stopOpacity="1" />
               </radialGradient>
               <linearGradient id="sunnyCloudyCloud" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor="#FFFFFF" stopOpacity="1" />
-                <stop offset="100%" stopColor="#757575" stopOpacity="1" />
+                <stop offset="0%" stopColor="#E0E0E0" stopOpacity="1" />
+                <stop offset="100%" stopColor="#9E9E9E" stopOpacity="1" />
               </linearGradient>
-              <filter id="sunnyCloudySunGlow">
-                <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
-                <feMerge>
-                  <feMergeNode in="coloredBlur"/>
-                  <feMergeNode in="SourceGraphic"/>
-                </feMerge>
-              </filter>
-              <filter id="sunnyCloudyCloudShadow">
-                <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="#000000" floodOpacity="0.3"/>
-              </filter>
             </defs>
             {/* 青空背景 */}
-            <rect x="0" y="0" width="100" height="100" fill="#1976D2" />
+            <rect x="0" y="0" width="100" height="100" fill="#4FC3F7" />
             {/* 太陽 */}
-            <circle cx="35" cy="35" r="24" fill="url(#sunnyCloudySun)" stroke="#E65100" strokeWidth="4" filter="url(#sunnyCloudySunGlow)" />
-            {Array.from({ length: 6 }).map((_, i) => {
-              const angle = (i * 60) * Math.PI / 180
-              const x1 = 35 + Math.cos(angle) * 27
-              const y1 = 35 + Math.sin(angle) * 27
-              const x2 = 35 + Math.cos(angle) * 36
-              const y2 = 35 + Math.sin(angle) * 36
+            <circle cx="35" cy="35" r="26" fill="url(#sunnyCloudySun)" stroke="#FF6F00" strokeWidth="3" />
+            {Array.from({ length: 8 }).map((_, i) => {
+              const angle = (i * 45) * Math.PI / 180
+              const x1 = 35 + Math.cos(angle) * 29
+              const y1 = 35 + Math.sin(angle) * 29
+              const x2 = 35 + Math.cos(angle) * 39
+              const y2 = 35 + Math.sin(angle) * 39
               return (
                 <line
                   key={i}
@@ -202,17 +184,16 @@ const WeatherIcon = ({ code, size = 64, className = '' }: WeatherIconProps) => {
                   y1={y1}
                   x2={x2}
                   y2={y2}
-                  stroke="#FFEB3B"
-                  strokeWidth="4.5"
+                  stroke="#FFD700"
+                  strokeWidth="4"
                   strokeLinecap="round"
-                  filter="url(#sunnyCloudySunGlow)"
                 />
               )
             })}
             {/* 雲 */}
-            <ellipse cx="70" cy="50" rx="34" ry="22" fill="url(#sunnyCloudyCloud)" stroke="#212121" strokeWidth="3.5" filter="url(#sunnyCloudyCloudShadow)" />
-            <ellipse cx="60" cy="45" rx="26" ry="19" fill="url(#sunnyCloudyCloud)" stroke="#212121" strokeWidth="3.5" filter="url(#sunnyCloudyCloudShadow)" />
-            <ellipse cx="80" cy="45" rx="26" ry="19" fill="url(#sunnyCloudyCloud)" stroke="#212121" strokeWidth="3.5" filter="url(#sunnyCloudyCloudShadow)" />
+            <ellipse cx="70" cy="50" rx="36" ry="24" fill="url(#sunnyCloudyCloud)" stroke="#616161" strokeWidth="3" />
+            <ellipse cx="60" cy="45" rx="28" ry="20" fill="url(#sunnyCloudyCloud)" stroke="#616161" strokeWidth="3" />
+            <ellipse cx="80" cy="45" rx="28" ry="20" fill="url(#sunnyCloudyCloud)" stroke="#616161" strokeWidth="3" />
           </svg>
         )
 
@@ -221,40 +202,30 @@ const WeatherIcon = ({ code, size = 64, className = '' }: WeatherIconProps) => {
           <svg width={iconSize} height={iconSize} viewBox="0 0 100 100" className={`weather-icon-svg ${className}`}>
             <defs>
               <linearGradient id="rainCloudGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor="#9E9E9E" stopOpacity="1" />
-                <stop offset="100%" stopColor="#212121" stopOpacity="1" />
+                <stop offset="0%" stopColor="#BDBDBD" stopOpacity="1" />
+                <stop offset="100%" stopColor="#424242" stopOpacity="1" />
               </linearGradient>
-              <filter id="rainShadow">
-                <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="#000000" floodOpacity="0.4"/>
-              </filter>
-              <filter id="rainGlow">
-                <feGaussianBlur stdDeviation="1" result="coloredBlur"/>
-                <feMerge>
-                  <feMergeNode in="coloredBlur"/>
-                  <feMergeNode in="SourceGraphic"/>
-                </feMerge>
-              </filter>
             </defs>
             {/* グレー空背景 */}
-            <rect x="0" y="0" width="100" height="100" fill="#455A64" />
-            {/* 雲 */}
-            <ellipse cx="50" cy="45" rx="36" ry="24" fill="url(#rainCloudGradient)" stroke="#000000" strokeWidth="4" filter="url(#rainShadow)" />
-            <ellipse cx="40" cy="40" rx="28" ry="20" fill="url(#rainCloudGradient)" stroke="#000000" strokeWidth="4" filter="url(#rainShadow)" />
-            <ellipse cx="60" cy="40" rx="28" ry="20" fill="url(#rainCloudGradient)" stroke="#000000" strokeWidth="4" filter="url(#rainShadow)" />
-            {/* 雨 */}
-            {Array.from({ length: 8 }).map((_, i) => {
-              const x = 30 + (i * 5.5)
+            <rect x="0" y="0" width="100" height="100" fill="#78909C" />
+            {/* 雲（大きく、はっきりと） */}
+            <ellipse cx="50" cy="42" rx="38" ry="26" fill="url(#rainCloudGradient)" stroke="#212121" strokeWidth="3" />
+            <ellipse cx="38" cy="37" rx="30" ry="22" fill="url(#rainCloudGradient)" stroke="#212121" strokeWidth="3" />
+            <ellipse cx="62" cy="37" rx="30" ry="22" fill="url(#rainCloudGradient)" stroke="#212121" strokeWidth="3" />
+            <ellipse cx="50" cy="33" rx="24" ry="18" fill="url(#rainCloudGradient)" stroke="#212121" strokeWidth="3" />
+            {/* 雨（太く、はっきりと） */}
+            {Array.from({ length: 9 }).map((_, i) => {
+              const x = 28 + (i * 5.5)
               return (
                 <line
                   key={i}
                   x1={x}
-                  y1="56"
+                  y1="55"
                   x2={x}
-                  y2="94"
-                  stroke="#0277BD"
-                  strokeWidth="5"
+                  y2="95"
+                  stroke="#1976D2"
+                  strokeWidth="6"
                   strokeLinecap="round"
-                  filter="url(#rainGlow)"
                 />
               )
             })}
@@ -300,41 +271,25 @@ const WeatherIcon = ({ code, size = 64, className = '' }: WeatherIconProps) => {
           <svg width={iconSize} height={iconSize} viewBox="0 0 100 100" className={`weather-icon-svg ${className}`}>
             <defs>
               <radialGradient id="sunnyRainSun" cx="50%" cy="50%">
-                <stop offset="0%" stopColor="#FFEB3B" stopOpacity="1" />
-                <stop offset="100%" stopColor="#FF6F00" stopOpacity="1" />
+                <stop offset="0%" stopColor="#FFD700" stopOpacity="1" />
+                <stop offset="70%" stopColor="#FFA500" stopOpacity="1" />
+                <stop offset="100%" stopColor="#FF8C00" stopOpacity="1" />
               </radialGradient>
               <linearGradient id="sunnyRainCloud" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor="#9E9E9E" stopOpacity="1" />
-                <stop offset="100%" stopColor="#212121" stopOpacity="1" />
+                <stop offset="0%" stopColor="#BDBDBD" stopOpacity="1" />
+                <stop offset="100%" stopColor="#424242" stopOpacity="1" />
               </linearGradient>
-              <filter id="sunnyRainSunGlow">
-                <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
-                <feMerge>
-                  <feMergeNode in="coloredBlur"/>
-                  <feMergeNode in="SourceGraphic"/>
-                </feMerge>
-              </filter>
-              <filter id="sunnyRainCloudShadow">
-                <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="#000000" floodOpacity="0.4"/>
-              </filter>
-              <filter id="sunnyRainGlow">
-                <feGaussianBlur stdDeviation="1" result="coloredBlur"/>
-                <feMerge>
-                  <feMergeNode in="coloredBlur"/>
-                  <feMergeNode in="SourceGraphic"/>
-                </feMerge>
-              </filter>
             </defs>
             {/* 青空背景 */}
-            <rect x="0" y="0" width="100" height="100" fill="#1976D2" />
+            <rect x="0" y="0" width="100" height="100" fill="#4FC3F7" />
             {/* 太陽 */}
-            <circle cx="30" cy="30" r="21" fill="url(#sunnyRainSun)" stroke="#E65100" strokeWidth="4" filter="url(#sunnyRainSunGlow)" />
-            {Array.from({ length: 6 }).map((_, i) => {
-              const angle = (i * 60) * Math.PI / 180
-              const x1 = 30 + Math.cos(angle) * 24
-              const y1 = 30 + Math.sin(angle) * 24
-              const x2 = 30 + Math.cos(angle) * 34
-              const y2 = 30 + Math.sin(angle) * 34
+            <circle cx="30" cy="30" r="24" fill="url(#sunnyRainSun)" stroke="#FF6F00" strokeWidth="3" />
+            {Array.from({ length: 8 }).map((_, i) => {
+              const angle = (i * 45) * Math.PI / 180
+              const x1 = 30 + Math.cos(angle) * 27
+              const y1 = 30 + Math.sin(angle) * 27
+              const x2 = 30 + Math.cos(angle) * 37
+              const y2 = 30 + Math.sin(angle) * 37
               return (
                 <line
                   key={i}
@@ -342,31 +297,29 @@ const WeatherIcon = ({ code, size = 64, className = '' }: WeatherIconProps) => {
                   y1={y1}
                   x2={x2}
                   y2={y2}
-                  stroke="#FFEB3B"
-                  strokeWidth="4.5"
+                  stroke="#FFD700"
+                  strokeWidth="4"
                   strokeLinecap="round"
-                  filter="url(#sunnyRainSunGlow)"
                 />
               )
             })}
             {/* 雲 */}
-            <ellipse cx="70" cy="50" rx="34" ry="22" fill="url(#sunnyRainCloud)" stroke="#000000" strokeWidth="4" filter="url(#sunnyRainCloudShadow)" />
-            <ellipse cx="60" cy="45" rx="26" ry="19" fill="url(#sunnyRainCloud)" stroke="#000000" strokeWidth="4" filter="url(#sunnyRainCloudShadow)" />
-            <ellipse cx="80" cy="45" rx="26" ry="19" fill="url(#sunnyRainCloud)" stroke="#000000" strokeWidth="4" filter="url(#sunnyRainCloudShadow)" />
-            {/* 雨 */}
-            {Array.from({ length: 7 }).map((_, i) => {
-              const x = 54 + (i * 5)
+            <ellipse cx="70" cy="50" rx="36" ry="24" fill="url(#sunnyRainCloud)" stroke="#212121" strokeWidth="3" />
+            <ellipse cx="60" cy="45" rx="28" ry="20" fill="url(#sunnyRainCloud)" stroke="#212121" strokeWidth="3" />
+            <ellipse cx="80" cy="45" rx="28" ry="20" fill="url(#sunnyRainCloud)" stroke="#212121" strokeWidth="3" />
+            {/* 雨（太く、はっきりと） */}
+            {Array.from({ length: 8 }).map((_, i) => {
+              const x = 52 + (i * 5)
               return (
                 <line
                   key={i}
                   x1={x}
-                  y1="61"
+                  y1="59"
                   x2={x}
-                  y2="94"
-                  stroke="#0277BD"
-                  strokeWidth="5"
+                  y2="95"
+                  stroke="#1976D2"
+                  strokeWidth="6"
                   strokeLinecap="round"
-                  filter="url(#sunnyRainGlow)"
                 />
               )
             })}
@@ -378,36 +331,27 @@ const WeatherIcon = ({ code, size = 64, className = '' }: WeatherIconProps) => {
           <svg width={iconSize} height={iconSize} viewBox="0 0 100 100" className={`weather-icon-svg ${className}`}>
             <defs>
               <linearGradient id="snowCloudGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor="#FFFFFF" stopOpacity="1" />
-                <stop offset="100%" stopColor="#757575" stopOpacity="1" />
+                <stop offset="0%" stopColor="#FAFAFA" stopOpacity="1" />
+                <stop offset="100%" stopColor="#BDBDBD" stopOpacity="1" />
               </linearGradient>
-              <filter id="snowShadow">
-                <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="#000000" floodOpacity="0.3"/>
-              </filter>
-              <filter id="snowGlow">
-                <feGaussianBlur stdDeviation="1.5" result="coloredBlur"/>
-                <feMerge>
-                  <feMergeNode in="coloredBlur"/>
-                  <feMergeNode in="SourceGraphic"/>
-                </feMerge>
-              </filter>
             </defs>
             {/* グレー空背景 */}
-            <rect x="0" y="0" width="100" height="100" fill="#546E7A" />
-            {/* 雲 */}
-            <ellipse cx="50" cy="45" rx="36" ry="24" fill="url(#snowCloudGradient)" stroke="#212121" strokeWidth="3.5" filter="url(#snowShadow)" />
-            <ellipse cx="40" cy="40" rx="28" ry="20" fill="url(#snowCloudGradient)" stroke="#212121" strokeWidth="3.5" filter="url(#snowShadow)" />
-            <ellipse cx="60" cy="40" rx="28" ry="20" fill="url(#snowCloudGradient)" stroke="#212121" strokeWidth="3.5" filter="url(#snowShadow)" />
-            {/* 雪の結晶 */}
-            {Array.from({ length: 7 }).map((_, i) => {
-              const x = 22 + (i * 8)
-              const y = 61 + (i % 2) * 15
+            <rect x="0" y="0" width="100" height="100" fill="#90A4AE" />
+            {/* 雲（大きく、はっきりと） */}
+            <ellipse cx="50" cy="42" rx="38" ry="26" fill="url(#snowCloudGradient)" stroke="#616161" strokeWidth="3" />
+            <ellipse cx="38" cy="37" rx="30" ry="22" fill="url(#snowCloudGradient)" stroke="#616161" strokeWidth="3" />
+            <ellipse cx="62" cy="37" rx="30" ry="22" fill="url(#snowCloudGradient)" stroke="#616161" strokeWidth="3" />
+            <ellipse cx="50" cy="33" rx="24" ry="18" fill="url(#snowCloudGradient)" stroke="#616161" strokeWidth="3" />
+            {/* 雪の結晶（大きく、はっきりと） */}
+            {Array.from({ length: 8 }).map((_, i) => {
+              const x = 20 + (i * 7.5)
+              const y = 58 + (i % 2) * 18
               return (
                 <g key={i} transform={`translate(${x}, ${y})`}>
-                  <line x1="0" y1="-8" x2="0" y2="8" stroke="#FFFFFF" strokeWidth="4.5" strokeLinecap="round" filter="url(#snowGlow)" />
-                  <line x1="-8" y1="0" x2="8" y2="0" stroke="#FFFFFF" strokeWidth="4.5" strokeLinecap="round" filter="url(#snowGlow)" />
-                  <line x1="-6" y1="-6" x2="6" y2="6" stroke="#FFFFFF" strokeWidth="4.5" strokeLinecap="round" filter="url(#snowGlow)" />
-                  <line x1="-6" y1="6" x2="6" y2="-6" stroke="#FFFFFF" strokeWidth="4.5" strokeLinecap="round" filter="url(#snowGlow)" />
+                  <line x1="0" y1="-9" x2="0" y2="9" stroke="#FFFFFF" strokeWidth="5" strokeLinecap="round" />
+                  <line x1="-9" y1="0" x2="9" y2="0" stroke="#FFFFFF" strokeWidth="5" strokeLinecap="round" />
+                  <line x1="-6.5" y1="-6.5" x2="6.5" y2="6.5" stroke="#FFFFFF" strokeWidth="5" strokeLinecap="round" />
+                  <line x1="-6.5" y1="6.5" x2="6.5" y2="-6.5" stroke="#FFFFFF" strokeWidth="5" strokeLinecap="round" />
                 </g>
               )
             })}
@@ -524,19 +468,32 @@ const WeatherIcon = ({ code, size = 64, className = '' }: WeatherIconProps) => {
           <svg width={iconSize} height={iconSize} viewBox="0 0 100 100" className={`weather-icon-svg ${className}`}>
             <defs>
               <radialGradient id="defaultGradient" cx="50%" cy="50%">
-                <stop offset="0%" stopColor="#FFEB3B" stopOpacity="1" />
-                <stop offset="100%" stopColor="#FF6F00" stopOpacity="1" />
+                <stop offset="0%" stopColor="#FFD700" stopOpacity="1" />
+                <stop offset="70%" stopColor="#FFA500" stopOpacity="1" />
+                <stop offset="100%" stopColor="#FF8C00" stopOpacity="1" />
               </radialGradient>
-              <filter id="defaultGlow">
-                <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
-                <feMerge>
-                  <feMergeNode in="coloredBlur"/>
-                  <feMergeNode in="SourceGraphic"/>
-                </feMerge>
-              </filter>
             </defs>
-            <rect x="0" y="0" width="100" height="100" fill="#1976D2" />
-            <circle cx="50" cy="50" r="26" fill="url(#defaultGradient)" stroke="#E65100" strokeWidth="4" filter="url(#defaultGlow)" />
+            <rect x="0" y="0" width="100" height="100" fill="#4FC3F7" />
+            <circle cx="50" cy="50" r="28" fill="url(#defaultGradient)" stroke="#FF6F00" strokeWidth="3" />
+            {Array.from({ length: 12 }).map((_, i) => {
+              const angle = (i * 30) * Math.PI / 180
+              const x1 = 50 + Math.cos(angle) * 30
+              const y1 = 50 + Math.sin(angle) * 30
+              const x2 = 50 + Math.cos(angle) * 42
+              const y2 = 50 + Math.sin(angle) * 42
+              return (
+                <line
+                  key={i}
+                  x1={x1}
+                  y1={y1}
+                  x2={x2}
+                  y2={y2}
+                  stroke="#FFD700"
+                  strokeWidth="4"
+                  strokeLinecap="round"
+                />
+              )
+            })}
           </svg>
         )
     }
