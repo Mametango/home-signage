@@ -112,6 +112,13 @@ const News = () => {
   }
   */
 
+  // HTMLタグを除去する関数
+  const stripHtmlTags = (html: string): string => {
+    const tmp = document.createElement('div')
+    tmp.innerHTML = html
+    return tmp.textContent || tmp.innerText || ''
+  }
+
   // Google Newsを取得
   const fetchGoogleNews = async (): Promise<NewsItem[]> => {
     const allNews: NewsItem[] = []
@@ -154,18 +161,25 @@ const News = () => {
         const title = item.querySelector('title')?.textContent || ''
         const link = item.querySelector('link')?.textContent || ''
         const pubDate = item.querySelector('pubDate')?.textContent || ''
-        const description = item.querySelector('description')?.textContent || ''
+        const descriptionElement = item.querySelector('description')
+        let description = ''
+        
+        if (descriptionElement) {
+          // description要素のHTMLコンテンツを取得
+          const descriptionHtml = descriptionElement.innerHTML || descriptionElement.textContent || ''
+          // HTMLタグを除去
+          description = stripHtmlTags(descriptionHtml).trim()
+        }
         
         if (title && link) {
           const trimmedTitle = title.trim()
-          const trimmedDescription = description.trim()
           
           allNews.push({
             id: allNews.length + index + 1,
             title: trimmedTitle,
             link: link.trim(),
             pubDate: pubDate.trim(),
-            description: trimmedDescription,
+            description: description || undefined, // 空の場合はundefined
             category: 'Google News',
             isUrgent: false
           })
