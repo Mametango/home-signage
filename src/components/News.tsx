@@ -109,6 +109,74 @@ const News = () => {
   }
   */
 
+  // Google Newsを取得
+  const fetchGoogleNews = async (): Promise<NewsItem[]> => {
+    const allNews: NewsItem[] = []
+    
+    try {
+      // サーバーレス関数を経由してGoogle News RSSを取得（CORS回避）
+      const apiUrl = `/api/google-news-rss?url=${encodeURIComponent(GOOGLE_NEWS_URL)}`
+
+      const response = await fetch(apiUrl, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/xml, text/xml, */*'
+        }
+      })
+
+      if (!response.ok) {
+        console.error(`Google News取得エラー: status=${response.status}`)
+        return []
+      }
+
+      const xmlText = await response.text()
+
+      if (!xmlText || xmlText.trim().length === 0) {
+        console.error('Google News取得エラー: 空のレスポンス')
+        return []
+      }
+
+      const parser = new DOMParser()
+      const xmlDoc = parser.parseFromString(xmlText, 'text/xml')
+
+      const parseError = xmlDoc.querySelector('parsererror')
+      if (parseError) {
+        console.error('Google News XMLパースエラー')
+        return []
+      }
+
+      const items = xmlDoc.querySelectorAll('item')
+
+      items.forEach((item, index) => {
+        const title = item.querySelector('title')?.textContent || ''
+        const link = item.querySelector('link')?.textContent || ''
+        const pubDate = item.querySelector('pubDate')?.textContent || ''
+        const description = item.querySelector('description')?.textContent || ''
+        const source = item.querySelector('source')?.textContent || 'Google News'
+        
+        if (title && link) {
+          const trimmedTitle = title.trim()
+          const trimmedDescription = description.trim()
+          
+          allNews.push({
+            id: allNews.length + index + 1,
+            title: trimmedTitle,
+            link: link.trim(),
+            pubDate: pubDate.trim(),
+            description: trimmedDescription,
+            category: 'Google News',
+            isUrgent: false
+          })
+        }
+      })
+      
+      return allNews.slice(0, 20) // 最大20件
+    } catch (err) {
+      console.error('Google News取得エラー:', err)
+      return []
+    }
+  }
+
   // NHKニュースを取得（複数カテゴリーから）
   const fetchNHKNews = async (): Promise<NewsItem[]> => {
     const allNews: NewsItem[] = []
@@ -223,8 +291,21 @@ const News = () => {
         // 緊急ニュース機能を完全に停止
         // P2P地震情報のAPIからの取得も停止
         
-        // NHKニュースのみを取得
-        const newsItems = await fetchNHKNews()
+        // NHKニュースとGoogle Newsを並列で取得
+        const [nhkNews, googleNews] = await Promise.all([
+          fetchNHKNews(),
+          fetchGoogleNews()
+        ])
+        
+        // 両方のニュースを統合
+        const newsItems = [...nhkNews, ...googleNews]
+        
+        // 日時でソート（新しい順）
+        newsItems.sort((a, b) => {
+          const dateA = new Date(a.pubDate).getTime()
+          const dateB = new Date(b.pubDate).getTime()
+          return dateB - dateA
+        })
 
         if (newsItems.length === 0) {
           setError('ニュースが取得できませんでした')
@@ -344,7 +425,11 @@ const News = () => {
               </div>
               <div className="news-header-right">
                 <span className="news-source-label">
-                  {currentNews.category === '緊急地震速報' ? 'P2P地震情報' : 'NHKニュース'}
+                  {currentNews.category === '緊急地震速報' 
+                    ? 'P2P地震情報' 
+                    : currentNews.category === 'Google News' 
+                    ? 'Google News' 
+                    : 'NHKニュース'}
                 </span>
                 <span className="news-counter">
                   {getNewsCounter()}
