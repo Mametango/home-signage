@@ -10,12 +10,8 @@ const GIT_HASH = typeof __GIT_HASH__ !== 'undefined' ? __GIT_HASH__ : 'dev'
 const BUILD_DATE = typeof __BUILD_DATE__ !== 'undefined' ? __BUILD_DATE__ : new Date().toISOString()
 
 function App() {
-  // 週間天気予報の表示間隔（5分ごと）
-  const INTERVAL_MS = 300000 // 5分ごと（300秒）
-  
   const [showWeeklyWeather, setShowWeeklyWeather] = useState(false)
   const [rightContentIndex, setRightContentIndex] = useState(1) // 0: 天気, 1: ニュース（初期はニュース）
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const rightContentIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const showWeeklyWeatherRef = useRef(showWeeklyWeather)
   const touchStartX = useRef<number | null>(null)
