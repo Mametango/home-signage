@@ -363,26 +363,27 @@ const WeatherIcon = ({ code, size = 64, className = '' }: WeatherIconProps) => {
           <svg width={iconSize} height={iconSize} viewBox="0 0 100 100" className={`weather-icon-svg ${className}`}>
             <defs>
               <linearGradient id="cloudySnowCloud" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor="#FFFFFF" stopOpacity="1" />
+                <stop offset="0%" stopColor="#FAFAFA" stopOpacity="1" />
                 <stop offset="100%" stopColor="#BDBDBD" stopOpacity="1" />
               </linearGradient>
             </defs>
             {/* グレー空背景 */}
-            <rect x="0" y="0" width="100" height="100" fill="#607D8B" />
-            {/* 雲 */}
-            <ellipse cx="50" cy="45" rx="34" ry="22" fill="url(#cloudySnowCloud)" stroke="#424242" strokeWidth="3" />
-            <ellipse cx="40" cy="40" rx="26" ry="18" fill="url(#cloudySnowCloud)" stroke="#424242" strokeWidth="3" />
-            <ellipse cx="60" cy="40" rx="26" ry="18" fill="url(#cloudySnowCloud)" stroke="#424242" strokeWidth="3" />
-            {/* 雪の結晶 */}
-            {Array.from({ length: 6 }).map((_, i) => {
-              const x = 25 + (i * 9)
-              const y = 63 + (i % 2) * 14
+            <rect x="0" y="0" width="100" height="100" fill="#90A4AE" />
+            {/* 雲（大きく、はっきりと） */}
+            <ellipse cx="50" cy="42" rx="38" ry="26" fill="url(#cloudySnowCloud)" stroke="#616161" strokeWidth="3" />
+            <ellipse cx="38" cy="37" rx="30" ry="22" fill="url(#cloudySnowCloud)" stroke="#616161" strokeWidth="3" />
+            <ellipse cx="62" cy="37" rx="30" ry="22" fill="url(#cloudySnowCloud)" stroke="#616161" strokeWidth="3" />
+            <ellipse cx="50" cy="33" rx="24" ry="18" fill="url(#cloudySnowCloud)" stroke="#616161" strokeWidth="3" />
+            {/* 雪の結晶（大きく、はっきりと） */}
+            {Array.from({ length: 8 }).map((_, i) => {
+              const x = 20 + (i * 7.5)
+              const y = 58 + (i % 2) * 18
               return (
                 <g key={i} transform={`translate(${x}, ${y})`}>
-                  <line x1="0" y1="-7" x2="0" y2="7" stroke="#FFFFFF" strokeWidth="3.5" strokeLinecap="round" />
-                  <line x1="-7" y1="0" x2="7" y2="0" stroke="#FFFFFF" strokeWidth="3.5" strokeLinecap="round" />
-                  <line x1="-5" y1="-5" x2="5" y2="5" stroke="#FFFFFF" strokeWidth="3.5" strokeLinecap="round" />
-                  <line x1="-5" y1="5" x2="5" y2="-5" stroke="#FFFFFF" strokeWidth="3.5" strokeLinecap="round" />
+                  <line x1="0" y1="-9" x2="0" y2="9" stroke="#FFFFFF" strokeWidth="5" strokeLinecap="round" />
+                  <line x1="-9" y1="0" x2="9" y2="0" stroke="#FFFFFF" strokeWidth="5" strokeLinecap="round" />
+                  <line x1="-6.5" y1="-6.5" x2="6.5" y2="6.5" stroke="#FFFFFF" strokeWidth="5" strokeLinecap="round" />
+                  <line x1="-6.5" y1="6.5" x2="6.5" y2="-6.5" stroke="#FFFFFF" strokeWidth="5" strokeLinecap="round" />
                 </g>
               )
             })}
