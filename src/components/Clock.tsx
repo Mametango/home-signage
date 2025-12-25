@@ -83,7 +83,7 @@ const Clock = ({ showTimeOnly = false, showWeatherOnly = false }: ClockProps = {
   useEffect(() => {
     const fetchWarnings = async () => {
       try {
-        // 新潟県のエリアコード（150000は新潟県全体、150013は下越地方の新発田市など）
+        // 新潟県のエリアコード（150000は新潟県全体、150013は下越地方）
         const areaCodes = ['150000', '150013'] // 新潟県全体と下越地方を試す
         
         const areaWarnings: WarningInfo[] = []
@@ -91,7 +91,7 @@ const Clock = ({ showTimeOnly = false, showWeatherOnly = false }: ClockProps = {
         // 複数のエリアコードを試す
         for (const areaCode of areaCodes) {
           try {
-            // 気象庁の警報・注意報API（詳細版を試す）
+            // 気象庁の警報・注意報API（詳細版）
             let warningResponse = await fetch(`https://www.jma.go.jp/bosai/warning/data/warning/${areaCode}.json`)
             
             if (!warningResponse.ok) {
@@ -104,73 +104,53 @@ const Clock = ({ showTimeOnly = false, showWeatherOnly = false }: ClockProps = {
               console.log(`警報データ (${areaCode}):`, warningData)
               
               if (warningData && typeof warningData === 'object') {
-                // レスポンス構造を確認してパース
-                Object.keys(warningData).forEach((key) => {
-                  const area = warningData[key]
+                // 気象庁APIの構造: { "150013": { "0": { "areas": [...] } } }
+                Object.keys(warningData).forEach((regionCode) => {
+                  const regionData = warningData[regionCode]
                   
-                  if (area && typeof area === 'object') {
-                    // area.warnings が存在する場合
-                    if (area.warnings && typeof area.warnings === 'object') {
-                      Object.keys(area.warnings).forEach((warningKey) => {
-                        const warning = area.warnings[warningKey]
-                        
-                        // 配列の場合
-                        if (Array.isArray(warning)) {
-                          warning.forEach((w: any) => {
-                            if (w && typeof w === 'object') {
-                              // status フィールドを確認
-                              const status = w.status || w.Status || ''
-                              if (status === '警報' || status === '注意報' || status === 'Warning' || status === 'Advisory') {
-                                const kindName = w.kindName || w.KindName || w.kind || w.Kind || warningKey
-                                areaWarnings.push({
-                                  title: w.title || w.Title || kindName,
-                                  status: status === 'Warning' ? '警報' : status === 'Advisory' ? '注意報' : status,
-                                  kind: kindName
+                  if (regionData && typeof regionData === 'object') {
+                    // タイムスタンプキー（通常 "0" が最新）を取得
+                    Object.keys(regionData).forEach((timeKey) => {
+                      const timeData = regionData[timeKey]
+                      
+                      if (timeData && timeData.areas && Array.isArray(timeData.areas)) {
+                        // 各エリアを処理
+                        timeData.areas.forEach((area: any) => {
+                          // 新発田市を含むエリアを探す（コード 1510150 または名前で判定）
+                          const areaName = area.name || ''
+                          const areaCode = area.code || ''
+                          const isShibataArea = areaName.includes('新発田') || areaCode === '1510150'
+                          
+                          if (area.warnings && typeof area.warnings === 'object') {
+                            // 警告の種類ごとに処理
+                            Object.keys(area.warnings).forEach((warningTypeKey) => {
+                              const warningArray = area.warnings[warningTypeKey]
+                              
+                              if (Array.isArray(warningArray)) {
+                                warningArray.forEach((warning: any) => {
+                                  if (warning && typeof warning === 'object') {
+                                    const status = warning.status || ''
+                                    const kindName = warning.kindName || warning.kind || ''
+                                    
+                                    // 警報または注意報の場合
+                                    if ((status === '警報' || status === '注意報') && kindName) {
+                                      // 新発田市のエリアのみ、またはすべてのエリアから取得
+                                      if (isShibataArea || areaCodes.length === 1) {
+                                        areaWarnings.push({
+                                          title: kindName,
+                                          status: status,
+                                          kind: kindName
+                                        })
+                                      }
+                                    }
+                                  }
                                 })
                               }
-                            }
-                          })
-                        } 
-                        // オブジェクトの場合
-                        else if (warning && typeof warning === 'object') {
-                          const status = warning.status || warning.Status || ''
-                          if (status === '警報' || status === '注意報' || status === 'Warning' || status === 'Advisory') {
-                            const kindName = warning.kindName || warning.KindName || warning.kind || warning.Kind || warningKey
-                            areaWarnings.push({
-                              title: warning.title || warning.Title || kindName,
-                              status: status === 'Warning' ? '警報' : status === 'Advisory' ? '注意報' : status,
-                              kind: kindName
                             })
                           }
-                        }
-                      })
-                    }
-                    
-                    // area.areas が存在する場合（ネストされた構造）
-                    if (area.areas && Array.isArray(area.areas)) {
-                      area.areas.forEach((subArea: any) => {
-                        if (subArea.warnings && typeof subArea.warnings === 'object') {
-                          Object.keys(subArea.warnings).forEach((warningKey) => {
-                            const warning = subArea.warnings[warningKey]
-                            if (Array.isArray(warning)) {
-                              warning.forEach((w: any) => {
-                                if (w && typeof w === 'object') {
-                                  const status = w.status || w.Status || ''
-                                  if (status === '警報' || status === '注意報' || status === 'Warning' || status === 'Advisory') {
-                                    const kindName = w.kindName || w.KindName || w.kind || w.Kind || warningKey
-                                    areaWarnings.push({
-                                      title: w.title || w.Title || kindName,
-                                      status: status === 'Warning' ? '警報' : status === 'Advisory' ? '注意報' : status,
-                                      kind: kindName
-                                    })
-                                  }
-                                }
-                              })
-                            }
-                          })
-                        }
-                      })
-                    }
+                        })
+                      }
+                    })
                   }
                 })
               }
@@ -180,8 +160,13 @@ const Clock = ({ showTimeOnly = false, showWeatherOnly = false }: ClockProps = {
           }
         }
         
-        console.log('抽出された警報:', areaWarnings)
-        setWarnings(areaWarnings)
+        // 重複を除去（同じ種類の警報が複数ある場合）
+        const uniqueWarnings = areaWarnings.filter((warning, index, self) =>
+          index === self.findIndex((w) => w.kind === warning.kind && w.status === warning.status)
+        )
+        
+        console.log('抽出された警報:', uniqueWarnings)
+        setWarnings(uniqueWarnings)
       } catch (error) {
         console.error('警報・注意報の取得に失敗しました:', error)
         setWarnings([])
