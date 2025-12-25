@@ -1086,7 +1086,7 @@ const Clock = ({ showTimeOnly = false, showWeatherOnly = false }: ClockProps = {
             {(!warnings.length || !showWarning) && (
               <div className="clock-weather-today-tomorrow-compact">
                 {weather.today && (
-                <div className={`clock-weather-day-card-compact today ${getWeatherTypeClass(weather.today.weatherCode)}`}>
+                  <div className={`clock-weather-day-card-compact today ${getWeatherTypeClass(weather.today.weatherCode)}`}>
                   <div className="clock-weather-day-background-compact">
                     <WeatherIcon code={weather.today.weatherCode || '100'} size={150} className="weather-background-icon" />
                   </div>
