@@ -80,6 +80,80 @@ const Clock = ({ showTimeOnly = false, showWeatherOnly = false }: ClockProps = {
     return () => clearInterval(timer)
   }, [])
 
+  // 警報・注意報を取得
+  useEffect(() => {
+    const fetchWarnings = async () => {
+      try {
+        const areaCode = '150000' // 新潟県新発田市のエリアコード
+        
+        // 気象庁の警報・注意報API
+        const warningResponse = await fetch(`https://www.jma.go.jp/bosai/warning/data/overview_warning/${areaCode}.json`)
+        
+        if (warningResponse.ok) {
+          const warningData = await warningResponse.json()
+          
+          if (warningData && Object.keys(warningData).length > 0) {
+            const areaWarnings: WarningInfo[] = []
+            
+            // 各エリアの警報・注意報を取得
+            Object.keys(warningData).forEach((key) => {
+              const area = warningData[key]
+              if (area && area.warnings && Object.keys(area.warnings).length > 0) {
+                Object.keys(area.warnings).forEach((warningKey) => {
+                  const warning = area.warnings[warningKey]
+                  if (warning && Array.isArray(warning) && warning.length > 0) {
+                    warning.forEach((w: any) => {
+                      if (w && (w.status === '警報' || w.status === '注意報')) {
+                        areaWarnings.push({
+                          title: w.title || warningKey,
+                          status: w.status,
+                          kind: w.kindName || w.kind || warningKey
+                        })
+                      }
+                    })
+                  } else if (warning && (warning.status === '警報' || warning.status === '注意報')) {
+                    areaWarnings.push({
+                      title: warning.title || warningKey,
+                      status: warning.status,
+                      kind: warning.kindName || warning.kind || warningKey
+                    })
+                  }
+                })
+              }
+            })
+            
+            setWarnings(areaWarnings)
+          } else {
+            setWarnings([])
+          }
+        }
+      } catch (error) {
+        console.error('警報・注意報の取得に失敗しました:', error)
+        setWarnings([])
+      }
+    }
+    
+    fetchWarnings()
+    const interval = setInterval(fetchWarnings, 600000) // 10分ごとに更新
+    
+    return () => clearInterval(interval)
+  }, [])
+
+  // 警報がある場合の自動スクロール
+  useEffect(() => {
+    if (warnings.length === 0) {
+      setShowWarning(false)
+      return
+    }
+    
+    // 警報がある場合、10秒ごとに天気と警報を切り替え
+    const interval = setInterval(() => {
+      setShowWarning((prev) => !prev)
+    }, 10000) // 10秒ごとに切り替え
+    
+    return () => clearInterval(interval)
+  }, [warnings])
+
   // 天気情報を取得
   useEffect(() => {
     const fetchWeather = async () => {
@@ -991,8 +1065,27 @@ const Clock = ({ showTimeOnly = false, showWeatherOnly = false }: ClockProps = {
         </div>
         {weather && (
           <div className="clock-time-only-weather">
-            <div className="clock-weather-today-tomorrow-compact">
-              {weather.today && (
+            {/* 警報・注意報の表示 */}
+            {warnings.length > 0 && showWarning && (
+              <div className="clock-warning-alert">
+                <div className="clock-warning-header">
+                  <div className="clock-warning-icon">⚠️</div>
+                  <div className="clock-warning-title">警報・注意報</div>
+                </div>
+                <div className="clock-warning-list">
+                  {warnings.map((warning, index) => (
+                    <div key={index} className={`clock-warning-item ${warning.status === '警報' ? 'warning-alert' : 'warning-advisory'}`}>
+                      <div className="clock-warning-status">{warning.status}</div>
+                      <div className="clock-warning-kind">{warning.kind || warning.title}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            {/* 天気表示 */}
+            {(!warnings.length || !showWarning) && (
+              <div className="clock-weather-today-tomorrow-compact">
+                {weather.today && (
                 <div className={`clock-weather-day-card-compact today ${getWeatherTypeClass(weather.today.weatherCode)}`}>
                   <div className="clock-weather-day-background-compact">
                     <WeatherIcon code={weather.today.weatherCode || '100'} size={150} className="weather-background-icon" />
