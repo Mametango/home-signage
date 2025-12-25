@@ -1126,24 +1126,6 @@ const Clock = ({ showTimeOnly = false, showWeatherOnly = false }: ClockProps = {
       <div className="clock clock-weather-only">
         {weather && (
         <div className="clock-weather-summary">
-          {/* 警報・注意報の表示 */}
-          {warnings.length > 0 && (
-            <div className="clock-warning-alert">
-              <div className="clock-warning-header">
-                <div className="clock-warning-icon">⚠️</div>
-                <div className="clock-warning-title">警報・注意報</div>
-              </div>
-              <div className="clock-warning-list">
-                {warnings.map((warning, index) => (
-                  <div key={index} className={`clock-warning-item ${warning.status === '警報' ? 'warning-alert' : 'warning-advisory'}`}>
-                    <div className="clock-warning-status">{warning.status}</div>
-                    <div className="clock-warning-kind">{warning.kind || warning.title}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-          
           {/* おじさんの解説 */}
           {weather.description && (
             <div className="clock-weather-description-section">
@@ -1157,6 +1139,20 @@ const Clock = ({ showTimeOnly = false, showWeatherOnly = false }: ClockProps = {
                   <div className="clock-weather-condition-text">{weather.condition}</div>
                 </div>
               </div>
+              {/* 警報・注意報のカード表示 */}
+              {warnings.length > 0 && (
+                <div className="clock-warning-cards">
+                  {warnings.map((warning, index) => (
+                    <div key={index} className={`clock-warning-card ${warning.status === '警報' ? 'warning-alert' : 'warning-advisory'}`}>
+                      <div className="clock-warning-card-header">
+                        <div className="clock-warning-card-icon">⚠️</div>
+                        <div className="clock-warning-card-status">{warning.status}</div>
+                      </div>
+                      <div className="clock-warning-card-kind">{warning.kind || warning.title}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
               <div className="clock-weather-description-full">{weather.description}</div>
             </div>
           )}
@@ -1265,24 +1261,6 @@ const Clock = ({ showTimeOnly = false, showWeatherOnly = false }: ClockProps = {
             )}
           </div>
           
-          {/* 警報・注意報の表示 */}
-          {warnings.length > 0 && (
-            <div className="clock-warning-alert">
-              <div className="clock-warning-header">
-                <div className="clock-warning-icon">⚠️</div>
-                <div className="clock-warning-title">警報・注意報</div>
-              </div>
-              <div className="clock-warning-list">
-                {warnings.map((warning, index) => (
-                  <div key={index} className={`clock-warning-item ${warning.status === '警報' ? 'warning-alert' : 'warning-advisory'}`}>
-                    <div className="clock-warning-status">{warning.status}</div>
-                    <div className="clock-warning-kind">{warning.kind || warning.title}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-          
           {/* おじさんの解説 */}
           {weather.description && (
             <div className="clock-weather-description-section">
@@ -1296,6 +1274,20 @@ const Clock = ({ showTimeOnly = false, showWeatherOnly = false }: ClockProps = {
                   <div className="clock-weather-condition-text">{weather.condition}</div>
                 </div>
               </div>
+              {/* 警報・注意報のカード表示 */}
+              {warnings.length > 0 && (
+                <div className="clock-warning-cards">
+                  {warnings.map((warning, index) => (
+                    <div key={index} className={`clock-warning-card ${warning.status === '警報' ? 'warning-alert' : 'warning-advisory'}`}>
+                      <div className="clock-warning-card-header">
+                        <div className="clock-warning-card-icon">⚠️</div>
+                        <div className="clock-warning-card-status">{warning.status}</div>
+                      </div>
+                      <div className="clock-warning-card-kind">{warning.kind || warning.title}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
               <div className="clock-weather-description-full">{weather.description}</div>
             </div>
           )}
