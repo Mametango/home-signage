@@ -33,6 +33,12 @@ interface WeatherData {
   }
 }
 
+interface WarningInfo {
+  title: string
+  status: string // '警報' | '注意報'
+  kind: string // 警報の種類（例: '大雨', '洪水'など）
+}
+
 interface ClockProps {
   showTimeOnly?: boolean
   showWeatherOnly?: boolean
@@ -43,6 +49,8 @@ const Clock = ({ showTimeOnly = false, showWeatherOnly = false }: ClockProps = {
   const [weather, setWeather] = useState<WeatherData | null>(null)
   const [prefecture, setPrefecture] = useState<string>('新潟県')
   const [city, setCity] = useState<string>('新発田市')
+  const [warnings, setWarnings] = useState<WarningInfo[]>([])
+  const [showWarning, setShowWarning] = useState(false) // 警報表示フラグ
 
   // 設定を読み込み
   useEffect(() => {
@@ -1046,7 +1054,8 @@ const Clock = ({ showTimeOnly = false, showWeatherOnly = false }: ClockProps = {
                   </div>
                 </div>
               )}
-            </div>
+              </div>
+            )}
           </div>
         )}
       </div>
