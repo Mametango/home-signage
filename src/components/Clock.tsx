@@ -83,49 +83,105 @@ const Clock = ({ showTimeOnly = false, showWeatherOnly = false }: ClockProps = {
   useEffect(() => {
     const fetchWarnings = async () => {
       try {
-        const areaCode = '150000' // 新潟県新発田市のエリアコード
+        // 新潟県のエリアコード（150000は新潟県全体、150013は下越地方の新発田市など）
+        const areaCodes = ['150000', '150013'] // 新潟県全体と下越地方を試す
         
-        // 気象庁の警報・注意報API
-        const warningResponse = await fetch(`https://www.jma.go.jp/bosai/warning/data/overview_warning/${areaCode}.json`)
+        const areaWarnings: WarningInfo[] = []
         
-        if (warningResponse.ok) {
-          const warningData = await warningResponse.json()
-          
-          if (warningData && Object.keys(warningData).length > 0) {
-            const areaWarnings: WarningInfo[] = []
+        // 複数のエリアコードを試す
+        for (const areaCode of areaCodes) {
+          try {
+            // 気象庁の警報・注意報API（詳細版を試す）
+            let warningResponse = await fetch(`https://www.jma.go.jp/bosai/warning/data/warning/${areaCode}.json`)
             
-            // 各エリアの警報・注意報を取得
-            Object.keys(warningData).forEach((key) => {
-              const area = warningData[key]
-              if (area && area.warnings && Object.keys(area.warnings).length > 0) {
-                Object.keys(area.warnings).forEach((warningKey) => {
-                  const warning = area.warnings[warningKey]
-                  if (warning && Array.isArray(warning) && warning.length > 0) {
-                    warning.forEach((w: any) => {
-                      if (w && (w.status === '警報' || w.status === '注意報')) {
-                        areaWarnings.push({
-                          title: w.title || warningKey,
-                          status: w.status,
-                          kind: w.kindName || w.kind || warningKey
-                        })
-                      }
-                    })
-                  } else if (warning && (warning.status === '警報' || warning.status === '注意報')) {
-                    areaWarnings.push({
-                      title: warning.title || warningKey,
-                      status: warning.status,
-                      kind: warning.kindName || warning.kind || warningKey
-                    })
+            if (!warningResponse.ok) {
+              // 詳細版が失敗した場合は概要版を試す
+              warningResponse = await fetch(`https://www.jma.go.jp/bosai/warning/data/overview_warning/${areaCode}.json`)
+            }
+            
+            if (warningResponse.ok) {
+              const warningData = await warningResponse.json()
+              console.log(`警報データ (${areaCode}):`, warningData)
+              
+              if (warningData && typeof warningData === 'object') {
+                // レスポンス構造を確認してパース
+                Object.keys(warningData).forEach((key) => {
+                  const area = warningData[key]
+                  
+                  if (area && typeof area === 'object') {
+                    // area.warnings が存在する場合
+                    if (area.warnings && typeof area.warnings === 'object') {
+                      Object.keys(area.warnings).forEach((warningKey) => {
+                        const warning = area.warnings[warningKey]
+                        
+                        // 配列の場合
+                        if (Array.isArray(warning)) {
+                          warning.forEach((w: any) => {
+                            if (w && typeof w === 'object') {
+                              // status フィールドを確認
+                              const status = w.status || w.Status || ''
+                              if (status === '警報' || status === '注意報' || status === 'Warning' || status === 'Advisory') {
+                                const kindName = w.kindName || w.KindName || w.kind || w.Kind || warningKey
+                                areaWarnings.push({
+                                  title: w.title || w.Title || kindName,
+                                  status: status === 'Warning' ? '警報' : status === 'Advisory' ? '注意報' : status,
+                                  kind: kindName
+                                })
+                              }
+                            }
+                          })
+                        } 
+                        // オブジェクトの場合
+                        else if (warning && typeof warning === 'object') {
+                          const status = warning.status || warning.Status || ''
+                          if (status === '警報' || status === '注意報' || status === 'Warning' || status === 'Advisory') {
+                            const kindName = warning.kindName || warning.KindName || warning.kind || warning.Kind || warningKey
+                            areaWarnings.push({
+                              title: warning.title || warning.Title || kindName,
+                              status: status === 'Warning' ? '警報' : status === 'Advisory' ? '注意報' : status,
+                              kind: kindName
+                            })
+                          }
+                        }
+                      })
+                    }
+                    
+                    // area.areas が存在する場合（ネストされた構造）
+                    if (area.areas && Array.isArray(area.areas)) {
+                      area.areas.forEach((subArea: any) => {
+                        if (subArea.warnings && typeof subArea.warnings === 'object') {
+                          Object.keys(subArea.warnings).forEach((warningKey) => {
+                            const warning = subArea.warnings[warningKey]
+                            if (Array.isArray(warning)) {
+                              warning.forEach((w: any) => {
+                                if (w && typeof w === 'object') {
+                                  const status = w.status || w.Status || ''
+                                  if (status === '警報' || status === '注意報' || status === 'Warning' || status === 'Advisory') {
+                                    const kindName = w.kindName || w.KindName || w.kind || w.Kind || warningKey
+                                    areaWarnings.push({
+                                      title: w.title || w.Title || kindName,
+                                      status: status === 'Warning' ? '警報' : status === 'Advisory' ? '注意報' : status,
+                                      kind: kindName
+                                    })
+                                  }
+                                }
+                              })
+                            }
+                          })
+                        }
+                      })
+                    }
                   }
                 })
               }
-            })
-            
-            setWarnings(areaWarnings)
-          } else {
-            setWarnings([])
+            }
+          } catch (error) {
+            console.error(`エリアコード ${areaCode} の警報取得エラー:`, error)
           }
         }
+        
+        console.log('抽出された警報:', areaWarnings)
+        setWarnings(areaWarnings)
       } catch (error) {
         console.error('警報・注意報の取得に失敗しました:', error)
         setWarnings([])
