@@ -119,6 +119,12 @@ const News = () => {
     return tmp.textContent || tmp.innerText || ''
   }
 
+  // URLを除去する関数
+  const removeUrls = (text: string): string => {
+    // URLパターンを除去（http://、https://で始まる文字列）
+    return text.replace(/https?:\/\/[^\s]+/gi, '').trim()
+  }
+
   // Google Newsを取得
   const fetchGoogleNews = async (): Promise<NewsItem[]> => {
     const allNews: NewsItem[] = []
@@ -168,7 +174,10 @@ const News = () => {
           // description要素のHTMLコンテンツを取得
           const descriptionHtml = descriptionElement.innerHTML || descriptionElement.textContent || ''
           // HTMLタグを除去
-          description = stripHtmlTags(descriptionHtml).trim()
+          let cleanedDescription = stripHtmlTags(descriptionHtml).trim()
+          // URLを除去
+          cleanedDescription = removeUrls(cleanedDescription)
+          description = cleanedDescription
         }
         
         if (title && link) {
