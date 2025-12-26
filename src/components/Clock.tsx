@@ -79,106 +79,98 @@ const Clock = ({ showTimeOnly = false, showWeatherOnly = false }: ClockProps = {
     return () => clearInterval(timer)
   }, [])
 
-  // 警報・注意報を取得
-  useEffect(() => {
-    const fetchWarnings = async () => {
-      try {
-        // 新潟県のエリアコード（150000は新潟県全体、150013は下越地方）
-        const areaCodes = ['150000', '150013'] // 新潟県全体と下越地方を試す
-        
-        const areaWarnings: WarningInfo[] = []
-        
-        // 複数のエリアコードを試す
-        for (const areaCode of areaCodes) {
-          try {
-            // 気象庁の警報・注意報API（詳細版）
-            let warningResponse = await fetch(`https://www.jma.go.jp/bosai/warning/data/warning/${areaCode}.json`)
+  // 警報・注意報を取得する関数
+  const fetchWarnings = async (): Promise<WarningInfo[]> => {
+    try {
+      // 新潟県のエリアコード（150000は新潟県全体、150013は下越地方）
+      const areaCodes = ['150000', '150013'] // 新潟県全体と下越地方を試す
+      
+      const areaWarnings: WarningInfo[] = []
+      
+      // 複数のエリアコードを試す
+      for (const areaCode of areaCodes) {
+        try {
+          // 気象庁の警報・注意報API（詳細版）
+          let warningResponse = await fetch(`https://www.jma.go.jp/bosai/warning/data/warning/${areaCode}.json`)
+          
+          if (!warningResponse.ok) {
+            // 詳細版が失敗した場合は概要版を試す
+            warningResponse = await fetch(`https://www.jma.go.jp/bosai/warning/data/overview_warning/${areaCode}.json`)
+          }
+          
+          if (warningResponse.ok) {
+            const warningData = await warningResponse.json()
+            console.log(`警報データ (${areaCode}):`, warningData)
             
-            if (!warningResponse.ok) {
-              // 詳細版が失敗した場合は概要版を試す
-              warningResponse = await fetch(`https://www.jma.go.jp/bosai/warning/data/overview_warning/${areaCode}.json`)
-            }
-            
-            if (warningResponse.ok) {
-              const warningData = await warningResponse.json()
-              console.log(`警報データ (${areaCode}):`, warningData)
-              
-              if (warningData && typeof warningData === 'object') {
-                // 気象庁APIの構造: { "150013": { "0": { "areas": [...] } } }
-                Object.keys(warningData).forEach((regionCode) => {
-                  const regionData = warningData[regionCode]
-                  
-                  if (regionData && typeof regionData === 'object') {
-                    // タイムスタンプキー（通常 "0" が最新）を取得
-                    Object.keys(regionData).forEach((timeKey) => {
-                      const timeData = regionData[timeKey]
-                      
-                      if (timeData && timeData.areas && Array.isArray(timeData.areas)) {
-                        // 各エリアを処理
-                        timeData.areas.forEach((area: any) => {
-                          // 新発田市を含むエリアを探す（コード 1510150 または名前で判定）
-                          const areaName = area.name || ''
-                          const areaCode = area.code || ''
-                          const isShibataArea = areaName.includes('新発田') || areaCode === '1510150'
-                          
-                          if (area.warnings && typeof area.warnings === 'object') {
-                            // 警告の種類ごとに処理
-                            Object.keys(area.warnings).forEach((warningTypeKey) => {
-                              const warningArray = area.warnings[warningTypeKey]
-                              
-                              if (Array.isArray(warningArray)) {
-                                warningArray.forEach((warning: any) => {
-                                  if (warning && typeof warning === 'object') {
-                                    const status = warning.status || ''
-                                    const kindName = warning.kindName || warning.kind || ''
-                                    
-                                    // 警報または注意報の場合
-                                    if ((status === '警報' || status === '注意報') && kindName) {
-                                      // 新発田市のエリアのみ、またはすべてのエリアから取得
-                                      if (isShibataArea || areaCodes.length === 1) {
-                                        areaWarnings.push({
-                                          title: kindName,
-                                          status: status,
-                                          kind: kindName
-                                        })
-                                      }
+            if (warningData && typeof warningData === 'object') {
+              // 気象庁APIの構造: { "150013": { "0": { "areas": [...] } } }
+              Object.keys(warningData).forEach((regionCode) => {
+                const regionData = warningData[regionCode]
+                
+                if (regionData && typeof regionData === 'object') {
+                  // タイムスタンプキー（通常 "0" が最新）を取得
+                  Object.keys(regionData).forEach((timeKey) => {
+                    const timeData = regionData[timeKey]
+                    
+                    if (timeData && timeData.areas && Array.isArray(timeData.areas)) {
+                      // 各エリアを処理
+                      timeData.areas.forEach((area: any) => {
+                        // 新発田市を含むエリアを探す（コード 1510150 または名前で判定）
+                        const areaName = area.name || ''
+                        const areaCodeValue = area.code || ''
+                        const isShibataArea = areaName.includes('新発田') || areaCodeValue === '1510150'
+                        
+                        if (area.warnings && typeof area.warnings === 'object') {
+                          // 警告の種類ごとに処理
+                          Object.keys(area.warnings).forEach((warningTypeKey) => {
+                            const warningArray = area.warnings[warningTypeKey]
+                            
+                            if (Array.isArray(warningArray)) {
+                              warningArray.forEach((warning: any) => {
+                                if (warning && typeof warning === 'object') {
+                                  const status = warning.status || ''
+                                  const kindName = warning.kindName || warning.kind || ''
+                                  
+                                  // 警報または注意報の場合
+                                  if ((status === '警報' || status === '注意報') && kindName) {
+                                    // 新発田市のエリアのみ、またはすべてのエリアから取得
+                                    if (isShibataArea || areaCodes.length === 1) {
+                                      areaWarnings.push({
+                                        title: kindName,
+                                        status: status,
+                                        kind: kindName
+                                      })
                                     }
                                   }
-                                })
-                              }
-                            })
-                          }
-                        })
-                      }
-                    })
-                  }
-                })
-              }
+                                }
+                              })
+                            }
+                          })
+                        }
+                      })
+                    }
+                  })
+                }
+              })
             }
-          } catch (error) {
-            console.error(`エリアコード ${areaCode} の警報取得エラー:`, error)
           }
+        } catch (error) {
+          console.error(`エリアコード ${areaCode} の警報取得エラー:`, error)
         }
-        
-        // 重複を除去（同じ種類の警報が複数ある場合）
-        const uniqueWarnings = areaWarnings.filter((warning, index, self) =>
-          index === self.findIndex((w) => w.kind === warning.kind && w.status === warning.status)
-        )
-        
-        console.log('抽出された警報:', uniqueWarnings)
-        setWarnings(uniqueWarnings)
-      } catch (error) {
-        console.error('警報・注意報の取得に失敗しました:', error)
-        setWarnings([])
       }
+      
+      // 重複を除去（同じ種類の警報が複数ある場合）
+      const uniqueWarnings = areaWarnings.filter((warning, index, self) =>
+        index === self.findIndex((w) => w.kind === warning.kind && w.status === warning.status)
+      )
+      
+      console.log('抽出された警報:', uniqueWarnings)
+      return uniqueWarnings
+    } catch (error) {
+      console.error('警報・注意報の取得に失敗しました:', error)
+      return []
     }
-    
-    fetchWarnings()
-    const interval = setInterval(fetchWarnings, 600000) // 10分ごとに更新
-    
-    return () => clearInterval(interval)
-  }, [])
-
+  }
 
   // 天気情報を取得
   useEffect(() => {
@@ -299,6 +291,10 @@ const Clock = ({ showTimeOnly = false, showWeatherOnly = false }: ClockProps = {
                   description: description
                 })
                 
+                // 警報・注意報も取得
+                const warningsData = await fetchWarnings()
+                setWarnings(warningsData)
+                
                 // 今日の気温をlocalStorageに保存
                 try {
                   const today = new Date()
@@ -406,6 +402,10 @@ const Clock = ({ showTimeOnly = false, showWeatherOnly = false }: ClockProps = {
                       precipitation: 0,
                       description: description
                     })
+                    
+                    // 警報・注意報も取得
+                    const warningsData = await fetchWarnings()
+                    setWarnings(warningsData)
                     
                     window.dispatchEvent(new CustomEvent('weatherChanged', { 
                       detail: { condition: weatherInfo.condition } 
@@ -862,6 +862,10 @@ const Clock = ({ showTimeOnly = false, showWeatherOnly = false }: ClockProps = {
                   tomorrow: tomorrowInfo
                 })
                 
+                // 警報・注意報も取得
+                const warningsData = await fetchWarnings()
+                setWarnings(warningsData)
+                
                 // 今日の気温をlocalStorageに保存（明日の比較用）
                 try {
                   const today = new Date()
@@ -1018,6 +1022,10 @@ const Clock = ({ showTimeOnly = false, showWeatherOnly = false }: ClockProps = {
               description: description,
               today: todayInfo
             })
+            
+            // 警報・注意報も取得
+            const warningsData = await fetchWarnings()
+            setWarnings(warningsData)
             
             // 今日の気温をlocalStorageに保存（明日の比較用）
             try {
