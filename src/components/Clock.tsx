@@ -1180,6 +1180,7 @@ const Clock = ({ showTimeOnly = false, showWeatherOnly = false }: ClockProps = {
                   <div className="clock-weather-condition-text">{weather.condition}</div>
                 </div>
               </div>
+              <div className="clock-weather-description-full">{weather.description}</div>
               {/* 警報・注意報のカード表示 */}
               {warnings.length > 0 && (
                 <div className="clock-warning-cards">
@@ -1194,7 +1195,6 @@ const Clock = ({ showTimeOnly = false, showWeatherOnly = false }: ClockProps = {
                   ))}
                 </div>
               )}
-              <div className="clock-weather-description-full">{weather.description}</div>
             </div>
           )}
           
@@ -1315,6 +1315,7 @@ const Clock = ({ showTimeOnly = false, showWeatherOnly = false }: ClockProps = {
                   <div className="clock-weather-condition-text">{weather.condition}</div>
                 </div>
               </div>
+              <div className="clock-weather-description-full">{weather.description}</div>
               {/* 警報・注意報のカード表示 */}
               {warnings.length > 0 && (
                 <div className="clock-warning-cards">
@@ -1329,7 +1330,6 @@ const Clock = ({ showTimeOnly = false, showWeatherOnly = false }: ClockProps = {
                   ))}
                 </div>
               )}
-              <div className="clock-weather-description-full">{weather.description}</div>
             </div>
           )}
           
