@@ -481,7 +481,10 @@ const News = () => {
                 </span>
               </div>
             </div>
-            <h3 className="news-item-title">{currentNews.title}</h3>
+            {/* NHKニュースの場合はタイトルを非表示 */}
+            {!NHK_CATEGORIES.some(cat => cat.name === currentNews.category) && (
+              <h3 className="news-item-title">{currentNews.title}</h3>
+            )}
             {currentNews.description && (
               <div className="news-item-description">{currentNews.description}</div>
             )}
