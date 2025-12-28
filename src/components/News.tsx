@@ -29,8 +29,15 @@ const NHK_CATEGORIES = [
   { name: 'スポーツ', url: 'https://news.web.nhk/n-data/conf/na/rss/cat7.xml' }
 ]
 
-// Google News RSS URL
-const GOOGLE_NEWS_URL = 'https://news.google.com/rss?hl=ja&gl=JP&ceid=JP:ja'
+// Google News RSS URLs（興味のあるトピック）
+const GOOGLE_NEWS_URLS = [
+  { name: '日本の社会情勢', url: 'https://news.google.com/rss/search?q=日本+社会&hl=ja&gl=JP&ceid=JP:ja' },
+  { name: 'ハイテク', url: 'https://news.google.com/rss/topics/CAAqJggKIiBDQkFTRWdvSUwyMHZNRFZxYUdjU0FtVnVHZ0pWVXlnQVAB?hl=ja&gl=JP&ceid=JP:ja' }, // テクノロジー
+  { name: 'コンピュータ', url: 'https://news.google.com/rss/search?q=コンピュータ+PC+CPU+GPU&hl=ja&gl=JP&ceid=JP:ja' },
+  { name: 'POE', url: 'https://news.google.com/rss/search?q=Path+of+Exile+POE&hl=ja&gl=JP&ceid=JP:ja' },
+  { name: 'ゲーム情報', url: 'https://news.google.com/rss/search?q=ゲーム+ゲームニュース&hl=ja&gl=JP&ceid=JP:ja' },
+  { name: 'テック', url: 'https://news.google.com/rss/search?q=テック+IT+AI+人工知能&hl=ja&gl=JP&ceid=JP:ja' }
+]
 
 const News = () => {
   const [normalNews, setNormalNews] = useState<NewsItem[]>([])
@@ -125,81 +132,94 @@ const News = () => {
     return text.replace(/https?:\/\/[^\s]+/gi, '').trim()
   }
 
-  // Google Newsを取得
+  // Google Newsを取得（複数のトピックから）
   const fetchGoogleNews = async (): Promise<NewsItem[]> => {
     const allNews: NewsItem[] = []
+    let newsId = 1
     
-    try {
-      // サーバーレス関数を経由してGoogle News RSSを取得（CORS回避）
-      const apiUrl = `/api/google-news-rss?url=${encodeURIComponent(GOOGLE_NEWS_URL)}`
+    // 複数のRSSフィードを並列で取得
+    const fetchPromises = GOOGLE_NEWS_URLS.map(async (topic) => {
+      try {
+        // サーバーレス関数を経由してGoogle News RSSを取得（CORS回避）
+        const apiUrl = `/api/google-news-rss?url=${encodeURIComponent(topic.url)}`
 
-      const response = await fetch(apiUrl, {
-        method: 'GET',
-        headers: {
-          'Accept': 'application/xml, text/xml, */*'
+        const response = await fetch(apiUrl, {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/xml, text/xml, */*'
+          }
+        })
+
+        if (!response.ok) {
+          console.error(`Google News取得エラー (${topic.name}): status=${response.status}`)
+          return []
         }
-      })
 
-      if (!response.ok) {
-        console.error(`Google News取得エラー: status=${response.status}`)
-        return []
-      }
+        const xmlText = await response.text()
 
-      const xmlText = await response.text()
-
-      if (!xmlText || xmlText.trim().length === 0) {
-        console.error('Google News取得エラー: 空のレスポンス')
-        return []
-      }
-
-      const parser = new DOMParser()
-      const xmlDoc = parser.parseFromString(xmlText, 'text/xml')
-
-      const parseError = xmlDoc.querySelector('parsererror')
-      if (parseError) {
-        console.error('Google News XMLパースエラー')
-        return []
-      }
-
-      const items = xmlDoc.querySelectorAll('item')
-
-      items.forEach((item, index) => {
-        const title = item.querySelector('title')?.textContent || ''
-        const link = item.querySelector('link')?.textContent || ''
-        const pubDate = item.querySelector('pubDate')?.textContent || ''
-        const descriptionElement = item.querySelector('description')
-        let description = ''
-        
-        if (descriptionElement) {
-          // description要素のHTMLコンテンツを取得
-          const descriptionHtml = descriptionElement.innerHTML || descriptionElement.textContent || ''
-          // HTMLタグを除去
-          let cleanedDescription = stripHtmlTags(descriptionHtml).trim()
-          // URLを除去
-          cleanedDescription = removeUrls(cleanedDescription)
-          description = cleanedDescription
+        if (!xmlText || xmlText.trim().length === 0) {
+          console.error(`Google News取得エラー (${topic.name}): 空のレスポンス`)
+          return []
         }
-        
-        if (title && link) {
-          const trimmedTitle = title.trim()
+
+        const parser = new DOMParser()
+        const xmlDoc = parser.parseFromString(xmlText, 'text/xml')
+
+        const parseError = xmlDoc.querySelector('parsererror')
+        if (parseError) {
+          console.error(`Google News XMLパースエラー (${topic.name})`)
+          return []
+        }
+
+        const items = xmlDoc.querySelectorAll('item')
+        const topicNews: NewsItem[] = []
+
+        items.forEach((item) => {
+          const title = item.querySelector('title')?.textContent || ''
+          const link = item.querySelector('link')?.textContent || ''
+          const pubDate = item.querySelector('pubDate')?.textContent || ''
+          const descriptionElement = item.querySelector('description')
+          let description: string | undefined
           
-          allNews.push({
-            id: allNews.length + index + 1,
-            title: trimmedTitle,
-            link: link.trim(),
-            pubDate: pubDate.trim(),
-            description: description || undefined, // 空の場合はundefined
-            category: 'Google News',
-            isUrgent: false
-          })
-        }
-      })
-      
-      return allNews.slice(0, 20) // 最大20件
-    } catch (err) {
-      console.error('Google News取得エラー:', err)
-      return []
-    }
+          if (descriptionElement) {
+            // description要素のHTMLコンテンツを取得
+            const descriptionHtml = descriptionElement.innerHTML || descriptionElement.textContent || ''
+            // HTMLタグを除去
+            let cleanedDescription = stripHtmlTags(descriptionHtml).trim()
+            // URLを除去
+            cleanedDescription = removeUrls(cleanedDescription)
+            description = cleanedDescription
+          }
+          
+          if (title && link) {
+            const trimmedTitle = title.trim()
+            
+            topicNews.push({
+              id: newsId++,
+              title: trimmedTitle,
+              link: link.trim(),
+              pubDate: pubDate.trim(),
+              description: description || undefined,
+              category: `Google News - ${topic.name}`,
+              isUrgent: false
+            })
+          }
+        })
+        
+        return topicNews.slice(0, 10) // 各トピックから最大10件
+      } catch (err) {
+        console.error(`Google News取得エラー (${topic.name}):`, err)
+        return []
+      }
+    })
+
+    // すべてのトピックからニュースを取得
+    const results = await Promise.all(fetchPromises)
+    results.forEach((news) => {
+      allNews.push(...news)
+    })
+    
+    return allNews
   }
 
   // NHKニュースを取得（複数カテゴリーから）
