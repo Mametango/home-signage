@@ -119,17 +119,45 @@ const News = () => {
   }
   */
 
-  // HTMLタグを除去する関数
+  // HTMLタグを除去する関数（より確実に）
   const stripHtmlTags = (html: string): string => {
-    const tmp = document.createElement('div')
-    tmp.innerHTML = html
-    return tmp.textContent || tmp.innerText || ''
+    if (!html) return ''
+    
+    // まずDOMパーサーで試す
+    try {
+      const tmp = document.createElement('div')
+      tmp.innerHTML = html
+      let text = tmp.textContent || tmp.innerText || ''
+      
+      // 正規表現で残っているHTMLタグを除去（念のため）
+      text = text.replace(/<[^>]*>/g, '')
+      
+      // HTMLエンティティをデコード
+      text = text.replace(/&nbsp;/g, ' ')
+      text = text.replace(/&amp;/g, '&')
+      text = text.replace(/&lt;/g, '<')
+      text = text.replace(/&gt;/g, '>')
+      text = text.replace(/&quot;/g, '"')
+      text = text.replace(/&#39;/g, "'")
+      
+      return text.trim()
+    } catch (e) {
+      // エラーが発生した場合は正規表現のみで処理
+      return html.replace(/<[^>]*>/g, '').trim()
+    }
   }
 
   // URLを除去する関数
   const removeUrls = (text: string): string => {
+    if (!text) return ''
     // URLパターンを除去（http://、https://で始まる文字列）
-    return text.replace(/https?:\/\/[^\s]+/gi, '').trim()
+    let cleaned = text.replace(/https?:\/\/[^\s]+/gi, '').trim()
+    // 残っているHTML属性っぽい文字列も除去（href=、target=など）
+    cleaned = cleaned.replace(/href\s*=\s*["'][^"']*["']/gi, '')
+    cleaned = cleaned.replace(/target\s*=\s*["'][^"']*["']/gi, '')
+    cleaned = cleaned.replace(/<a[^>]*>/gi, '')
+    cleaned = cleaned.replace(/<\/a>/gi, '')
+    return cleaned.trim()
   }
 
   // Google Newsを取得（複数のトピックから）
@@ -175,11 +203,14 @@ const News = () => {
         const topicNews: NewsItem[] = []
 
         items.forEach((item) => {
-          const title = item.querySelector('title')?.textContent || ''
+          let title = item.querySelector('title')?.textContent || ''
           const link = item.querySelector('link')?.textContent || ''
           const pubDate = item.querySelector('pubDate')?.textContent || ''
           const descriptionElement = item.querySelector('description')
           let description: string | undefined
+          
+          // タイトルからHTMLタグを除去
+          title = stripHtmlTags(title).trim()
           
           if (descriptionElement) {
             // description要素のHTMLコンテンツを取得
@@ -192,11 +223,9 @@ const News = () => {
           }
           
           if (title && link) {
-            const trimmedTitle = title.trim()
-            
             topicNews.push({
               id: newsId++,
-              title: trimmedTitle,
+              title: title,
               link: link.trim(),
               pubDate: pubDate.trim(),
               description: description || undefined,
@@ -264,15 +293,18 @@ const News = () => {
 
         const newsItems: NewsItem[] = []
         items.forEach((item, index) => {
-          const title = item.querySelector('title')?.textContent || ''
+          let title = item.querySelector('title')?.textContent || ''
           const link = item.querySelector('link')?.textContent || ''
           const pubDate = item.querySelector('pubDate')?.textContent || ''
-          const description = item.querySelector('description')?.textContent || ''
+          let description = item.querySelector('description')?.textContent || ''
+          
+          // タイトルと説明文からHTMLタグを除去
+          title = stripHtmlTags(title).trim()
+          description = stripHtmlTags(description).trim()
+          // URLも除去
+          description = removeUrls(description)
           
           if (title && link) {
-            const trimmedTitle = title.trim()
-            const trimmedDescription = description.trim()
-            
             // 除外する記事のタイトル（部分一致で除外）
             const excludedTitles = [
               '岩手 久慈 8日の地震直後 避難所への道路渋滞',
@@ -283,21 +315,21 @@ const News = () => {
             
             // 除外する記事かどうかをチェック
             const shouldExclude = excludedTitles.some(excludedTitle => 
-              trimmedTitle.includes(excludedTitle) || trimmedDescription.includes(excludedTitle)
+              title.includes(excludedTitle) || description.includes(excludedTitle)
             )
             
             // 除外する記事は追加しない
             if (shouldExclude) {
-              console.log('記事を除外:', trimmedTitle)
+              console.log('記事を除外:', title)
               return
             }
             
             newsItems.push({
               id: allNews.length + index + 1,
-              title: trimmedTitle,
+              title: title,
               link: link.trim(),
               pubDate: pubDate.trim(),
-              description: trimmedDescription,
+              description: description || undefined,
               category: category.name,
               isUrgent: false // NHKニュースは全て通常ニュースとして扱う
             })
