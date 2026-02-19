@@ -33,14 +33,6 @@
   overflow: hidden;
 }
 
-.app-right {
-  position: relative;
-  cursor: grab;
-}
-
-.app-right:active {
-  cursor: grabbing;
-}
 
 .app-right-content {
   width: 100%;
@@ -49,64 +41,6 @@
   overflow: hidden;
 }
 
-.app-right-weather {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  opacity: 0;
-  transform: translateX(100%);
-  transition: opacity 0.3s ease, transform 0.3s ease;
-  overflow-y: auto;
-}
-
-.app-right-weather.active {
-  opacity: 1;
-  transform: translateX(0);
-}
-
-.app-right-news {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  opacity: 0;
-  transform: translateX(-100%);
-  transition: opacity 0.3s ease, transform 0.3s ease;
-  overflow-y: auto;
-}
-
-.app-right-news.active {
-  opacity: 1;
-  transform: translateX(0);
-}
-
-/* インジケーター */
-.app-right-indicator {
-  position: absolute;
-  bottom: 1rem;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  gap: 0.5rem;
-  z-index: 10;
-}
-
-.app-right-indicator-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.3);
-  transition: background 0.3s ease, transform 0.3s ease;
-  cursor: pointer;
-}
-
-.app-right-indicator-dot.active {
-  background: rgba(255, 255, 255, 0.9);
-  transform: scale(1.2);
-}
 
 .app-earthquake {
   position: absolute;
@@ -267,6 +201,73 @@
   line-height: 1.2;
   margin-top: 0.1rem;
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.debug-overlay {
+  position: fixed;
+  left: 0.5rem;
+  bottom: 0.5rem;
+  width: 48vw;
+  max-width: 680px;
+  max-height: 45vh;
+  background: rgba(0, 0, 0, 0.85);
+  border: 1px solid rgba(0, 255, 0, 0.4);
+  border-radius: 0.5rem;
+  padding: 0.5rem;
+  z-index: 100000;
+  color: #b6ffb6;
+  font-family: 'Courier New', 'Monaco', 'Menlo', monospace;
+  font-size: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.debug-overlay-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.debug-overlay-title {
+  font-weight: 700;
+  color: #eaffea;
+}
+
+.debug-overlay-close {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #eaffea;
+  border-radius: 0.25rem;
+  padding: 0.1rem 0.4rem;
+  cursor: pointer;
+}
+
+.debug-overlay-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  color: rgba(182, 255, 182, 0.85);
+}
+
+.debug-overlay-body {
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 0.4rem;
+  padding: 0.4rem;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+.debug-overlay-line {
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.2;
+  color: #aaffaa;
+}
+
+.debug-overlay-empty {
+  color: rgba(182, 255, 182, 0.6);
 }
 
 @media (max-width: 1024px) {

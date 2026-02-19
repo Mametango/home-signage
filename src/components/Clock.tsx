@@ -13,7 +13,6 @@ interface WeatherData {
   icon: string
   weatherCode?: string // 天気コード（WeatherIcon用）
   precipitation: number // 降水確率（%）
-  description?: string // 天気の解説
   // 今日と明日の天気
   today?: {
     condition: string
@@ -41,15 +40,24 @@ interface WarningInfo {
 
 interface ClockProps {
   showTimeOnly?: boolean
-  showWeatherOnly?: boolean
 }
 
-const Clock = ({ showTimeOnly = false, showWeatherOnly = false }: ClockProps = {}) => {
+interface WeeklyWeatherItem {
+  date: string
+  condition?: string
+  icon?: string
+  maxTemp?: number
+  minTemp?: number
+  rainProbability?: number
+}
+
+const Clock = ({ showTimeOnly = false }: ClockProps = {}) => {
   const [time, setTime] = useState(new Date())
   const [weather, setWeather] = useState<WeatherData | null>(null)
   const [prefecture, setPrefecture] = useState<string>('新潟県')
   const [city, setCity] = useState<string>('新発田市')
-  const [warnings, setWarnings] = useState<WarningInfo[]>([])
+  const [_warnings, setWarnings] = useState<WarningInfo[]>([])
+  const [weeklyWeather, setWeeklyWeather] = useState<WeeklyWeatherItem[]>([])
 
   // 設定を読み込み
   useEffect(() => {
@@ -72,8 +80,23 @@ const Clock = ({ showTimeOnly = false, showWeatherOnly = false }: ClockProps = {
   }, [])
 
   useEffect(() => {
+    // 初期時刻を設定
+    setTime(new Date())
+    
+    // 1秒ごとに更新（ドリフト補正付き）
+    let expectedTime = Date.now() + 1000
     const timer = setInterval(() => {
-      setTime(new Date())
+      const now = Date.now()
+      const drift = now - expectedTime
+      
+      // ドリフトが大きい場合は即座に修正
+      if (Math.abs(drift) > 100) {
+        setTime(new Date())
+        expectedTime = now + 1000
+      } else {
+        setTime(new Date())
+        expectedTime += 1000
+      }
     }, 1000)
 
     return () => clearInterval(timer)
@@ -237,49 +260,6 @@ const Clock = ({ showTimeOnly = false, showWeatherOnly = false }: ClockProps = {
                 const minTemp = todayForecast?.mintemp
                 const precipitation = todayForecast?.pop || 0
                 
-                // 詳細な解説を作成
-                let description = `今日の天気は${weatherInfo.text}`
-                if (maxTemp !== undefined && minTemp !== undefined) {
-                  const tempRange = maxTemp - minTemp
-                  description += `。最高気温${maxTemp}度、最低気温${minTemp}度で、日中の気温差は${tempRange}度の見込み`
-                  
-                  // 昨日の気温と比較
-                  try {
-                    const yesterdayData = localStorage.getItem('yesterdayWeather')
-                    if (yesterdayData) {
-                      const parsed = JSON.parse(yesterdayData)
-                      const yesterdayDate = new Date(parsed.date).toDateString()
-                      const todayDate = new Date().toDateString()
-                      
-                      if (yesterdayDate !== todayDate && parsed.maxTemp !== undefined) {
-                        const maxTempDiff = maxTemp - parsed.maxTemp
-                        const minTempDiff = minTemp - (parsed.minTemp || parsed.maxTemp)
-                        
-                        if (Math.abs(maxTempDiff) >= 1) {
-                          if (maxTempDiff > 0) {
-                            description += `。最高気温は昨日より${Math.round(maxTempDiff)}度高い`
-                          } else {
-                            description += `。最高気温は昨日より${Math.abs(Math.round(maxTempDiff))}度低い`
-                          }
-                        }
-                        
-                        if (parsed.minTemp !== undefined && Math.abs(minTempDiff) >= 1) {
-                          if (minTempDiff > 0) {
-                            description += `。最低気温は昨日より${Math.round(minTempDiff)}度高い`
-                          } else {
-                            description += `。最低気温は昨日より${Math.abs(Math.round(minTempDiff))}度低い`
-                          }
-                        }
-                      }
-                    }
-                  } catch (e) {
-                    // localStorageの読み込みエラーは無視
-                  }
-                }
-                if (precipitation > 0) {
-                  description += `。降水確率${precipitation}%`
-                }
-                
                 setWeather({
                   temp: currentForecast?.temp || maxTemp || 12,
                   maxTemp: maxTemp,
@@ -287,8 +267,7 @@ const Clock = ({ showTimeOnly = false, showWeatherOnly = false }: ClockProps = {
                   condition: weatherInfo.condition,
                   icon: weatherInfo.icon,
                   weatherCode: String(wxCode),
-                  precipitation: precipitation,
-                  description: description
+                  precipitation: precipitation
                 })
                 
                 // 警報・注意報も取得
@@ -359,8 +338,6 @@ const Clock = ({ showTimeOnly = false, showWeatherOnly = false }: ClockProps = {
                   if (weatherParts.length > 0) {
                     const todayWeather = weatherParts[0]
                     const weatherCode = todayWeather.querySelector('WeatherCode')?.textContent || '100'
-                    const weatherText = todayWeather.querySelector('Weather')?.textContent || '晴れ'
-                    
                     // 気温を取得
                     let maxTemp: number | undefined
                     let minTemp: number | undefined
@@ -385,13 +362,6 @@ const Clock = ({ showTimeOnly = false, showWeatherOnly = false }: ClockProps = {
                     
                     const weatherInfo = getWeatherCondition(weatherCode)
                     
-                    // 解説を取得
-                    const headline = forecastDoc.querySelector('Headline')?.textContent || ''
-                    let description = weatherText
-                    if (headline) {
-                      description = headline
-                    }
-                    
                     setWeather({
                       temp: maxTemp || minTemp || 12,
                       maxTemp: maxTemp,
@@ -399,8 +369,7 @@ const Clock = ({ showTimeOnly = false, showWeatherOnly = false }: ClockProps = {
                       condition: weatherInfo.condition,
                       icon: weatherInfo.icon,
                       weatherCode: weatherCode,
-                      precipitation: 0,
-                      description: description
+                      precipitation: 0
                     })
                     
                     // 警報・注意報も取得
@@ -490,242 +459,45 @@ const Clock = ({ showTimeOnly = false, showWeatherOnly = false }: ClockProps = {
                 let todayPop = 0
                 let tomorrowPop = 0
                 
-                // 天気の解説を作成（より詳細で自然な表現に）
-                let description = ''
-                if (weatherCodes.length > 0 && timeDefines.length > 0) {
-                  const todayWeatherParts: string[] = []
-                  const tomorrowWeatherParts: string[] = []
-                  const popDetails: string[] = []
-                  const weatherChanges: string[] = []
-                  
-                  // 各時間帯の天気と降水確率を取得
-                  let prevWeather = ''
-                  for (let i = 0; i < Math.min(weatherCodes.length, timeDefines.length); i++) {
-                    const weatherInfo = getWeatherCondition(weatherCodes[i])
+                // 明日の気温を取得（temps配列から）
+                if (temps && temps.length >= 4) {
+                  // temps配列は[今日最高, 今日最低, 明日最高, 明日最低]の形式
+                  tomorrowMaxTemp = parseInt(temps[2])
+                  tomorrowMinTemp = parseInt(temps[3])
+                }
+                
+                // 今日と明日の降水確率を取得
+                if (pops && pops.length > 0 && timeDefines.length > 0) {
+                  const todayPops: number[] = []
+                  const tomorrowPops: number[] = []
+                  for (let i = 0; i < Math.min(pops.length, timeDefines.length); i++) {
                     const timeDef = new Date(timeDefines[i])
                     const timeDefDate = new Date(timeDef.getFullYear(), timeDef.getMonth(), timeDef.getDate())
-                    const hour = timeDef.getHours()
-                    
-                    // 今日か明日かを判定
-                    const isToday = timeDefDate.getTime() === today.getTime()
+                    const popValue = parseInt(pops[i])
+                    if (!isNaN(popValue)) {
+                      if (timeDefDate.getTime() === today.getTime()) {
+                        todayPops.push(popValue)
+                      } else if (timeDefDate.getTime() === tomorrow.getTime()) {
+                        tomorrowPops.push(popValue)
+                      }
+                    }
+                  }
+                  if (todayPops.length > 0) {
+                    todayPop = Math.max(...todayPops)
+                  }
+                  if (tomorrowPops.length > 0) {
+                    tomorrowPop = Math.max(...tomorrowPops)
+                  }
+                }
+                
+                // 明日の天気コードを取得
+                if (weatherCodes.length > 0 && timeDefines.length > 0) {
+                  for (let i = 0; i < Math.min(weatherCodes.length, timeDefines.length); i++) {
+                    const timeDef = new Date(timeDefines[i])
+                    const timeDefDate = new Date(timeDef.getFullYear(), timeDef.getMonth(), timeDef.getDate())
                     const isTomorrow = timeDefDate.getTime() === tomorrow.getTime()
-                    
-                    // 明日の最初の天気コードを取得
                     if (isTomorrow && tomorrowWeatherCode === null) {
                       tomorrowWeatherCode = weatherCodes[i]
-                    }
-                    
-                    let timeLabel = ''
-                    if (hour >= 0 && hour < 6) timeLabel = '未明'
-                    else if (hour >= 6 && hour < 12) timeLabel = '午前'
-                    else if (hour >= 12 && hour < 18) timeLabel = '午後'
-                    else timeLabel = '夜'
-                    
-                    // 天気の表現を改善（より詳細に）
-                    let weatherText = weatherInfo.text
-                    if (weatherText === '雨') {
-                      // 降水確率に応じて詳細な表現
-                      if (pops && pops[i] && parseInt(pops[i]) >= 80) {
-                        weatherText = '強い雨が降る'
-                      } else if (pops && pops[i] && parseInt(pops[i]) >= 50) {
-                        weatherText = '雨が降る'
-                      } else {
-                        weatherText = '一時的に雨が降る可能性'
-                      }
-                    } else if (weatherText === '雪') {
-                      weatherText = '雪が降る'
-                    } else if (weatherText === '曇り') {
-                      weatherText = '曇りがち'
-                    } else if (weatherText === '晴れ') {
-                      weatherText = '晴れ'
-                    }
-                    
-                    // 今日と明日で分けて保存
-                    if (isToday) {
-                      todayWeatherParts.push(`${timeLabel}は${weatherText}`)
-                    } else if (isTomorrow) {
-                      tomorrowWeatherParts.push(`${timeLabel}は${weatherText}`)
-                    }
-                    
-                    // 天気の変化を検出（今日のみ）
-                    if (isToday && prevWeather && prevWeather !== weatherInfo.text) {
-                      weatherChanges.push(`${timeLabel}から${weatherInfo.text === '雨' ? '雨' : weatherInfo.text === '雪' ? '雪' : weatherInfo.text}に変わる`)
-                    }
-                    if (isToday) {
-                      prevWeather = weatherInfo.text
-                    }
-                    
-                    // 降水確率の詳細情報（今日のみ）
-                    if (isToday && pops && pops[i] && parseInt(pops[i]) > 0) {
-                      const popValue = parseInt(pops[i])
-                      if (popValue >= 80) {
-                        popDetails.push(`${timeLabel}の降水確率は${popValue}%で、雨が降る可能性が非常に高い`)
-                      } else if (popValue >= 60) {
-                        popDetails.push(`${timeLabel}の降水確率は${popValue}%で、雨が降る可能性が高い`)
-                      } else if (popValue >= 40) {
-                        popDetails.push(`${timeLabel}の降水確率は${popValue}%`)
-                      }
-                    }
-                  }
-                  
-                  // 明日の気温を取得（temps配列から）
-                  if (temps && temps.length >= 4) {
-                    // temps配列は[今日最高, 今日最低, 明日最高, 明日最低]の形式
-                    tomorrowMaxTemp = parseInt(temps[2])
-                    tomorrowMinTemp = parseInt(temps[3])
-                  }
-                  
-                  // 今日と明日の降水確率を取得
-                  if (pops && pops.length > 0 && timeDefines.length > 0) {
-                    const todayPops: number[] = []
-                    const tomorrowPops: number[] = []
-                    for (let i = 0; i < Math.min(pops.length, timeDefines.length); i++) {
-                      const timeDef = new Date(timeDefines[i])
-                      const timeDefDate = new Date(timeDef.getFullYear(), timeDef.getMonth(), timeDef.getDate())
-                      const popValue = parseInt(pops[i])
-                      if (!isNaN(popValue)) {
-                        if (timeDefDate.getTime() === today.getTime()) {
-                          todayPops.push(popValue)
-                        } else if (timeDefDate.getTime() === tomorrow.getTime()) {
-                          tomorrowPops.push(popValue)
-                        }
-                      }
-                    }
-                    if (todayPops.length > 0) {
-                      todayPop = Math.max(...todayPops)
-                    }
-                    if (tomorrowPops.length > 0) {
-                      tomorrowPop = Math.max(...tomorrowPops)
-                    }
-                  }
-                  
-                  // 詳細な解説を組み立て
-                  if (todayWeatherParts.length > 0) {
-                    // 基本の天気情報（今日）
-                    description = `今日の天気は${todayWeatherParts.join('、')}`
-                    
-                    // 天気の変化を追加
-                    if (weatherChanges.length > 0) {
-                      description += `。${weatherChanges.join('、')}`
-                    }
-                    
-                    // 降水確率の詳細情報を追加
-                    if (popDetails.length > 0) {
-                      description += `。${popDetails.join('。')}`
-                    }
-                    
-                    // 気温の詳細情報を追加
-                    if (maxTemp !== undefined && minTemp !== undefined) {
-                      const tempRange = maxTemp - minTemp
-                      description += `。気温は最高${maxTemp}度、最低${minTemp}度で、日中の気温差は${tempRange}度の見込み`
-                      
-                      // 昨日の気温と比較
-                      try {
-                        const yesterdayData = localStorage.getItem('yesterdayWeather')
-                        
-                        if (yesterdayData) {
-                          const parsed = JSON.parse(yesterdayData)
-                          const yesterdayDate = new Date(parsed.date).toDateString()
-                          const todayDate = new Date().toDateString()
-                          
-                          // 昨日のデータが存在し、日付が異なる場合
-                          if (yesterdayDate !== todayDate && parsed.maxTemp !== undefined) {
-                            const maxTempDiff = maxTemp - parsed.maxTemp
-                            const minTempDiff = minTemp - (parsed.minTemp || parsed.maxTemp)
-                            
-                            if (Math.abs(maxTempDiff) >= 1) {
-                              if (maxTempDiff > 0) {
-                                description += `。最高気温は昨日より${Math.round(maxTempDiff)}度高い`
-                              } else {
-                                description += `。最高気温は昨日より${Math.abs(Math.round(maxTempDiff))}度低い`
-                              }
-                            }
-                            
-                            if (parsed.minTemp !== undefined && Math.abs(minTempDiff) >= 1) {
-                              if (minTempDiff > 0) {
-                                description += `。最低気温は昨日より${Math.round(minTempDiff)}度高い`
-                              } else {
-                                description += `。最低気温は昨日より${Math.abs(Math.round(minTempDiff))}度低い`
-                              }
-                            }
-                          }
-                        }
-                      } catch (e) {
-                        // localStorageの読み込みエラーは無視
-                      }
-                    } else if (maxTemp !== undefined) {
-                      description += `。最高気温は${maxTemp}度の見込み`
-                      
-                      // 昨日の最高気温と比較
-                      try {
-                        const yesterdayData = localStorage.getItem('yesterdayWeather')
-                        if (yesterdayData) {
-                          const parsed = JSON.parse(yesterdayData)
-                          const yesterdayDate = new Date(parsed.date).toDateString()
-                          const todayDate = new Date().toDateString()
-                          
-                          if (yesterdayDate !== todayDate && parsed.maxTemp !== undefined) {
-                            const maxTempDiff = maxTemp - parsed.maxTemp
-                            if (Math.abs(maxTempDiff) >= 1) {
-                              if (maxTempDiff > 0) {
-                                description += `。昨日より${Math.round(maxTempDiff)}度高い`
-                              } else {
-                                description += `。昨日より${Math.abs(Math.round(maxTempDiff))}度低い`
-                              }
-                            }
-                          }
-                        }
-                      } catch (e) {
-                        // localStorageの読み込みエラーは無視
-                      }
-                    }
-                    
-                    // 天気の傾向を追加
-                    if (weatherCodes.length >= 2) {
-                      const morningWeather = getWeatherCondition(weatherCodes[0]).text
-                      const afternoonWeather = weatherCodes.length > 1 ? getWeatherCondition(weatherCodes[1]).text : morningWeather
-                      if (morningWeather !== afternoonWeather) {
-                        if (afternoonWeather === '雨' || afternoonWeather === '雪') {
-                          description += `。午後から天気が崩れる見込み`
-                        } else if (afternoonWeather === '晴れ' && morningWeather !== '晴れ') {
-                          description += `。午後から天気が回復する見込み`
-                        }
-                      }
-                    }
-                    
-                    // 明日の天気情報を追加
-                    if (tomorrowWeatherCode) {
-                      // 明日の天気コードが取得できた場合
-                      const tomorrowWeatherInfo = getWeatherCondition(tomorrowWeatherCode)
-                      
-                      // 明日の天気の詳細情報を構築
-                      let tomorrowDescription = `明日の天気は${tomorrowWeatherInfo.text}`
-                      
-                      // 明日の時間帯別の天気がある場合は追加
-                      if (tomorrowWeatherParts.length > 0) {
-                        const tomorrowParts = tomorrowWeatherParts.map(part => part.replace(/午前は|午後は|未明は|夜は/g, '')).join('、')
-                        if (tomorrowParts) {
-                          tomorrowDescription = `明日の天気は${tomorrowParts}`
-                        }
-                      }
-                      
-                      description += `。${tomorrowDescription}`
-                      
-                      // 明日の気温を追加
-                      if (tomorrowMaxTemp !== undefined && tomorrowMinTemp !== undefined) {
-                        description += `。明日の気温は最高${tomorrowMaxTemp}度、最低${tomorrowMinTemp}度の見込み`
-                      } else if (tomorrowMaxTemp !== undefined) {
-                        description += `。明日の最高気温は${tomorrowMaxTemp}度の見込み`
-                      }
-                    } else if (weatherCodes.length > 1) {
-                      // フォールバック: 2番目の天気コードを使用
-                      const tomorrowWeatherInfo = getWeatherCondition(weatherCodes[1])
-                      description += `。明日の天気は${tomorrowWeatherInfo.text}の見込み`
-                      if (tomorrowMaxTemp !== undefined && tomorrowMinTemp !== undefined) {
-                        description += `。明日の気温は最高${tomorrowMaxTemp}度、最低${tomorrowMinTemp}度の見込み`
-                      } else if (tomorrowMaxTemp !== undefined) {
-                        description += `。明日の最高気温は${tomorrowMaxTemp}度の見込み`
-                      }
                     }
                   }
                 }
@@ -857,7 +629,6 @@ const Clock = ({ showTimeOnly = false, showWeatherOnly = false }: ClockProps = {
                   icon: displayIcon,
                   weatherCode: todayWeatherCodeForIcon,
                   precipitation: pop,
-                  description: description || undefined,
                   today: todayInfo,
                   tomorrow: tomorrowInfo
                 })
@@ -932,75 +703,8 @@ const Clock = ({ showTimeOnly = false, showWeatherOnly = false }: ClockProps = {
             const maxTemp = data.main.temp_max ? Math.round(data.main.temp_max) : undefined
             const minTemp = data.main.temp_min ? Math.round(data.main.temp_min) : undefined
             
-            // 天気のコメントを作成
-            const conditionText = data.weather[0].description || '晴れ'
-            let description = `${conditionText}`
-            if (maxTemp !== undefined && minTemp !== undefined) {
-              const tempRange = maxTemp - minTemp
-              description += `。最高気温${maxTemp}度、最低気温${minTemp}度で、日中の気温差は${tempRange}度の見込み`
-              
-              // 昨日の気温と比較
-              try {
-                const yesterdayData = localStorage.getItem('yesterdayWeather')
-                if (yesterdayData) {
-                  const parsed = JSON.parse(yesterdayData)
-                  const yesterdayDate = new Date(parsed.date).toDateString()
-                  const todayDate = new Date().toDateString()
-                  
-                  if (yesterdayDate !== todayDate && parsed.maxTemp !== undefined) {
-                    const maxTempDiff = maxTemp - parsed.maxTemp
-                    const minTempDiff = minTemp - (parsed.minTemp || parsed.maxTemp)
-                    
-                    if (Math.abs(maxTempDiff) >= 1) {
-                      if (maxTempDiff > 0) {
-                        description += `。最高気温は昨日より${Math.round(maxTempDiff)}度高い`
-                      } else {
-                        description += `。最高気温は昨日より${Math.abs(Math.round(maxTempDiff))}度低い`
-                      }
-                    }
-                    
-                    if (parsed.minTemp !== undefined && Math.abs(minTempDiff) >= 1) {
-                      if (minTempDiff > 0) {
-                        description += `。最低気温は昨日より${Math.round(minTempDiff)}度高い`
-                      } else {
-                        description += `。最低気温は昨日より${Math.abs(Math.round(minTempDiff))}度低い`
-                      }
-                    }
-                  }
-                }
-              } catch (e) {
-                // localStorageの読み込みエラーは無視
-              }
-            } else if (maxTemp !== undefined) {
-              description += `。最高気温${maxTemp}度の見込み`
-              
-              // 昨日の最高気温と比較
-              try {
-                const yesterdayData = localStorage.getItem('yesterdayWeather')
-                if (yesterdayData) {
-                  const parsed = JSON.parse(yesterdayData)
-                  const yesterdayDate = new Date(parsed.date).toDateString()
-                  const todayDate = new Date().toDateString()
-                  
-                  if (yesterdayDate !== todayDate && parsed.maxTemp !== undefined) {
-                    const maxTempDiff = maxTemp - parsed.maxTemp
-                    if (Math.abs(maxTempDiff) >= 1) {
-                      if (maxTempDiff > 0) {
-                        description += `。昨日より${Math.round(maxTempDiff)}度高い`
-                      } else {
-                        description += `。昨日より${Math.abs(Math.round(maxTempDiff))}度低い`
-                      }
-                    }
-                  }
-                }
-              } catch (e) {
-                // localStorageの読み込みエラーは無視
-              }
-            }
-            if (precipitation > 0) {
-              description += `。降水確率${precipitation}%`
-            }
-            
+            const conditionText = data.weather?.[0]?.description || data.weather?.[0]?.main || '晴れ'
+
             // 今日と明日の天気情報を構築（OpenWeatherMap APIでは簡易版）
             const weatherCode = getWeatherCodeFromOpenWeather(data.weather[0].main)
             const todayInfo = {
@@ -1019,7 +723,6 @@ const Clock = ({ showTimeOnly = false, showWeatherOnly = false }: ClockProps = {
               icon: getWeatherIcon(data.weather[0].main),
               weatherCode: weatherCode,
               precipitation: precipitation,
-              description: description,
               today: todayInfo
             })
             
@@ -1054,7 +757,6 @@ const Clock = ({ showTimeOnly = false, showWeatherOnly = false }: ClockProps = {
           icon: '☁️',
           weatherCode: '200',
           precipitation: 30,
-          description: '曇りがち。降水確率30%'
         })
       } catch (error) {
         console.error('天気情報の取得に失敗しました:', error)
@@ -1074,6 +776,57 @@ const Clock = ({ showTimeOnly = false, showWeatherOnly = false }: ClockProps = {
     return () => clearInterval(interval)
   }, [prefecture, city])
 
+  // 週間（10日間）天気を取得
+  useEffect(() => {
+    const fetchWeeklyWeather = async () => {
+      try {
+        // 都道府県と市町村をクエリパラメータで渡す
+        const params = new URLSearchParams({
+          prefecture: prefecture || '新潟県',
+          city: city || '新潟市'
+        })
+        const response = await fetch(`/api/nhk-weekly-weather?${params.toString()}`, {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json'
+          }
+        })
+
+        if (!response.ok) {
+          console.error('週間天気取得エラー: status=', response.status)
+          return
+        }
+
+        const data = await response.json()
+        
+        console.log('週間天気データ:', data)
+        
+        if (data.weekly && Array.isArray(data.weekly)) {
+          console.log('週間天気取得成功:', data.weekly.length, '件')
+          console.log('週間天気データ詳細:', data.weekly.map((w: WeeklyWeatherItem) => ({ 
+            date: w.date, 
+            maxTemp: w.maxTemp, 
+            minTemp: w.minTemp, 
+            rainProbability: w.rainProbability 
+          })))
+          setWeeklyWeather(data.weekly.slice(0, 6)) // 最大6日分
+        } else {
+          console.log('週間天気データが空または不正な形式')
+          // デバッグ用：とりあえず空の配列でも表示エリアを出す
+          setWeeklyWeather([])
+        }
+      } catch (err) {
+        console.error('週間天気取得エラー:', err)
+        setWeeklyWeather([])
+      }
+    }
+
+    fetchWeeklyWeather()
+    const interval = setInterval(fetchWeeklyWeather, 3600000) // 1時間ごとに更新（Vercel無料枠節約）
+
+    return () => clearInterval(interval)
+  }, [prefecture, city])
+
   // 天気コードから天気タイプを取得する関数
   const getWeatherTypeClass = (code?: string) => {
     if (!code) return 'weather-sunny'
@@ -1085,8 +838,415 @@ const Clock = ({ showTimeOnly = false, showWeatherOnly = false }: ClockProps = {
     return 'weather-sunny'
   }
 
+  const getDateLabel = (date: Date) => format(date, 'M/d(E)', { locale: ja })
+
+  const normalizeDateLabel = (label: string) => {
+    // 日付ラベルを正規化（0埋めを削除、空白を削除）
+    // 例: "01/25(日)" → "1/25(日)", "1/25(日)" → "1/25(日)"
+    let normalized = label.replace(/\s+/g, '')
+    // 月の0埋めを削除: "01/25" → "1/25"
+    normalized = normalized.replace(/^0+(\d+)\//, '$1/')
+    // 日の0埋めを削除: "1/05" → "1/5"
+    normalized = normalized.replace(/\/(0+)(\d+)/, '/$2')
+    return normalized
+  }
+
+  const getConditionLabel = (condition?: string) => {
+    const trimmed = condition?.trim()
+    return trimmed ? trimmed : '天気未取得'
+  }
+
+  const getDayCondition = (day: WeeklyWeatherItem, index: number) => {
+    if (day.condition) return getConditionLabel(day.condition)
+    if (index === 0) return getConditionLabel(weather?.today?.condition ?? weather?.condition)
+    if (index === 1) return getConditionLabel(weather?.tomorrow?.condition)
+    return '天気未取得'
+  }
+
+  const getDayTemps = (day: WeeklyWeatherItem, index: number) => {
+    // まずdayオブジェクトから気温を取得
+    if (day.maxTemp !== undefined || day.minTemp !== undefined) {
+      console.log(`[Clock Debug] getDayTemps: Using day data for index ${index}:`, { maxTemp: day.maxTemp, minTemp: day.minTemp })
+      return { maxTemp: day.maxTemp, minTemp: day.minTemp }
+    }
+    // dayオブジェクトに気温がない場合はフォールバック
+    console.log(`[Clock Debug] getDayTemps: Using fallback for index ${index}`)
+    if (index === 0) {
+      const fallback = { maxTemp: weather?.today?.maxTemp ?? weather?.maxTemp, minTemp: weather?.today?.minTemp ?? weather?.minTemp }
+      console.log(`[Clock Debug] getDayTemps: Fallback for today:`, fallback)
+      return fallback
+    }
+    if (index === 1) {
+      const fallback = { maxTemp: weather?.tomorrow?.maxTemp, minTemp: weather?.tomorrow?.minTemp }
+      console.log(`[Clock Debug] getDayTemps: Fallback for tomorrow:`, fallback)
+      return fallback
+    }
+    return { maxTemp: undefined, minTemp: undefined }
+  }
+
+  const getDisplayWeeklyWeather = (): WeeklyWeatherItem[] => {
+    const today = new Date()
+    const todayLabel = normalizeDateLabel(getDateLabel(today))
+    const tomorrowDate = new Date(today)
+    tomorrowDate.setDate(today.getDate() + 1)
+    const tomorrowLabel = normalizeDateLabel(getDateLabel(tomorrowDate))
+
+    // 「今日」「明日」を優先的にマッチングするマップを作成
+    const normalizedMap = new Map<string, WeeklyWeatherItem>()
+    
+    // 今日と明日の日付ラベルを生成（0埋めなしとありの両方を試す）
+    const todayLabelWithZero = normalizeDateLabel(getDateLabel(today).replace(/\/(\d)\//, '/0$1/').replace(/^(\d)\//, '0$1/'))
+    const tomorrowLabelWithZero = normalizeDateLabel(getDateLabel(tomorrowDate).replace(/\/(\d)\//, '/0$1/').replace(/^(\d)\//, '0$1/'))
+    
+    const todayItem = weeklyWeather.find(item => {
+      const normalized = normalizeDateLabel(item.date)
+      const matches = item.date === '今日' || normalized === todayLabel || normalized === todayLabelWithZero
+      if (matches) {
+        console.log(`[Clock Debug] Found todayItem:`, { 
+          originalDate: item.date, 
+          normalized, 
+          todayLabel, 
+          todayLabelWithZero,
+          maxTemp: item.maxTemp,
+          minTemp: item.minTemp,
+          rainProbability: item.rainProbability
+        })
+      }
+      return matches
+    })
+    // 明日の日付を数値で取得（月/日）
+    const tomorrowMonth = tomorrowDate.getMonth() + 1
+    const tomorrowDay = tomorrowDate.getDate()
+    
+    const tomorrowItem = weeklyWeather.find(item => {
+      // 「明日」という文字列でマッチ
+      if (item.date === '明日') {
+        console.log(`[Clock Debug] Found tomorrowItem by text "明日":`, { 
+          originalDate: item.date, 
+          maxTemp: item.maxTemp,
+          minTemp: item.minTemp,
+          rainProbability: item.rainProbability
+        })
+        return true
+      }
+      
+      // 日付文字列から月と日を抽出
+      const dateMatch = item.date.match(/(\d+)\/(\d+)/)
+      if (dateMatch) {
+        const itemMonth = parseInt(dateMatch[1], 10)
+        const itemDay = parseInt(dateMatch[2], 10)
+        const matches = itemMonth === tomorrowMonth && itemDay === tomorrowDay
+        
+        if (matches) {
+          console.log(`[Clock Debug] Found tomorrowItem by date match:`, { 
+            originalDate: item.date, 
+            itemMonth,
+            itemDay,
+            tomorrowMonth,
+            tomorrowDay,
+            maxTemp: item.maxTemp,
+            minTemp: item.minTemp,
+            rainProbability: item.rainProbability
+          })
+        }
+        return matches
+      }
+      
+      // 正規化後の日付でも試す
+      const normalized = normalizeDateLabel(item.date)
+      const normalizedMatch = normalized.match(/(\d+)\/(\d+)/)
+      if (normalizedMatch) {
+        const itemMonth = parseInt(normalizedMatch[1], 10)
+        const itemDay = parseInt(normalizedMatch[2], 10)
+        const matches = itemMonth === tomorrowMonth && itemDay === tomorrowDay
+        
+        if (matches) {
+          console.log(`[Clock Debug] Found tomorrowItem by normalized date match:`, { 
+            originalDate: item.date,
+            normalized,
+            itemMonth,
+            itemDay,
+            tomorrowMonth,
+            tomorrowDay,
+            maxTemp: item.maxTemp,
+            minTemp: item.minTemp,
+            rainProbability: item.rainProbability
+          })
+        }
+        return matches
+      }
+      
+      return false
+    })
+    
+    // デバッグ: すべてのweeklyWeatherアイテムを確認
+    console.log('[Clock Debug] All weeklyWeather items:', weeklyWeather.map((w: WeeklyWeatherItem) => {
+      const normalized = normalizeDateLabel(w.date)
+      return {
+        date: w.date,
+        normalized,
+        maxTemp: w.maxTemp,
+        minTemp: w.minTemp,
+        rainProbability: w.rainProbability,
+        compareToday: {
+          normalized,
+          todayLabel,
+          todayLabelWithZero,
+          matches: normalized === todayLabel || normalized === todayLabelWithZero || w.date === '今日'
+        },
+        compareTomorrow: {
+          normalized,
+          tomorrowLabel,
+          tomorrowLabelWithZero,
+          matches: normalized === tomorrowLabel || normalized === tomorrowLabelWithZero || w.date === '明日' || (normalized.match(/^\d+\/\d+/) && tomorrowLabel.match(/^\d+\/\d+/) && normalized.match(/^\d+\/\d+/)?.[0] === tomorrowLabel.match(/^\d+\/\d+/)?.[0])
+        }
+      }
+    }))
+    
+    const weeklyWeatherDatesDebug = weeklyWeather.map((w: WeeklyWeatherItem) => {
+      const normalized = normalizeDateLabel(w.date)
+      return {
+        date: w.date, 
+        normalized, 
+        maxTemp: w.maxTemp, 
+        minTemp: w.minTemp,
+        rainProbability: w.rainProbability,
+        matchesToday: normalized === todayLabel || normalized === todayLabelWithZero || w.date === '今日',
+        matchesTomorrow: normalized === tomorrowLabel || normalized === tomorrowLabelWithZero || w.date === '明日',
+        todayLabel,
+        todayLabelWithZero,
+        tomorrowLabel,
+        tomorrowLabelWithZero
+      }
+    })
+    
+    console.log('[Clock Debug] getDisplayWeeklyWeather: Matching items', {
+      todayLabel,
+      todayLabelWithZero,
+      tomorrowLabel,
+      tomorrowLabelWithZero,
+      todayItem: todayItem ? { date: todayItem.date, normalized: normalizeDateLabel(todayItem.date), maxTemp: todayItem.maxTemp, minTemp: todayItem.minTemp, rainProbability: todayItem.rainProbability } : null,
+      tomorrowItem: tomorrowItem ? { date: tomorrowItem.date, normalized: normalizeDateLabel(tomorrowItem.date), maxTemp: tomorrowItem.maxTemp, minTemp: tomorrowItem.minTemp, rainProbability: tomorrowItem.rainProbability } : null,
+      weeklyWeatherCount: weeklyWeather.length,
+      weeklyWeatherDates: weeklyWeatherDatesDebug
+    })
+    
+    // 「今日」「明日」をマップに追加（気温データと降水確率も含める）
+    if (todayItem) {
+      console.log(`[Clock Debug] Adding todayItem to map:`, { 
+        date: todayItem.date, 
+        maxTemp: todayItem.maxTemp, 
+        minTemp: todayItem.minTemp,
+        rainProbability: todayItem.rainProbability 
+      })
+      normalizedMap.set(todayLabel, { 
+        ...todayItem, 
+        date: todayLabel,
+        maxTemp: todayItem.maxTemp,
+        minTemp: todayItem.minTemp,
+        rainProbability: todayItem.rainProbability
+      })
+      // 0埋めありのキーでも追加
+      normalizedMap.set(todayLabelWithZero, { 
+        ...todayItem, 
+        date: todayLabel,
+        maxTemp: todayItem.maxTemp,
+        minTemp: todayItem.minTemp,
+        rainProbability: todayItem.rainProbability
+      })
+    }
+    if (tomorrowItem) {
+      console.log(`[Clock Debug] Adding tomorrowItem to map:`, { 
+        date: tomorrowItem.date, 
+        maxTemp: tomorrowItem.maxTemp, 
+        minTemp: tomorrowItem.minTemp,
+        rainProbability: tomorrowItem.rainProbability 
+      })
+      normalizedMap.set(tomorrowLabel, { 
+        ...tomorrowItem, 
+        date: tomorrowLabel,
+        maxTemp: tomorrowItem.maxTemp,
+        minTemp: tomorrowItem.minTemp,
+        rainProbability: tomorrowItem.rainProbability
+      })
+      // 0埋めありのキーでも追加
+      normalizedMap.set(tomorrowLabelWithZero, { 
+        ...tomorrowItem, 
+        date: tomorrowLabel,
+        maxTemp: tomorrowItem.maxTemp,
+        minTemp: tomorrowItem.minTemp,
+        rainProbability: tomorrowItem.rainProbability
+      })
+    } else {
+      // tomorrowItemが見つからない場合、weeklyWeatherから直接探す
+      console.log(`[Clock Debug] tomorrowItem not found, searching in weeklyWeather directly...`)
+      const fallbackTomorrowItem = weeklyWeather.find(item => {
+        // 日付文字列から月と日を抽出
+        const dateMatch = item.date.match(/(\d+)\/(\d+)/)
+        if (dateMatch) {
+          const itemMonth = parseInt(dateMatch[1], 10)
+          const itemDay = parseInt(dateMatch[2], 10)
+          return itemMonth === tomorrowMonth && itemDay === tomorrowDay
+        }
+        // 正規化後の日付でも試す
+        const normalized = normalizeDateLabel(item.date)
+        const normalizedMatch = normalized.match(/(\d+)\/(\d+)/)
+        if (normalizedMatch) {
+          const itemMonth = parseInt(normalizedMatch[1], 10)
+          const itemDay = parseInt(normalizedMatch[2], 10)
+          return itemMonth === tomorrowMonth && itemDay === tomorrowDay
+        }
+        return false
+      })
+      
+      if (fallbackTomorrowItem) {
+        console.log(`[Clock Debug] Found fallback tomorrowItem:`, { 
+          date: fallbackTomorrowItem.date, 
+          maxTemp: fallbackTomorrowItem.maxTemp, 
+          minTemp: fallbackTomorrowItem.minTemp,
+          rainProbability: fallbackTomorrowItem.rainProbability 
+        })
+        normalizedMap.set(tomorrowLabel, { 
+          ...fallbackTomorrowItem, 
+          date: tomorrowLabel,
+          maxTemp: fallbackTomorrowItem.maxTemp,
+          minTemp: fallbackTomorrowItem.minTemp,
+          rainProbability: fallbackTomorrowItem.rainProbability
+        })
+        normalizedMap.set(tomorrowLabelWithZero, { 
+          ...fallbackTomorrowItem, 
+          date: tomorrowLabel,
+          maxTemp: fallbackTomorrowItem.maxTemp,
+          minTemp: fallbackTomorrowItem.minTemp,
+          rainProbability: fallbackTomorrowItem.rainProbability
+        })
+      } else {
+        console.log(`[Clock Debug] Fallback tomorrowItem also not found. tomorrowMonth=${tomorrowMonth}, tomorrowDay=${tomorrowDay}`)
+        console.log(`[Clock Debug] Available dates in weeklyWeather:`, weeklyWeather.map(w => ({ date: w.date, normalized: normalizeDateLabel(w.date) })))
+      }
+    }
+    
+    // その他の日付もマップに追加（0埋めなしとありの両方のキーで追加）
+    weeklyWeather.forEach((item) => {
+      if (item.date !== '今日' && item.date !== '明日') {
+        const key = normalizeDateLabel(item.date)
+        // 0埋めなしのキーで追加
+        if (!normalizedMap.has(key)) {
+          normalizedMap.set(key, item)
+        }
+        // 0埋めありのキーでも追加（互換性のため）
+        const keyWithZero = key.replace(/\/(\d)\//, '/0$1/').replace(/^(\d)\//, '0$1/')
+        if (keyWithZero !== key && !normalizedMap.has(keyWithZero)) {
+          normalizedMap.set(keyWithZero, item)
+        }
+        // 0埋めなしのキーでも追加（逆方向の互換性）
+        const keyWithoutZero = key.replace(/\/0(\d)\//, '/$1/').replace(/^0(\d)\//, '$1/')
+        if (keyWithoutZero !== key && !normalizedMap.has(keyWithoutZero)) {
+          normalizedMap.set(keyWithoutZero, item)
+        }
+      }
+    })
+
+    return Array.from({ length: 3 }, (_, index): WeeklyWeatherItem => {
+      const date = new Date(today)
+      date.setDate(today.getDate() + index)
+      const label = getDateLabel(date)
+      const key = normalizeDateLabel(label)
+      const keyWithZero = normalizeDateLabel(label.replace(/\/(\d)\//, '/0$1/').replace(/^(\d)\//, '0$1/'))
+      
+      // まず通常のキーで検索、見つからない場合は0埋めありのキーで検索
+      let item = normalizedMap.get(key)
+      if (!item) {
+        item = normalizedMap.get(keyWithZero)
+      }
+      // それでも見つからない場合は、逆方向（0埋め削除）で検索
+      if (!item && keyWithZero !== key) {
+        const keyWithoutZero = keyWithZero.replace(/\/0(\d)\//, '/$1/').replace(/^0(\d)\//, '$1/')
+        item = normalizedMap.get(keyWithoutZero)
+      }
+
+      console.log(`[Clock Debug] getDisplayWeeklyWeather: index ${index}, label="${label}", key="${key}", keyWithZero="${keyWithZero}", item=`, item ? { date: item.date, maxTemp: item.maxTemp, minTemp: item.minTemp, rainProbability: item.rainProbability } : null)
+
+      if (item) {
+        // 気温データが存在する場合はそのまま返す（dateはlabelに上書き）
+        console.log(`[Clock Debug] getDisplayWeeklyWeather: Found item for index ${index}:`, {
+          date: item.date,
+          label,
+          key,
+          maxTemp: item.maxTemp,
+          minTemp: item.minTemp,
+          rainProbability: item.rainProbability,
+          hasMaxTemp: item.maxTemp !== undefined,
+          hasMinTemp: item.minTemp !== undefined
+        })
+        if (item.maxTemp !== undefined || item.minTemp !== undefined) {
+          console.log(`[Clock Debug] getDisplayWeeklyWeather: Returning item with temps for index ${index}`)
+          return { ...item, date: label, maxTemp: item.maxTemp, minTemp: item.minTemp, rainProbability: item.rainProbability }
+        }
+        // 気温データがない場合はフォールバック
+        console.log(`[Clock Debug] getDisplayWeeklyWeather: Item found but no temps for index ${index}, using fallback`)
+        const fallbackMax = index === 0 ? (weather?.today?.maxTemp ?? weather?.maxTemp) : (index === 1 ? weather?.tomorrow?.maxTemp : undefined)
+        const fallbackMin = index === 0 ? (weather?.today?.minTemp ?? weather?.minTemp) : (index === 1 ? weather?.tomorrow?.minTemp : undefined)
+        return {
+          date: label,
+          condition: item.condition || getConditionLabel(index === 0 ? (weather?.today?.condition ?? weather?.condition) : (index === 1 ? weather?.tomorrow?.condition : undefined)),
+          maxTemp: fallbackMax,
+          minTemp: fallbackMin,
+          rainProbability: item.rainProbability
+        }
+      }
+
+      // マップにない場合はフォールバック
+      if (index === 0) {
+        return {
+          date: label,
+          condition: getConditionLabel(weather?.today?.condition ?? weather?.condition),
+          maxTemp: weather?.today?.maxTemp ?? weather?.maxTemp,
+          minTemp: weather?.today?.minTemp ?? weather?.minTemp,
+          rainProbability: undefined
+        }
+      }
+
+      if (index === 1) {
+        return {
+          date: label,
+          condition: getConditionLabel(weather?.tomorrow?.condition),
+          maxTemp: weather?.tomorrow?.maxTemp,
+          minTemp: weather?.tomorrow?.minTemp,
+          rainProbability: undefined
+        }
+      }
+
+      return {
+        date: label,
+        condition: '天気未取得',
+        maxTemp: undefined,
+        minTemp: undefined,
+        rainProbability: undefined
+      }
+    })
+  }
+
   // 時刻のみ表示モード（今日と明日の天気も表示）
   if (showTimeOnly) {
+    console.log('[Clock Debug] showTimeOnly mode - 週間天気予報表示中')
+    console.log('[Clock Debug] weather data:', { 
+      hasWeather: !!weather, 
+      hasToday: !!weather?.today, 
+      hasTomorrow: !!weather?.tomorrow,
+      weeklyWeatherCount: weeklyWeather.length,
+      weeklyWeather: weeklyWeather
+    })
+    const displayWeekly = getDisplayWeeklyWeather()
+    console.log('[Clock Debug] displayWeekly:', displayWeekly.map((day, idx) => ({
+      index: idx,
+      date: day.date,
+      condition: day.condition,
+      maxTemp: 'maxTemp' in day ? day.maxTemp : undefined,
+      minTemp: 'minTemp' in day ? day.minTemp : undefined,
+      rainProbability: 'rainProbability' in day ? day.rainProbability : undefined
+    })))
+
     return (
       <div className="clock clock-time-only">
         <div className="clock-time-section">
@@ -1097,144 +1257,67 @@ const Clock = ({ showTimeOnly = false, showWeatherOnly = false }: ClockProps = {
             {format(time, 'HH:mm:ss')}
           </div>
         </div>
-        {weather && (
-          <div className="clock-time-only-weather">
-            <div className="clock-weather-today-tomorrow-compact">
-                {weather.today && (
-                  <div className={`clock-weather-day-card-compact today ${getWeatherTypeClass(weather.today.weatherCode)}`}>
-                  <div className="clock-weather-day-background-compact">
-                    <WeatherIcon code={weather.today.weatherCode || '100'} size={150} className="weather-background-icon" />
-                  </div>
-                  <div className="clock-weather-day-content-compact">
-                    <div className="clock-weather-day-label-compact">今日</div>
-                    <div className="clock-weather-day-condition-compact">{weather.today.condition}</div>
-                    <div className="clock-weather-day-details-compact">
-                      {weather.today.maxTemp !== undefined && weather.today.minTemp !== undefined && (
-                        <div className="clock-weather-day-temp-detail-compact">
-                          <div className="temp-item-compact">
-                            <span className="temp-label-compact">最高</span>
-                            <span className="temp-max-compact">{weather.today.maxTemp}°</span>
-                          </div>
-                          <div className="temp-item-compact">
-                            <span className="temp-label-compact">最低</span>
-                            <span className="temp-min-compact">{weather.today.minTemp}°</span>
-                          </div>
-                        </div>
-                      )}
-                      {weather.today.precipitation !== undefined && (
-                        <div className="clock-weather-day-precipitation-detail-compact">
-                          <span className="precipitation-label-compact">💧 降水確率</span>
-                          <span className="precipitation-value-compact">{weather.today.precipitation}%</span>
-                        </div>
-                      )}
+        <div className="clock-weekly-weather">
+          {displayWeekly.length === 0 ? (
+            <div className="clock-weekly-weather-loading">週間天気を取得中...</div>
+          ) : (
+            <div className="clock-weekly-weather-list">
+              {displayWeekly.map((day, index) => {
+                const temps = getDayTemps(day, index)
+                // 日付ラベルから曜日を削除（M/d形式のみ）
+                let displayDate = day.date
+                // 曜日部分を削除（括弧とその中身を削除）
+                displayDate = displayDate.replace(/\([^)]*\)/g, '').replace(/（[^）]*）/g, '').trim()
+                // 日付が空の場合は、現在の日付から生成
+                if (!displayDate || displayDate.length < 2) {
+                  const date = new Date()
+                  date.setDate(date.getDate() + index)
+                  displayDate = format(date, 'M/d', { locale: ja })
+                }
+                // 曜日を取得
+                const date = new Date()
+                date.setDate(date.getDate() + index)
+                const weekday = format(date, 'E', { locale: ja })
+                console.log(`[Clock Debug] Day ${index}:`, {
+                  date: day.date,
+                  displayDate,
+                  weekday,
+                  maxTemp: 'maxTemp' in day ? day.maxTemp : undefined,
+                  minTemp: 'minTemp' in day ? day.minTemp : undefined,
+                  tempsMax: temps.maxTemp,
+                  tempsMin: temps.minTemp
+                })
+                return (
+                  <div key={`${day.date}-${index}`} className="clock-weekly-weather-item">
+                    <div className="clock-weekly-weather-date-wrapper">
+                      <div className="clock-weekly-weather-date">{displayDate}</div>
+                      <div className="clock-weekly-weather-weekday">({weekday})</div>
                     </div>
-                  </div>
-                </div>
-              )}
-              {weather.tomorrow && (
-                <div className={`clock-weather-day-card-compact tomorrow ${getWeatherTypeClass(weather.tomorrow.weatherCode)}`}>
-                  <div className="clock-weather-day-background-compact">
-                    <WeatherIcon code={weather.tomorrow.weatherCode || '100'} size={150} className="weather-background-icon" />
-                  </div>
-                  <div className="clock-weather-day-content-compact">
-                    <div className="clock-weather-day-label-compact">明日</div>
-                    <div className="clock-weather-day-condition-compact">{weather.tomorrow.condition}</div>
-                    <div className="clock-weather-day-details-compact">
-                      {weather.tomorrow.maxTemp !== undefined && weather.tomorrow.minTemp !== undefined && (
-                        <div className="clock-weather-day-temp-detail-compact">
-                          <div className="temp-item-compact">
-                            <span className="temp-label-compact">最高</span>
-                            <span className="temp-max-compact">{weather.tomorrow.maxTemp}°</span>
-                          </div>
-                          <div className="temp-item-compact">
-                            <span className="temp-label-compact">最低</span>
-                            <span className="temp-min-compact">{weather.tomorrow.minTemp}°</span>
-                          </div>
-                        </div>
-                      )}
-                      {weather.tomorrow.precipitation !== undefined && (
-                        <div className="clock-weather-day-precipitation-detail-compact">
-                          <span className="precipitation-label-compact">💧 降水確率</span>
-                          <span className="precipitation-value-compact">{weather.tomorrow.precipitation}%</span>
-                        </div>
-                      )}
+                    <div className="clock-weekly-weather-condition">
+                      {getDayCondition(day, index)}
                     </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
-    )
-  }
-
-  // 天気のみ表示モード
-  if (showWeatherOnly) {
-    return (
-      <div className="clock clock-weather-only">
-        {weather && (
-        <div className="clock-weather-summary">
-          {/* おじさんの解説 */}
-          {weather.description && (
-            <div className="clock-weather-description-section">
-              <div className="clock-weather-description-header">
-                <div className="clock-weather-description-header-left">
-                  <div className="clock-weather-ojisan-icon">👴</div>
-                  <div className="clock-weather-ojisan-title">おじさんの解説</div>
-                </div>
-                <div className="clock-weather-description-header-right">
-                  <div className="clock-weather-location-text">{prefecture} {city}</div>
-                  <div className="clock-weather-condition-text">{weather.condition}</div>
-                </div>
-              </div>
-              <div className="clock-weather-description-full">{weather.description}</div>
-              {/* 警報・注意報のカード表示 */}
-              {warnings.length > 0 && (
-                <div className="clock-warning-cards">
-                  {warnings.map((warning, index) => (
-                    <div key={index} className={`clock-warning-card ${warning.status === '警報' ? 'warning-alert' : 'warning-advisory'}`}>
-                      <div className="clock-warning-card-header">
-                        <div className="clock-warning-card-icon">⚠️</div>
-                        <div className="clock-warning-card-status">{warning.status}</div>
+                    <div className="clock-weekly-weather-temps-wrapper">
+                      {day.rainProbability !== undefined && (
+                        <span className="clock-weekly-weather-rain">
+                          {day.rainProbability}%
+                        </span>
+                      )}
+                      <div className="clock-weekly-weather-temps">
+                        <span className="clock-weekly-weather-max">
+                          {temps.maxTemp !== undefined ? `${temps.maxTemp}°` : '--'}
+                        </span>
+                        <span className="clock-weekly-weather-separator">/</span>
+                        <span className="clock-weekly-weather-min">
+                          {temps.minTemp !== undefined ? `${temps.minTemp}°` : '--'}
+                        </span>
                       </div>
-                      <div className="clock-warning-card-kind">{warning.kind || warning.title}</div>
                     </div>
-                  ))}
-                </div>
-              )}
+                  </div>
+                )
+              })}
             </div>
           )}
-          
-          <div className="clock-weather-info-grid">
-            {weather.maxTemp !== undefined && weather.minTemp !== undefined ? (
-              <>
-                <div className="clock-weather-info-item">
-                  <div className="clock-weather-info-label">最高気温</div>
-                  <div className="clock-weather-info-value temp-max">{weather.maxTemp}°</div>
-                </div>
-                <div className="clock-weather-info-item">
-                  <div className="clock-weather-info-label">最低気温</div>
-                  <div className="clock-weather-info-value temp-min">{weather.minTemp}°</div>
-                </div>
-                <div className="clock-weather-info-item">
-                  <div className="clock-weather-info-label">気温差</div>
-                  <div className="clock-weather-info-value">{weather.maxTemp - weather.minTemp}°</div>
-                </div>
-              </>
-            ) : (
-              <div className="clock-weather-info-item">
-                <div className="clock-weather-info-label">気温</div>
-                <div className="clock-weather-info-value">{weather.temp}°C</div>
-              </div>
-            )}
-            <div className="clock-weather-info-item">
-              <div className="clock-weather-info-label">💧 降水確率</div>
-              <div className="clock-weather-info-value precipitation">{weather.precipitation}%</div>
-            </div>
-          </div>
         </div>
-      )}
       </div>
     )
   }
@@ -1267,20 +1350,6 @@ const Clock = ({ showTimeOnly = false, showWeatherOnly = false }: ClockProps = {
                   <div className="clock-weather-day-label">今日</div>
                   <div className="clock-weather-day-condition">{weather.today.condition}</div>
                 </div>
-                <div className="clock-weather-day-right">
-                  {weather.today.maxTemp !== undefined && weather.today.minTemp !== undefined && (
-                    <div className="clock-weather-day-temp">
-                      <span className="temp-max">{weather.today.maxTemp}°</span>
-                      <span className="temp-separator">/</span>
-                      <span className="temp-min">{weather.today.minTemp}°</span>
-                    </div>
-                  )}
-                  {weather.today.precipitation !== undefined && weather.today.precipitation > 0 && (
-                    <div className="clock-weather-day-precipitation">
-                      💧 {weather.today.precipitation}%
-                    </div>
-                  )}
-                </div>
               </div>
             )}
             {weather.tomorrow && (
@@ -1292,81 +1361,8 @@ const Clock = ({ showTimeOnly = false, showWeatherOnly = false }: ClockProps = {
                   <div className="clock-weather-day-label">明日</div>
                   <div className="clock-weather-day-condition">{weather.tomorrow.condition}</div>
                 </div>
-                <div className="clock-weather-day-right">
-                  {weather.tomorrow.maxTemp !== undefined && weather.tomorrow.minTemp !== undefined && (
-                    <div className="clock-weather-day-temp">
-                      <span className="temp-max">{weather.tomorrow.maxTemp}°</span>
-                      <span className="temp-separator">/</span>
-                      <span className="temp-min">{weather.tomorrow.minTemp}°</span>
-                    </div>
-                  )}
-                  {weather.tomorrow.precipitation !== undefined && weather.tomorrow.precipitation > 0 && (
-                    <div className="clock-weather-day-precipitation">
-                      💧 {weather.tomorrow.precipitation}%
-                    </div>
-                  )}
-                </div>
               </div>
             )}
-          </div>
-          
-          {/* おじさんの解説 */}
-          {weather.description && (
-            <div className="clock-weather-description-section">
-              <div className="clock-weather-description-header">
-                <div className="clock-weather-description-header-left">
-                  <div className="clock-weather-ojisan-icon">👴</div>
-                  <div className="clock-weather-ojisan-title">おじさんの解説</div>
-                </div>
-                <div className="clock-weather-description-header-right">
-                  <div className="clock-weather-location-text">{prefecture} {city}</div>
-                  <div className="clock-weather-condition-text">{weather.condition}</div>
-                </div>
-              </div>
-              <div className="clock-weather-description-full">{weather.description}</div>
-              {/* 警報・注意報のカード表示 */}
-              {warnings.length > 0 && (
-                <div className="clock-warning-cards">
-                  {warnings.map((warning, index) => (
-                    <div key={index} className={`clock-warning-card ${warning.status === '警報' ? 'warning-alert' : 'warning-advisory'}`}>
-                      <div className="clock-warning-card-header">
-                        <div className="clock-warning-card-icon">⚠️</div>
-                        <div className="clock-warning-card-status">{warning.status}</div>
-                      </div>
-                      <div className="clock-warning-card-kind">{warning.kind || warning.title}</div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-          
-          <div className="clock-weather-info-grid">
-            {weather.maxTemp !== undefined && weather.minTemp !== undefined ? (
-              <>
-                <div className="clock-weather-info-item">
-                  <div className="clock-weather-info-label">最高気温</div>
-                  <div className="clock-weather-info-value temp-max">{weather.maxTemp}°</div>
-                </div>
-                <div className="clock-weather-info-item">
-                  <div className="clock-weather-info-label">最低気温</div>
-                  <div className="clock-weather-info-value temp-min">{weather.minTemp}°</div>
-                </div>
-                <div className="clock-weather-info-item">
-                  <div className="clock-weather-info-label">気温差</div>
-                  <div className="clock-weather-info-value">{weather.maxTemp - weather.minTemp}°</div>
-                </div>
-              </>
-            ) : (
-              <div className="clock-weather-info-item">
-                <div className="clock-weather-info-label">気温</div>
-                <div className="clock-weather-info-value">{weather.temp}°C</div>
-              </div>
-            )}
-            <div className="clock-weather-info-item">
-              <div className="clock-weather-info-label">💧 降水確率</div>
-              <div className="clock-weather-info-value precipitation">{weather.precipitation}%</div>
-            </div>
           </div>
         </div>
       )}

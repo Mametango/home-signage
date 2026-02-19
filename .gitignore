@@ -40,3 +40,5 @@ local.properties
 
 # Vercel
 .vercel
+.vercel
+.env*.local

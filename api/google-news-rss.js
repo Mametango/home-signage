@@ -1,7 +1,31 @@
+// Vercel Serverless Function: Google News RSSをサーバー側で取得して返すプロキシ
+// フロントエンドからは /api/google-news-rss?url=<GOOGLE_NEWS_RSS_URL> で呼び出す
+
 export default async function handler(req, res) {
+  // OPTIONSメソッドのハンドリング（CORSプリフライト）
+  if (req.method === 'OPTIONS') {
+    res.setHeader('Access-Control-Allow-Origin', '*')
+    res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS')
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
+    res.status(200).end()
+    return
+  }
+
+  if (req.method !== 'GET') {
+    res.status(405).json({ error: 'Method not allowed' })
+    return
+  }
+
   try {
     // Google News RSS URL（日本のニュース）
-    const googleNewsUrl = req.query.url || 'https://news.google.com/rss?hl=ja&gl=JP&ceid=JP:ja'
+    let googleNewsUrl = req.query.url || 'https://news.google.com/rss?hl=ja&gl=JP&ceid=JP:ja'
+    
+    // セキュリティのため、Google NewsのRSS URLだけを許可
+    if (typeof googleNewsUrl !== 'string' || !googleNewsUrl.startsWith('https://news.google.com/rss')) {
+      res.setHeader('Access-Control-Allow-Origin', '*')
+      res.status(400).json({ error: 'Only Google News RSS URLs are allowed' })
+      return
+    }
     
     // Google News RSSを取得
     const response = await fetch(googleNewsUrl, {
@@ -25,6 +49,7 @@ export default async function handler(req, res) {
     res.status(200).send(xmlText)
   } catch (error) {
     console.error('Google News RSS取得エラー:', error)
+    res.setHeader('Access-Control-Allow-Origin', '*')
     res.status(500).json({ error: 'Google News RSSの取得に失敗しました' })
   }
 }

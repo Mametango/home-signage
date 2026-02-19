@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import legacy from '@vitejs/plugin-legacy'
 import { execSync } from 'child_process'
 import { readFileSync } from 'fs'
 
@@ -37,7 +38,14 @@ function getVersionInfo() {
 const versionInfo = getVersionInfo()
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    legacy({
+      targets: ['chrome 75'],
+      modernPolyfills: true,
+      additionalLegacyPolyfills: ['regenerator-runtime/runtime']
+    })
+  ],
   define: {
     __APP_VERSION__: JSON.stringify(versionInfo.version),
     __GIT_HASH__: JSON.stringify(versionInfo.gitHash),
@@ -50,8 +58,7 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     assetsDir: 'assets',
-    target: ['es2015', 'chrome75'], // Chrome 75対応
-    minify: 'esbuild',
+    minify: 'terser',
     sourcemap: false,
     // Chrome 75で確実に動作するように設定
     rollupOptions: {

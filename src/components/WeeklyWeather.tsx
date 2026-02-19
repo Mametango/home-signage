@@ -10,8 +10,6 @@ interface DayWeather {
   condition: string
   icon: string
   weatherCode?: string // 天気コード（WeatherIcon用）
-  maxTemp?: number
-  minTemp?: number
 }
 
 interface WeeklyWeatherProps {
@@ -49,6 +47,39 @@ const WeeklyWeather = ({ onBack }: WeeklyWeatherProps) => {
       try {
         const areaCode = '150000'
         
+        // まずXMLフィードから週間予報を取得を試みる
+        try {
+          const feedResponse = await fetch('https://www.data.jma.go.jp/developer/xml/feed/regular_l.xml')
+          if (feedResponse.ok) {
+            const feedText = await feedResponse.text()
+            const parser = new DOMParser()
+            const feedDoc = parser.parseFromString(feedText, 'text/xml')
+            
+            // 週間天気予報のリンクを探す（週間予報は別のエントリにある可能性がある）
+            const entries = feedDoc.querySelectorAll('entry')
+            let weeklyForecastUrl: string | null = null
+            
+            for (const entry of Array.from(entries)) {
+              const title = entry.querySelector('title')?.textContent
+              const link = entry.querySelector('link[type="application/xml"]')?.getAttribute('href')
+              
+              // 週間天気予報のエントリを探す（タイトルに「週間」が含まれる、または新潟県の週間予報）
+              if (title && (title.includes('週間') || title.includes('150000'))) {
+                weeklyForecastUrl = link || null
+                if (weeklyForecastUrl) break
+              }
+            }
+            
+            // XMLフィードから週間予報が見つからない場合は、JSON APIにフォールバック
+            if (!weeklyForecastUrl) {
+              console.log('XMLフィードから週間予報が見つかりません。JSON APIを使用します。')
+            }
+          }
+        } catch (xmlError) {
+          console.log('XMLフィードからの取得エラー:', xmlError)
+          // フォールバック処理に進む
+        }
+        
         const forecastResponse = await fetch(`https://www.jma.go.jp/bosai/forecast/data/forecast/${areaCode}.json`)
         
         if (forecastResponse.ok) {
@@ -58,16 +89,10 @@ const WeeklyWeather = ({ onBack }: WeeklyWeatherProps) => {
           if (forecastData && forecastData.length > 1) {
             const weeklyData = forecastData[1]
             const timeSeries = weeklyData.timeSeries?.[0] // 週間天気予報のデータ
-            const tempsSeries = weeklyData.timeSeries?.[1] // 週間気温のデータ
-            
             if (timeSeries && timeSeries.areas && timeSeries.areas.length > 0) {
               const area = timeSeries.areas[0]
               const weatherCodes = area.weatherCodes || []
               const timeDefines = timeSeries.timeDefines || []
-              
-              // 気温データ
-              const tempsMax = tempsSeries?.areas?.[0]?.tempsMax || []
-              const tempsMin = tempsSeries?.areas?.[0]?.tempsMin || []
               
               // 詳細な天気コードマッピング（Clock.tsxと同じ）
               const getWeatherCondition = (code: string) => {
@@ -108,22 +133,11 @@ const WeeklyWeather = ({ onBack }: WeeklyWeatherProps) => {
                 const weatherInfo = getWeatherCondition(weatherCode)
                 const date = new Date(timeDefines[i])
                 
-                let maxTemp: number | undefined
-                let minTemp: number | undefined
-                
-                // 気温データの処理（tempsMaxとtempsMinは日ごとに対応）
-                if (tempsMax && tempsMax[i] && tempsMin && tempsMin[i]) {
-                  maxTemp = parseInt(tempsMax[i])
-                  minTemp = parseInt(tempsMin[i])
-                }
-                
                 days.push({
                   date: date,
                   condition: weatherInfo.text,
                   icon: weatherInfo.icon,
-                  weatherCode: weatherCode,
-                  maxTemp: maxTemp,
-                  minTemp: minTemp
+                  weatherCode: weatherCode
                 })
               }
               
@@ -135,9 +149,7 @@ const WeeklyWeather = ({ onBack }: WeeklyWeatherProps) => {
                     date: addDays(lastDate, i - days.length + 1),
                     condition: '晴れ',
                     icon: '☀️',
-                    weatherCode: '100',
-                    maxTemp: 20,
-                    minTemp: 10
+                    weatherCode: '100'
                   })
                 }
               }
@@ -156,9 +168,7 @@ const WeeklyWeather = ({ onBack }: WeeklyWeatherProps) => {
             date: addDays(new Date(), i),
             condition: i % 2 === 0 ? '晴れ' : '曇り',
             icon: i % 2 === 0 ? '☀️' : '☁️',
-            weatherCode: i % 2 === 0 ? '100' : '200',
-            maxTemp: 20 - i,
-            minTemp: 10 - i
+            weatherCode: i % 2 === 0 ? '100' : '200'
           })
         }
         setWeatherData(mockData)
@@ -172,9 +182,7 @@ const WeeklyWeather = ({ onBack }: WeeklyWeatherProps) => {
             date: addDays(new Date(), i),
             condition: i % 2 === 0 ? '晴れ' : '曇り',
             icon: i % 2 === 0 ? '☀️' : '☁️',
-            weatherCode: i % 2 === 0 ? '100' : '200',
-            maxTemp: 20 - i,
-            minTemp: 10 - i
+            weatherCode: i % 2 === 0 ? '100' : '200'
           })
         }
         setWeatherData(mockData)
@@ -228,13 +236,6 @@ const WeeklyWeather = ({ onBack }: WeeklyWeatherProps) => {
               {getDayLabel(day.date, index)}
             </div>
             <div className="weekly-weather-condition">{day.condition}</div>
-            {day.maxTemp !== undefined && day.minTemp !== undefined && (
-              <div className="weekly-weather-temp">
-                <span className="temp-max">{day.maxTemp}°</span>
-                <span className="temp-separator">/</span>
-                <span className="temp-min">{day.minTemp}°</span>
-              </div>
-            )}
           </div>
         ))}
       </div>
