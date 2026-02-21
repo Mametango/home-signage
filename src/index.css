@@ -1,3 +1,19 @@
+:root {
+  --glass-bg: rgba(255, 255, 255, 0.03);
+  --glass-border: rgba(255, 255, 255, 0.15);
+  --glass-blur: blur(24px);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  --glass-radius: 28px;
+
+  --text-primary: #ffffff;
+  --text-secondary: rgba(255, 255, 255, 0.7);
+  --text-accent: #60a5fa;
+  --accent-color: #60a5fa;
+  --danger-color: #f87171;
+  --warning-color: #facc15;
+  --success-color: #4ade80;
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -11,13 +27,61 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow: hidden;
-  background: #000;
-  color: #fff;
+  background-color: #0f172a;
+  background-image:
+    radial-gradient(at 0% 0%, hsla(253, 16%, 7%, 1) 0, transparent 50%),
+    radial-gradient(at 50% 0%, hsla(225, 39%, 30%, 1) 0, transparent 50%),
+    radial-gradient(at 100% 0%, hsla(339, 49%, 30%, 1) 0, transparent 50%);
+  background-size: cover;
+  background-attachment: fixed;
+  color: var(--text-primary);
+}
+
+/* アニメーションする光のオーブを追加 */
+body::before,
+body::after {
+  content: '';
+  position: absolute;
+  width: 60vw;
+  height: 60vw;
+  border-radius: 50%;
+  -webkit-filter: blur(100px);
+  filter: blur(100px);
+  z-index: -1;
+  -webkit-animation: float 20s infinite ease-in-out alternate;
+  animation: float 20s infinite ease-in-out alternate;
+  -webkit-transform: translate3d(0, 0, 0);
+  transform: translate3d(0, 0, 0);
+  will-change: transform;
+}
+
+body::before {
+  top: -10%;
+  left: -10%;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.3) 0%, transparent 70%);
+  animation-delay: 0s;
+}
+
+body::after {
+  bottom: -10%;
+  right: -10%;
+  background: radial-gradient(circle, rgba(236, 72, 153, 0.3) 0%, transparent 70%);
+  animation-delay: -10s;
+}
+
+@keyframes float {
+  0% {
+    transform: translate(0, 0) scale(1);
+  }
+
+  100% {
+    transform: translate(10%, 10%) scale(1.1);
+  }
 }
 
 #root {
   width: 100vw;
   height: 100vh;
   overflow: hidden;
+  z-index: 1;
 }
-

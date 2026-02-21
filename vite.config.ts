@@ -9,7 +9,7 @@ function getVersionInfo() {
   try {
     const packageJson = JSON.parse(readFileSync('./package.json', 'utf-8'))
     const version = packageJson.version || '1.0.0'
-    
+
     // Gitコミットハッシュを取得（エラー時は空文字）
     let gitHash = ''
     try {
@@ -17,10 +17,10 @@ function getVersionInfo() {
     } catch (e) {
       gitHash = 'unknown'
     }
-    
+
     // ビルド日時
     const buildDate = new Date().toISOString()
-    
+
     return {
       version,
       gitHash,
@@ -38,6 +38,7 @@ function getVersionInfo() {
 const versionInfo = getVersionInfo()
 
 export default defineConfig({
+  base: './', // 相対パスにすることでローカル開発(localhost:3000)とGitHub Pages両方で動作する
   plugins: [
     react(),
     legacy({

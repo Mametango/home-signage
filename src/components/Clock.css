@@ -13,13 +13,14 @@
   flex-direction: column;
   justify-content: flex-start;
   align-items: center;
-  background: rgba(0, 0, 0, 0.3);
-  backdrop-filter: blur(10px);
-  border-radius: 1rem;
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border-radius: var(--glass-radius);
   padding: 0.5rem 0.5rem;
   padding-top: 0.5rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: var(--glass-shadow);
+  border: 1px solid var(--glass-border);
   gap: 1rem;
   min-height: 0;
   overflow: hidden;
@@ -31,6 +32,7 @@
   width: 100%;
   margin-top: 0.5rem;
   background: rgba(255, 255, 255, 0.1);
+  -webkit-backdrop-filter: blur(5px);
   backdrop-filter: blur(5px);
   border-radius: 0.75rem;
   padding: 0.5rem;
@@ -72,9 +74,9 @@
   gap: 0.2rem;
   padding: 0.4rem 0.3rem;
   border-radius: 0.5rem;
-  background: rgba(0, 0, 0, 0.35);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+  background: var(--glass-item-bg);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
   min-height: 0;
   overflow: hidden;
   box-sizing: border-box;
@@ -82,7 +84,7 @@
 }
 
 .clock-weekly-weather-item:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--glass-item-hover);
   transform: translateY(-2px);
 }
 
@@ -218,9 +220,12 @@
 }
 
 @keyframes warningPulse {
-  0%, 100% {
+
+  0%,
+  100% {
     box-shadow: 0 4px 12px rgba(220, 53, 69, 0.5);
   }
+
   50% {
     box-shadow: 0 4px 20px rgba(220, 53, 69, 0.8);
   }
@@ -251,8 +256,8 @@
 }
 
 .clock-warning-item {
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 0.5rem;
+  background: var(--glass-item-bg);
+  border-radius: 12px;
   padding: 1rem;
   display: flex;
   align-items: center;
@@ -297,14 +302,14 @@
 .clock-warning-card {
   flex: 1;
   min-width: 200px;
-  background: rgba(255, 255, 255, 0.15);
-  border-radius: 0.5rem;
+  background: var(--glass-item-bg);
+  border-radius: 12px;
   padding: 1rem;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
   transition: all 0.3s ease;
 }
 
@@ -358,15 +363,15 @@
 
 .clock-weather-day-card-compact {
   flex: 1;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 0.5rem;
+  background: var(--glass-item-bg);
+  border-radius: 12px;
   padding: 1rem;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 0.75rem;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
   min-width: 0;
   position: relative;
   overflow: hidden;
@@ -488,22 +493,26 @@
 }
 
 /* 天気コードに基づく背景色とボーダー（コンパクト版） */
-.clock-weather-day-card-compact.weather-1 { /* 晴れ系 */
+.clock-weather-day-card-compact.weather-1 {
+  /* 晴れ系 */
   background: linear-gradient(135deg, rgba(135, 206, 235, 0.2) 0%, rgba(255, 215, 0, 0.1) 100%);
   border-left: 4px solid #FFD700;
 }
 
-.clock-weather-day-card-compact.weather-2 { /* 曇り系 */
+.clock-weather-day-card-compact.weather-2 {
+  /* 曇り系 */
   background: linear-gradient(135deg, rgba(224, 224, 224, 0.2) 0%, rgba(176, 176, 176, 0.1) 100%);
   border-left: 4px solid #B0B0B0;
 }
 
-.clock-weather-day-card-compact.weather-3 { /* 雨系 */
+.clock-weather-day-card-compact.weather-3 {
+  /* 雨系 */
   background: linear-gradient(135deg, rgba(74, 144, 226, 0.2) 0%, rgba(40, 80, 120, 0.1) 100%);
   border-left: 4px solid #4A90E2;
 }
 
-.clock-weather-day-card-compact.weather-4 { /* 雪系 */
+.clock-weather-day-card-compact.weather-4 {
+  /* 雪系 */
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(173, 216, 230, 0.1) 100%);
   border-left: 4px solid #ADD8E6;
 }
@@ -536,12 +545,13 @@
   height: 100%;
   display: flex;
   flex-direction: column;
-  background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(15px);
-  border-radius: 1rem;
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border-radius: var(--glass-radius);
   padding: 1.5rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: var(--glass-shadow);
+  border: 1px solid var(--glass-border);
   position: relative;
   overflow-y: auto;
   box-sizing: border-box;
@@ -567,12 +577,13 @@
   height: 100%;
   display: flex;
   flex-direction: column;
-  background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(15px);
-  border-radius: 1rem;
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border-radius: var(--glass-radius);
   padding: 1.5rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: var(--glass-shadow);
+  border: 1px solid var(--glass-border);
   position: relative;
   overflow-y: auto;
   box-sizing: border-box;
@@ -632,12 +643,13 @@
 
 @keyframes glow {
   from {
-    text-shadow: 
+    text-shadow:
       0 0 10px rgba(255, 255, 255, 0.3),
       0 2px 4px rgba(0, 0, 0, 0.5);
   }
+
   to {
-    text-shadow: 
+    text-shadow:
       0 0 20px rgba(255, 255, 255, 0.5),
       0 2px 4px rgba(0, 0, 0, 0.5),
       0 0 30px rgba(255, 255, 255, 0.2);
@@ -681,10 +693,9 @@
   gap: 1rem;
   margin-top: 0.5rem;
   padding: 1.5rem;
-  background: rgba(255, 255, 255, 0.15);
-  border-radius: 0.75rem;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(10px);
+  background: var(--glass-item-bg);
+  border-radius: 16px;
+  border: 1px solid var(--glass-border);
   font-family: 'Noto Sans JP', sans-serif;
   width: 100%;
   box-sizing: border-box;
@@ -732,15 +743,15 @@
 
 .clock-weather-day-card {
   flex: 1;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 0.5rem;
+  background: var(--glass-item-bg);
+  border-radius: 12px;
   padding: 0.75rem;
   display: flex;
   flex-direction: row;
   align-items: center;
   gap: 0.75rem;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
   min-width: 0;
   position: relative;
   overflow: hidden;
@@ -998,56 +1009,56 @@
   .clock-time {
     font-size: 2.5rem;
   }
-  
+
   .clock-date {
     font-size: 1rem;
   }
-  
+
   .clock-large {
     padding: 1.5rem;
   }
-  
+
   .clock-large .clock-time {
     font-size: 3rem;
     margin-bottom: 1.5rem;
     max-width: 100%;
   }
-  
+
   .clock-large .clock-date {
     font-size: 1.2rem;
   }
-  
+
   .clock-large .clock-day {
     font-size: 1rem;
   }
-  
+
   .clock-weather-summary {
     padding: 1rem;
     gap: 1rem;
   }
-  
+
   .clock-weather-icon-large {
     font-size: 2.5rem;
   }
-  
+
   .clock-weather-condition-large {
     font-size: 1.4rem;
   }
-  
-  
+
+
   .clock-weather-info-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 0.5rem;
   }
-  
+
   .clock-weather-info-item {
     display: none !important;
   }
-  
+
   .clock-weather-info-value {
     display: none !important;
   }
-  
+
   .clock-weather-info-value.temp-max,
   .clock-weather-info-value.temp-min {
     display: none !important;

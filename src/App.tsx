@@ -76,68 +76,70 @@ function App() {
 
   // 通常表示
   return (
-    <div className="app">
-      {/* 左側: 時刻のみ */}
-      <div className="app-left">
-        <Clock showTimeOnly={true} />
-      </div>
-      
+    <div className="app-container">
+      <div className="app">
+        {/* 左側: 時刻のみ */}
+        <div className="app-left">
+          <Clock showTimeOnly={true} />
+        </div>
 
-      {/* 右側: ニュースのみ */}
-      <div className="app-right">
-        <div className="app-right-content">
-          <News />
-        </div>
-      </div>
-      
-      {/* バージョン情報 */}
-      <div className="app-version">
-        <div className="app-version-text">
-          v{APP_VERSION} ({GIT_HASH})
-        </div>
-        <div className="app-version-date">
-          {new Date(BUILD_DATE).toLocaleDateString('ja-JP', { 
-            year: 'numeric', 
-            month: '2-digit', 
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit'
-          })}
-        </div>
-      </div>
 
-      {debugVisible && (
-        <div className="debug-overlay">
-          <div className="debug-overlay-header">
-            <div className="debug-overlay-title">Debug Overlay</div>
-            <button
-              className="debug-overlay-close"
-              onClick={() => {
-                localStorage.setItem('debugOverlay', '0')
-                setDebugVisible(false)
-              }}
-            >
-              ✕
-            </button>
-          </div>
-          <div className="debug-overlay-meta">
-            <div>UA: {navigator.userAgent}</div>
-            <div>v{APP_VERSION} ({GIT_HASH})</div>
-            <div>{new Date(BUILD_DATE).toLocaleString('ja-JP')}</div>
-          </div>
-          <div className="debug-overlay-body">
-            {debugLogs.length === 0 ? (
-              <div className="debug-overlay-empty">ログ待機中...</div>
-            ) : (
-              debugLogs.map((line, index) => (
-                <div key={`${index}-${line}`} className="debug-overlay-line">
-                  {line}
-                </div>
-              ))
-            )}
+        {/* 右側: ニュースのみ */}
+        <div className="app-right">
+          <div className="app-right-content">
+            <News />
           </div>
         </div>
-      )}
+
+        {/* バージョン情報 */}
+        <div className="app-version">
+          <div className="app-version-text">
+            v{APP_VERSION} ({GIT_HASH})
+          </div>
+          <div className="app-version-date">
+            {new Date(BUILD_DATE).toLocaleDateString('ja-JP', {
+              year: 'numeric',
+              month: '2-digit',
+              day: '2-digit',
+              hour: '2-digit',
+              minute: '2-digit'
+            })}
+          </div>
+        </div>
+
+        {debugVisible && (
+          <div className="debug-overlay">
+            <div className="debug-overlay-header">
+              <div className="debug-overlay-title">Debug Overlay</div>
+              <button
+                className="debug-overlay-close"
+                onClick={() => {
+                  localStorage.setItem('debugOverlay', '0')
+                  setDebugVisible(false)
+                }}
+              >
+                ✕
+              </button>
+            </div>
+            <div className="debug-overlay-meta">
+              <div>UA: {navigator.userAgent}</div>
+              <div>v{APP_VERSION} ({GIT_HASH})</div>
+              <div>{new Date(BUILD_DATE).toLocaleString('ja-JP')}</div>
+            </div>
+            <div className="debug-overlay-body">
+              {debugLogs.length === 0 ? (
+                <div className="debug-overlay-empty">ログ待機中...</div>
+              ) : (
+                debugLogs.map((line, index) => (
+                  <div key={`${index}-${line}`} className="debug-overlay-line">
+                    {line}
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   )
 }

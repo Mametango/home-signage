@@ -40,6 +40,7 @@
   color: #fff;
   cursor: pointer;
   transition: all 0.3s;
+  -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
 }
 
@@ -119,6 +120,7 @@
   border-radius: 0.5rem;
   color: #fff;
   transition: all 0.3s;
+  -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
 }
 
