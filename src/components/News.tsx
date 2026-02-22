@@ -435,19 +435,15 @@ const News = () => {
 
             return (
               <>
-                {/* Counter */}
-                <div className="news-card-counter">
-                  {(currentNormalIndex % totalItems) + 1} / {totalItems}
+                {/* Meta row: source, time, counter — right-aligned */}
+                <div className="news-card-meta-row">
+                  <span className="news-category-badge">{newsItem.category}</span>
+                  <span className="news-time">{formatDate(newsItem.pubDate)}</span>
+                  <span className="news-card-counter">{(currentNormalIndex % totalItems) + 1} / {totalItems}</span>
                 </div>
 
-                {/* Title row: title left, meta right */}
-                <div className="news-card-header-row">
-                  <h3 className="news-card-title">{newsItem.title}</h3>
-                  <div className="news-card-meta">
-                    <span className="news-category-badge">{newsItem.category}</span>
-                    <span className="news-time">{formatDate(newsItem.pubDate)}</span>
-                  </div>
-                </div>
+                {/* Title */}
+                <h3 className="news-card-title">{newsItem.title}</h3>
 
                 {/* Media (bottom) */}
                 {itemHasValidMedia && (
