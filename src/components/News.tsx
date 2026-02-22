@@ -42,6 +42,7 @@ const News = () => {
   const [error, setError] = useState<string | null>(null)
   const [imageLoadErrors, setImageLoadErrors] = useState<Set<number>>(new Set())
   const touchStartRef = useRef<{ x: number; y: number } | null>(null)
+  const [transitionState, setTransitionState] = useState<'entering' | 'visible' | 'exiting'>('visible')
 
 
   // P2P地震情報から緊急地震速報を取得（未使用のためコメントアウト）
@@ -116,21 +117,57 @@ const News = () => {
   }
   */
 
-  // NHKのRSS(XML)を取得してパース
+
+  // NHK JSON API からニュースを取得（画像つき）
+  const NHK_BASE = 'https://www3.nhk.or.jp/news/'
+  const NHK_IMAGE_BASE = 'https://imgu.web.nhk/news/u/news/'
+  const categoryMap: Record<string, string> = {
+    '0': 'トップ', '1': '社会', '2': '科学・文化', '3': '政治',
+    '4': '経済', '5': '国際', '6': 'スポーツ', '7': '五輪',
+  }
+
+  const fetchNHKJson = async (jsonUrl: string): Promise<NewsItem[]> => {
+    try {
+      const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(jsonUrl)}`
+      const response = await fetch(proxyUrl, { cache: 'no-cache' })
+      if (!response.ok) return []
+
+      const data = await response.json()
+      const items = data?.channel?.item || []
+      const newsList: NewsItem[] = []
+
+      items.forEach((item: any, index: number) => {
+        const imgPath = item.imgPath || item.iconPath || ''
+        const imageUrl = imgPath ? `${NHK_IMAGE_BASE}${imgPath}` : ''
+        const cate = item.cate || '0'
+
+        newsList.push({
+          id: parseInt(item.id) || (Date.now() + index),
+          title: item.title || '',
+          link: item.link ? `${NHK_BASE}${item.link}` : '',
+          pubDate: item.pubDate || '',
+          description: '',
+          category: categoryMap[cate] || 'ニュース',
+          isUrgent: false,
+          image: imageUrl || undefined,
+        })
+      })
+      return newsList
+    } catch (err) {
+      console.error('NHK JSON API取得エラー:', err)
+      return []
+    }
+  }
+
+  // NHKのRSS(XML)を取得してパース（フォールバック用）
   const fetchNHKRss = async (rssUrl: string, categoryName: string): Promise<NewsItem[]> => {
     try {
-      // 既存のVercelバックエンド (Serverless Function) を専用プロキシとして指定
-      const response = await fetch(`https://home-signage.vercel.app/api/nhk-rss?url=${encodeURIComponent(rssUrl)}`, {
+      const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(rssUrl)}`
+      const response = await fetch(proxyUrl, {
         method: 'GET',
-        headers: {
-          'Accept': 'application/xml, text/xml'
-        }
+        headers: { 'Accept': 'application/xml, text/xml' }
       })
-
-      if (!response.ok) {
-        console.error(`${categoryName} RSS取得エラー: status=`, response.status)
-        return []
-      }
+      if (!response.ok) return []
 
       const xmlText = await response.text()
       const parser = new DOMParser()
@@ -144,35 +181,13 @@ const News = () => {
         const pubDate = item.querySelector('pubDate')?.textContent || ''
         const description = item.querySelector('description')?.textContent || ''
 
-        // nhk:video または enclosure から動画・画像を探す
-        let imageUrl = ''
-        let videoUrl = ''
-        const enc = item.querySelector('enclosure')
-        if (enc) {
-          const type = enc.getAttribute('type') || ''
-          const url = enc.getAttribute('url') || ''
-          if (type.startsWith('image/')) imageUrl = url
-          if (type.startsWith('video/')) videoUrl = url
-        }
-        // 要素名の名前空間検索(nhk:news_web_image) - 大文字小文字や正確な名前空間はRSSの仕様による
-        const imageEl = item.getElementsByTagNameNS('*', 'news_web_image')[0] || item.getElementsByTagName('image')[0];
-        if (imageEl && !imageUrl) {
-          imageUrl = imageEl.textContent || '';
-        }
-
         newsList.push({
           id: Date.now() + Math.floor(Math.random() * 1000) + index,
-          title,
-          link,
-          pubDate,
-          description,
+          title, link, pubDate, description,
           category: categoryName,
           isUrgent: false,
-          image: imageUrl || undefined,
-          video: videoUrl || undefined
         })
       })
-
       return newsList
     } catch (err) {
       console.error(`${categoryName} RSS取得でエラー:`, err)
@@ -186,79 +201,55 @@ const News = () => {
         setLoading(true)
         setError(null)
 
-        // 緊急ニュース機能を完全に停止
-        // P2P地震情報のAPIからの取得も停止
-
-        // スクレイピングAPIからニュースを取得
-        const [nhkAreaNews, nhkTopNews, nhkLatestNews] = await Promise.all([
-          fetchNHKRss('https://www.nhk.or.jp/niigata/lnews/niigata.xml', '新潟県ニュース'),
+        // NHK JSON API（画像つき）+ RSS フォールバック
+        const [nhkJsonNews, nhkAreaNews] = await Promise.all([
+          fetchNHKJson('https://www3.nhk.or.jp/news/json16/new_001.json'),
           fetchNHKRss('https://www.nhk.or.jp/rss/news/cat0.xml', 'トップニュース'),
-          fetchNHKRss('https://www.nhk.or.jp/rss/news/cat1.xml', '最新ニュース')
         ])
 
-        // デバッグ用：各ニュースソースの取得数をログ出力
-        console.log('📰 [ニュース取得結果]', {
-          '新潟県ニュース': nhkAreaNews.length,
-          'トップニュース': nhkTopNews.length,
-          '新着ニュース': nhkLatestNews.length
+        console.log('📰 [ニュース取得]', {
+          'JSON API': nhkJsonNews.length,
+          'RSS': nhkAreaNews.length,
+          '画像つき': nhkJsonNews.filter(n => n.image).length,
         })
 
-        // 各ソースの画像があるニュース数を確認
-        const areaNewsWithImage = nhkAreaNews.filter((item: NewsItem) => item.image && item.image.length >= 2 && !item.image.includes('data:') && !item.image.toLowerCase().includes('placeholder') && !item.image.toLowerCase().includes('nhk-one-news_eyecatch')).length
-        const topNewsWithImage = nhkTopNews.filter((item: NewsItem) => item.image && item.image.length >= 2 && !item.image.includes('data:') && !item.image.toLowerCase().includes('placeholder') && !item.image.toLowerCase().includes('nhk-one-news_eyecatch')).length
-        const latestNewsWithImage = nhkLatestNews.filter((item: NewsItem) => item.image && item.image.length >= 2 && !item.image.includes('data:') && !item.image.toLowerCase().includes('placeholder') && !item.image.toLowerCase().includes('nhk-one-news_eyecatch')).length
+        // JSON API のニュースを優先、重複除外
+        const seenTitles = new Set<string>()
+        let newsItems: NewsItem[] = []
 
-        console.log('🖼️ [画像があるニュース数]', {
-          '新潟県ニュース': areaNewsWithImage,
-          'トップニュース': topNewsWithImage,
-          '新着ニュース': latestNewsWithImage
+        // JSON APIのニュース（画像つき）を先に追加
+        nhkJsonNews.forEach(item => {
+          if (!seenTitles.has(item.title)) {
+            seenTitles.add(item.title)
+            newsItems.push(item)
+          }
         })
 
-        // 全てのニュースを統合
-        let newsItems = [...nhkAreaNews, ...nhkTopNews, ...nhkLatestNews]
+        // RSSのニュース（重複除外）
+        nhkAreaNews.forEach(item => {
+          if (!seenTitles.has(item.title)) {
+            seenTitles.add(item.title)
+            newsItems.push(item)
+          }
+        })
 
-        console.log('📊 [統合後のニュース総数]', newsItems.length)
-
-        // 一昨日以前を除外（昨日 0:00 JST 以降のみ表示）。日付不明は残す
+        // 一昨日以前を除外
         const yesterdayStartJST = getYesterdayStartJST()
         newsItems = newsItems.filter((item) => {
           const t = parsePubDateToTime(item.pubDate)
           return t === 0 || t >= yesterdayStartJST
         })
 
-        // ソート：時刻で新しい順。日付不明・無効は 0 で末尾に
+        // 新しい順にソート
         newsItems.sort((a, b) => {
           const dateA = parsePubDateToTime(a.pubDate)
           const dateB = parsePubDateToTime(b.pubDate)
           return dateB - dateA
         })
 
-        // 画像/動画つきのニュースを優先的に表示
-        const hasMedia = (item: NewsItem) => {
-          if (!item) return false
+        setNormalNews(newsItems)
 
-          const image = item.image?.trim()
-          const hasImage = !!(image && image.length >= 2 &&
-            !image.includes('data:') &&
-            !image.toLowerCase().includes('placeholder') &&
-            !image.toLowerCase().includes('nhk-one-news_eyecatch'))
-
-          const video = item.video?.trim()
-          const hasVideo = !!(video && video.length >= 2 &&
-            !video.includes('data:') &&
-            !video.toLowerCase().includes('placeholder'))
-
-          return hasImage || hasVideo
-        }
-
-        const mediaItems = newsItems.filter(hasMedia)
-        const orderedItems = mediaItems.length > 0 ? mediaItems : newsItems
-
-        // 全て通常ニュースとして扱う
-        setNormalNews(orderedItems)
-
-        // 通常ニュースのインデックスをリセット（念のため）
-        if (orderedItems.length > 0 && currentNormalIndex >= orderedItems.length) {
+        if (newsItems.length > 0 && currentNormalIndex >= newsItems.length) {
           setCurrentNormalIndex(0)
         }
 
@@ -280,14 +271,21 @@ const News = () => {
   // 緊急ニュースの表示管理を完全に停止
   // useEffect(() => { ... }, []) // コメントアウト
 
-  // 通常ニュースの自動切り替え（1分ごと）
+  // Card-by-card slide animation
   useEffect(() => {
-    // 緊急ニュースのチェックを削除（常に通常ニュースのみ）
-    if (normalNews.length === 0) return
+    if (normalNews.length <= 1) return
+
+    const DISPLAY_TIME = 8000  // 8 seconds per card
+    const EXIT_ANIM = 600      // exit animation duration
 
     const timer = setInterval(() => {
-      setCurrentNormalIndex((prev) => (prev + 1) % normalNews.length)
-    }, 60000) // 1分（60秒）ごとに切り替え
+      setTransitionState('exiting')
+      setTimeout(() => {
+        setCurrentNormalIndex((prev) => (prev + 1) % normalNews.length)
+        setTransitionState('entering')
+        setTimeout(() => setTransitionState('visible'), 50)
+      }, EXIT_ANIM)
+    }, DISPLAY_TIME)
 
     return () => clearInterval(timer)
   }, [normalNews])
@@ -341,25 +339,6 @@ const News = () => {
     )
   }
 
-  // 表示するニュースを決定（緊急ニュースは完全に無効化）
-  const getCurrentNews = () => {
-    // 緊急ニュースは一切表示しない（強制的に通常ニュースのみ）
-    if (normalNews.length > 0) {
-      return normalNews[currentNormalIndex]
-    }
-    return null
-  }
-
-  const getNewsCounter = () => {
-    // 緊急の表示を完全に削除
-    if (normalNews.length > 0) {
-      return `${currentNormalIndex + 1} / ${normalNews.length}`
-    }
-    return ''
-  }
-
-  const currentNews = getCurrentNews()
-
   // 画像の読み込みエラーハンドラ
   const handleImageError = (newsId: number, imageUrl?: string) => {
     console.warn('[画像読み込みエラー]', {
@@ -380,11 +359,17 @@ const News = () => {
     if (!url || typeof url !== 'string') return null
     const trimmed = url.trim()
     if (!trimmed) return null
-    // プロトコル相対URL（//で始まる）
-    if (trimmed.startsWith('//')) return `https:${trimmed}`
-    // 相対パス（/で始まる）の場合はNHKのドメインを追加
-    if (trimmed.startsWith('/')) return `https://news.web.nhk${trimmed}`
-    return trimmed
+
+    // Build full URL
+    let fullUrl = trimmed
+    if (trimmed.startsWith('//')) {
+      fullUrl = `https:${trimmed}`
+    } else if (trimmed.startsWith('/')) {
+      fullUrl = `https://www3.nhk.or.jp${trimmed}`
+    }
+
+    // imgu.web.nhk is publicly accessible, no proxy needed
+    return fullUrl
   }
 
   const isVideoUrl = (url?: string): boolean => {
@@ -393,223 +378,13 @@ const News = () => {
     return /\.(mp4|webm|m3u8)(\?|#|$)/i.test(normalized)
   }
 
-  const normalizedVideoUrl = normalizeMediaUrl(currentNews?.video)
-  const normalizedImageUrl = normalizeMediaUrl(currentNews?.image)
-
-  // 画像URLを優先的に使用（動画URLは画像として使用しない）
-  // 画像URLが存在する場合は、必ず表示を試みる
-  let mediaImageUrl: string | null = null
-  if (currentNews?.image) {
-    // 元の画像URLを正規化
-    const originalImage = currentNews.image.trim()
-    // より緩い条件：空でなく、data:やplaceholderでない場合は使用
-    // デフォルト画像（nhk-one-news_eyecatch）も除外
-    if (originalImage && originalImage.length >= 2 &&
-      !originalImage.includes('data:') &&
-      !originalImage.toLowerCase().includes('placeholder') &&
-      !originalImage.toLowerCase().includes('nhk-one-news_eyecatch')) {
-      // 正規化処理を適用
-      let finalImageUrl = originalImage
-      if (finalImageUrl.startsWith('//')) {
-        finalImageUrl = `https:${finalImageUrl}`
-      } else if (finalImageUrl.startsWith('/')) {
-        finalImageUrl = `https://news.web.nhk${finalImageUrl}`
-      } else if (!finalImageUrl.startsWith('http://') && !finalImageUrl.startsWith('https://')) {
-        // プロトコルがない場合はhttps://を追加
-        finalImageUrl = `https://news.web.nhk${finalImageUrl.startsWith('/') ? '' : '/'}${finalImageUrl}`
-      }
-      mediaImageUrl = finalImageUrl
-    }
-  }
-
-  // normalizedImageUrlが存在し、mediaImageUrlが設定されていない場合は使用
-  if (!mediaImageUrl && normalizedImageUrl) {
-    const normalizedLower = normalizedImageUrl.toLowerCase()
-    // デフォルト画像やplaceholderを除外
-    if (normalizedImageUrl.length >= 2 &&
-      !normalizedLower.includes('data:') &&
-      !normalizedLower.includes('placeholder') &&
-      !normalizedLower.includes('nhk-one-news_eyecatch')) {
-      mediaImageUrl = normalizedImageUrl
-    }
-  }
-
-  const hasValidMedia = !!currentNews && (
-    (isVideoUrl(normalizedVideoUrl || undefined) && normalizedVideoUrl) ||
-    !!mediaImageUrl
-  )
-
-  // デバッグ: 画像URLの処理状況をログ出力（詳細版）
-  if (currentNews) {
-    const currentIndex = currentNormalIndex
-    const totalCount = normalNews.length
-    const isTargetIndex = currentIndex >= 10 && currentIndex <= 15 // 10-15番目を重点的にデバッグ
-    const isExactly12th = currentIndex === 11 // 12番目（インデックス11）を特別にデバッグ
-
-    const debugInfo = {
-      index: `${currentIndex + 1}/${totalCount}`,
-      title: currentNews.title.substring(0, 40),
-      originalImage: currentNews.image,
-      originalImageLength: currentNews.image?.length || 0,
-      normalizedImageUrl,
-      normalizedImageUrlLength: normalizedImageUrl?.length || 0,
-      mediaImageUrl,
-      mediaImageUrlLength: mediaImageUrl?.length || 0,
-      hasVideo: !!currentNews.video,
-      videoUrl: currentNews.video,
-      isVideoUrl: isVideoUrl(normalizedVideoUrl || undefined),
-      willShowImage: !!mediaImageUrl && !isVideoUrl(normalizedVideoUrl || undefined),
-      hasValidMedia,
-      imageLoadError: imageLoadErrors.has(currentNews.id)
-    }
-
-    if (isExactly12th) {
-      // 12番目のニュースを特別に詳細デバッグ
-      console.log('🔍 [12番目のニュース - 詳細デバッグ]', {
-        ...debugInfo,
-        newsId: currentNews.id,
-        category: currentNews.category
-      })
-
-      // 画像URLの処理ステップを詳しく確認
-      if (currentNews.image) {
-        const originalImage = currentNews.image.trim()
-        console.log('🔍 [12番目 - 画像URL処理ステップ]', {
-          step1_originalImage: originalImage,
-          step2_lengthCheck: originalImage.length >= 2,
-          step3_dataCheck: !originalImage.includes('data:'),
-          step4_placeholderCheck: !originalImage.toLowerCase().includes('placeholder'),
-          step5_finalImageUrl: mediaImageUrl,
-          step6_normalizeMediaUrl_result: normalizeMediaUrl(currentNews.image),
-          step7_hasValidMedia: hasValidMedia,
-          step8_imageCondition: !isVideoUrl(normalizedVideoUrl || undefined) && !!mediaImageUrl && !imageLoadErrors.has(currentNews.id)
-        })
-      } else {
-        console.log('🔍 [12番目 - 画像なし]', {
-          hasImage: false,
-          hasVideo: !!currentNews.video,
-          videoUrl: currentNews.video,
-          hasValidMedia: hasValidMedia
-        })
-      }
-    } else if (isTargetIndex) {
-      console.log('[画像URL処理 - 詳細デバッグ]', debugInfo)
-
-      // 画像URLの処理ステップを詳しく確認
-      if (currentNews.image) {
-        const originalImage = currentNews.image.trim()
-        console.log('[画像URL処理ステップ]', {
-          step1_originalImage: originalImage,
-          step2_lengthCheck: originalImage.length >= 2,
-          step3_dataCheck: !originalImage.includes('data:'),
-          step4_placeholderCheck: !originalImage.toLowerCase().includes('placeholder'),
-          step5_finalImageUrl: mediaImageUrl,
-          step6_normalizeMediaUrl_result: normalizeMediaUrl(currentNews.image)
-        })
-      }
-    } else {
-      console.log('[画像URL処理]', {
-        index: `${currentIndex + 1}/${totalCount}`,
-        originalImage: currentNews.image,
-        mediaImageUrl,
-        willShowImage: !!mediaImageUrl && !isVideoUrl(normalizedVideoUrl || undefined)
-      })
-    }
-  }
-
-  // デバッグ用：現在のニュースの画像情報をログ出力（詳細版）
-  if (currentNews) {
-    const currentIndex = currentNormalIndex
-    const totalCount = normalNews.length
-    const isTargetIndex = currentIndex >= 10 && currentIndex <= 15 // 10-15番目を重点的にデバッグ
-    const isExactly12th = currentIndex === 11 // 12番目（インデックス11）を特別にデバッグ
-
-    const imageCondition = !isVideoUrl(normalizedVideoUrl || undefined) && !!mediaImageUrl && !imageLoadErrors.has(currentNews.id)
-
-    const debugInfo = {
-      index: `${currentIndex + 1}/${totalCount}`,
-      title: currentNews.title.substring(0, 30),
-      newsId: currentNews.id,
-      hasImage: !!currentNews.image,
-      imageUrl: currentNews.image,
-      imageUrlLength: currentNews.image?.length || 0,
-      isValidImageUrl: !!mediaImageUrl,
-      mediaImageUrl,
-      hasVideo: !!currentNews.video,
-      videoUrl: currentNews.video,
-      hasValidMedia: hasValidMedia,
-      imageLoadError: imageLoadErrors.has(currentNews.id),
-      imageCondition: imageCondition,
-      willShowImage: imageCondition,
-      isVideoUrl: isVideoUrl(normalizedVideoUrl || undefined),
-      normalizedVideoUrl,
-      normalizedImageUrl
-    }
-
-    if (isExactly12th) {
-      // 12番目のニュースを特別に詳細デバッグ
-      console.log('🔍 [12番目のニュース - 表示デバッグ]', {
-        ...debugInfo,
-        newsId: currentNews.id,
-        category: currentNews.category
-      })
-
-      // 画像表示の判定ロジックを詳しく確認
-      console.log('🔍 [12番目 - 画像表示判定]', {
-        step1_hasImage: !!currentNews.image,
-        step2_mediaImageUrl: !!mediaImageUrl,
-        step3_isVideoUrl: isVideoUrl(normalizedVideoUrl || undefined),
-        step4_imageLoadError: imageLoadErrors.has(currentNews.id),
-        step5_imageCondition: imageCondition,
-        step6_hasValidMedia: hasValidMedia,
-        final_willShowImage: imageCondition,
-        normalizedImageUrl,
-        normalizedVideoUrl
-      })
-    } else if (isTargetIndex) {
-      console.log('[ニュース表示デバッグ - 詳細]', debugInfo)
-
-      // 画像表示の判定ロジックを詳しく確認
-      console.log('[画像表示判定]', {
-        step1_hasImage: !!currentNews.image,
-        step2_mediaImageUrl: !!mediaImageUrl,
-        step3_isVideoUrl: isVideoUrl(normalizedVideoUrl || undefined),
-        step4_imageLoadError: imageLoadErrors.has(currentNews.id),
-        step5_imageCondition: imageCondition,
-        step6_hasValidMedia: hasValidMedia,
-        final_willShowImage: imageCondition
-      })
-    } else {
-      console.log('[ニュース表示デバッグ]', {
-        index: `${currentIndex + 1}/${totalCount}`,
-        title: currentNews.title.substring(0, 30),
-        hasImage: !!currentNews.image,
-        isValidImageUrl: !!mediaImageUrl,
-        hasValidMedia: hasValidMedia,
-        willShowImage: imageCondition
-      })
-    }
-
-    if (imageCondition && mediaImageUrl) {
-      console.log('[画像表示] 画像を表示します:', mediaImageUrl)
-    } else if (currentNews.image && !hasValidMedia) {
-      console.warn('[画像表示] 画像があるのに表示されません:', {
-        index: `${currentIndex + 1}/${totalCount}`,
-        imageUrl: currentNews.image,
-        imageUrlLength: currentNews.image.length,
-        isValidUrl: !!mediaImageUrl,
-        mediaImageUrl,
-        hasError: imageLoadErrors.has(currentNews.id),
-        reason: imageLoadErrors.has(currentNews.id) ? '画像読み込みエラー' : (mediaImageUrl ? '不明' : '無効なURL'),
-        normalizedImageUrl,
-        normalizedVideoUrl
-      })
-    }
-  }
+  // Current news item to display
+  const currentItem = normalNews.length > 0 ? normalNews[currentNormalIndex % normalNews.length] : null
+  const totalItems = normalNews.length
 
   return (
     <div
-      className="news"
+      className="news bento-news"
       onTouchStart={(event) => {
         const touch = event.touches[0]
         touchStartRef.current = { x: touch.clientX, y: touch.clientY }
@@ -638,166 +413,64 @@ const News = () => {
         </div>
       )}
 
-      {currentNews ? (
-        <div className="news-item-wrapper">
-          <a
-            href={currentNews.link}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={`news-item ${hasValidMedia ? 'news-item-with-media' : ''}`}
-            style={{
-              // 緊急ニュースのスタイルを強制的に無効化
-              background: currentNews.isUrgent ? 'rgba(255, 255, 255, 0.15) !important' : undefined,
-              border: currentNews.isUrgent ? '1px solid rgba(255, 255, 255, 0.1) !important' : undefined
-            }}
-          >
-            {/* 動画または画像がある場合：画像とテキストを配置 */}
-            {hasValidMedia ? (
-              <div className="news-item-media-container">
-                {/* 動画を表示 */}
-                {isVideoUrl(normalizedVideoUrl || undefined) && normalizedVideoUrl && (
-                  <div className="news-item-media">
-                    <video
-                      className="news-video"
-                      src={normalizedVideoUrl}
-                      controls
-                      playsInline
-                      preload="metadata"
-                      poster={mediaImageUrl && !isVideoUrl(mediaImageUrl) ? (mediaImageUrl.startsWith('data:image') ? mediaImageUrl : (mediaImageUrl.startsWith('http://') || mediaImageUrl.startsWith('https://') ? mediaImageUrl : `https://news.web.nhk${mediaImageUrl.startsWith('/') ? '' : '/'}${mediaImageUrl}`)) : undefined}
-                    >
-                      お使いのブラウザは動画の再生に対応していません。
-                    </video>
-                  </div>
-                )}
-                {/* 画像を表示（動画がない場合） */}
-                {!isVideoUrl(normalizedVideoUrl || undefined) && mediaImageUrl && (
-                  <div className="news-item-media">
-                    <img
-                      className="news-image"
-                      src={
-                        mediaImageUrl.startsWith('data:image')
-                          ? mediaImageUrl
-                          : mediaImageUrl.startsWith('http://') || mediaImageUrl.startsWith('https://')
-                            ? mediaImageUrl
-                            : `https://news.web.nhk${mediaImageUrl.startsWith('/') ? '' : '/'}${mediaImageUrl}`
-                      }
-                      alt={currentNews.title}
-                      loading="eager"
-                      crossOrigin="anonymous"
-                      onError={(e) => {
-                        const imgElement = e.target as HTMLImageElement
-                        const currentSrc = imgElement.src
-                        console.error('[画像読み込みエラー]', {
-                          imageUrl: mediaImageUrl,
-                          originalImageUrl: currentNews?.image,
-                          normalizedImageUrl,
-                          newsId: currentNews.id,
-                          src: currentSrc,
-                          attemptedUrl: mediaImageUrl
-                        })
+      {currentItem ? (
+        <div className={`bento-news-card news-transition-${transitionState}`}>
+          {(() => {
+            const newsItem = currentItem
+            let normalizedImageUrl = ''
+            let normalizedVideoUrl = ''
+            let itemHasValidMedia = false
 
-                        // エラーが発生した場合、元のURLを再正規化してリトライ（プロキシは使わない）
-                        if (mediaImageUrl && currentNews?.image) {
-                          const originalImage = currentNews.image.trim()
-                          let retryUrl = originalImage
-                          if (retryUrl.startsWith('//')) {
-                            retryUrl = `https:${retryUrl}`
-                          } else if (retryUrl.startsWith('/')) {
-                            retryUrl = `https://news.web.nhk${retryUrl}`
-                          } else if (!retryUrl.startsWith('http')) {
-                            retryUrl = `https://news.web.nhk/${retryUrl}`
-                          }
-                          if (retryUrl !== currentSrc && retryUrl !== mediaImageUrl) {
-                            console.log('[画像読み込みリトライ] 再正規化URLを試します:', retryUrl)
-                            imgElement.src = retryUrl
-                            return
-                          }
-                        }
+            if (newsItem.video) {
+              itemHasValidMedia = true
+              normalizedVideoUrl = normalizeMediaUrl(newsItem.video) || ''
+            } else if (newsItem.image && !imageLoadErrors.has(newsItem.id)) {
+              itemHasValidMedia = true
+              normalizedImageUrl = normalizeMediaUrl(newsItem.image) || ''
+            }
 
-                        handleImageError(currentNews.id, mediaImageUrl || undefined)
-                      }}
-                      onLoad={() => {
-                        console.log('[画像読み込み成功]', {
-                          imageUrl: mediaImageUrl,
-                          originalImageUrl: currentNews?.image,
-                          newsId: currentNews.id,
-                          src: (document.querySelector(`.news-image[alt="${currentNews.title}"]`) as HTMLImageElement)?.src
-                        })
-                      }}
-                    />
-                  </div>
-                )}
-                <div className="news-item-text">
-                  <h3 className="news-item-title">{currentNews.title}</h3>
-                  {currentNews.description && (
-                    <div className="news-item-description">{currentNews.description}</div>
-                  )}
-                  <div className="news-item-header">
-                    <div className="news-item-meta">
-                      <span className="news-category-badge">{currentNews.category}</span>
-                      <span className="news-time">{formatDate(currentNews.pubDate)}</span>
-                      <span className="news-source-label">
-                        {currentNews.category === '緊急地震速報'
-                          ? 'P2P地震情報'
-                          : currentNews.category === 'トップニュース'
-                            ? 'NHKトップニュース'
-                            : currentNews.category === '新着ニュース' || currentNews.category === '最新ニュース'
-                              ? 'NHK最新ニュース'
-                              : currentNews.category === '新潟県ニュース'
-                                ? 'NHK新潟'
-                                : 'NHKニュース'}
-                      </span>
-                      <span className="news-counter">
-                        {getNewsCounter()}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              /* 動画・画像がない場合：通常表示 */
+            const isVideo = isVideoUrl(normalizedVideoUrl || undefined)
+
+            return (
               <>
-                <h3 className="news-item-title">{currentNews.title}</h3>
-                {currentNews.description && (
-                  <div className="news-item-description">{currentNews.description}</div>
-                )}
-                <div className="news-item-header">
-                  <div className="news-item-meta">
-                    <span className="news-category-badge">{currentNews.category}</span>
-                    <span className="news-time">{formatDate(currentNews.pubDate)}</span>
-                    <span className="news-source-label">
-                      {currentNews.category === '緊急地震速報'
-                        ? 'P2P地震情報'
-                        : currentNews.category === 'トップニュース'
-                          ? 'NHKトップニュース'
-                          : currentNews.category === '新着ニュース' || currentNews.category === '最新ニュース'
-                            ? 'NHK最新ニュース'
-                            : currentNews.category === '新潟県ニュース'
-                              ? 'NHK新潟'
-                              : 'NHKニュース'}
-                    </span>
-                    <span className="news-counter">
-                      {getNewsCounter()}
-                    </span>
-                  </div>
+                {/* Counter */}
+                <div className="news-card-counter">
+                  {(currentNormalIndex % totalItems) + 1} / {totalItems}
                 </div>
+
+                {/* Media (top) */}
+                {itemHasValidMedia && (
+                  <div className="news-card-media">
+                    {isVideo && normalizedVideoUrl ? (
+                      <video className="news-video" src={normalizedVideoUrl} playsInline preload="metadata" />
+                    ) : normalizedImageUrl ? (
+                      <img
+                        className="news-image"
+                        src={normalizedImageUrl}
+                        alt={newsItem.title}
+                        loading="lazy"
+                        onError={() => handleImageError(newsItem.id, normalizedImageUrl)}
+                      />
+                    ) : null}
+                  </div>
+                )}
+
+                {/* Category & Time */}
+                <div className="news-card-meta">
+                  <span className="news-category-badge">{newsItem.category}</span>
+                  <span className="news-time">{formatDate(newsItem.pubDate)}</span>
+                </div>
+
+                {/* Title */}
+                <h3 className="news-card-title">{newsItem.title}</h3>
+
+                {/* Description */}
+                {newsItem.description && (
+                  <p className="news-card-description">{newsItem.description}</p>
+                )}
               </>
-            )}
-          </a>
-          {/* スキップボタン */}
-          <button
-            className="news-skip-button"
-            onClick={(e) => {
-              e.preventDefault()
-              e.stopPropagation()
-              // 次のニュースに進む
-              setCurrentNormalIndex((prev) => (prev + 1) % normalNews.length)
-            }}
-            title="次のニュースへ"
-            aria-label="次のニュースへ"
-          >
-            ⏭️
-          </button>
+            )
+          })()}
         </div>
       ) : (
         <div className="news-empty">ニュースが取得できませんでした</div>

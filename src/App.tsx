@@ -78,15 +78,15 @@ function App() {
   return (
     <div className="app-container">
       <div className="app">
-        {/* 左側: 時刻のみ */}
-        <div className="app-left">
-          <Clock showTimeOnly={true} />
-        </div>
+        <div className="app-bento-grid">
+          {/* Column 1: Time, Weather & Forecast */}
+          <div className="bento-col-1-time">
+            {/* @ts-ignore */}
+            <Clock renderMode="time" />
+          </div>
 
-
-        {/* 右側: ニュースのみ */}
-        <div className="app-right">
-          <div className="app-right-content">
+          {/* Column 2: News Feed */}
+          <div className="bento-col-2-news">
             <News />
           </div>
         </div>

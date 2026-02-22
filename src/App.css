@@ -1,3 +1,9 @@
+/* =============================================
+   Glassmorphism — App Layout
+   Animated mesh gradient + frosted glass panels
+   ============================================= */
+
+/* Animated background gradient */
 .app-container {
   width: 100vw;
   height: 100vh;
@@ -5,62 +11,98 @@
   justify-content: center;
   align-items: center;
   overflow: hidden;
-  background: transparent;
-  perspective: 1000px;
+  background: var(--glass-bg-dark);
+  position: relative;
+}
+
+/* Vivid mesh gradient orbs — bright and colorful like the concept image */
+.app-container::before {
+  content: '';
+  position: absolute;
+  inset: -30%;
+  background:
+    radial-gradient(ellipse 600px 500px at 5% 50%, rgba(99, 50, 230, 0.75) 0%, transparent 60%),
+    radial-gradient(ellipse 550px 450px at 75% 60%, rgba(168, 85, 247, 0.70) 0%, transparent 55%),
+    radial-gradient(ellipse 500px 400px at 45% 0%, rgba(6, 182, 212, 0.65) 0%, transparent 55%),
+    radial-gradient(ellipse 480px 420px at 95% 25%, rgba(236, 72, 153, 0.65) 0%, transparent 55%),
+    radial-gradient(ellipse 440px 380px at 20% 90%, rgba(59, 130, 246, 0.60) 0%, transparent 55%),
+    radial-gradient(ellipse 350px 300px at 60% 70%, rgba(16, 185, 129, 0.40) 0%, transparent 50%);
+  animation: meshFloat 20s ease-in-out infinite alternate;
+  pointer-events: none;
+  z-index: 0;
+}
+
+@keyframes meshFloat {
+  0% {
+    transform: translate(0, 0) scale(1);
+  }
+
+  25% {
+    transform: translate(40px, -30px) scale(1.05);
+  }
+
+  50% {
+    transform: translate(-20px, 20px) scale(1.02);
+  }
+
+  75% {
+    transform: translate(30px, 40px) scale(1.07);
+  }
+
+  100% {
+    transform: translate(-10px, -20px) scale(1);
+  }
 }
 
 .app {
   width: 1920px;
   height: 540px;
   flex-shrink: 0;
-  display: flex;
-  gap: 1.5rem;
-  /* gapを少し広げてモダンに */
-  background: transparent;
-  /* 背景はindex.cssのbodyに委ねる */
-  padding: 1.25rem;
   position: relative;
   overflow: hidden;
-  /* サイズ固定のためhiddenに変更 */
+  z-index: 1;
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
   -webkit-font-smoothing: antialiased;
-  transform-style: preserve-3d;
 }
 
-.app-left {
-  width: 50%;
-  /* 時計の割合を増やす */
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-  position: relative;
-  z-index: 2;
-  overflow: hidden;
-  justify-content: center;
-  align-items: center;
-}
-
-.app-right {
-  width: 50%;
-  /* 右側の割合を調整 */
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-  position: relative;
-  z-index: 2;
-  overflow: hidden;
-}
-
-
-.app-right-content {
+/* ---- 2-Column Layout ---- */
+.app-bento-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 2fr;
+  gap: 1.25rem;
+  padding: 1.5rem;
   width: 100%;
   height: 100%;
-  position: relative;
-  overflow: hidden;
+  box-sizing: border-box;
 }
 
+/* Column containers — each is a frosted glass panel */
+.bento-col-1-time,
+.bento-col-2-news {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  position: relative;
+  overflow: hidden;
 
+  /* Frosted glass effect — strong, visible panels */
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: var(--glass-radius);
+  -webkit-backdrop-filter: var(--glass-blur-heavy);
+  backdrop-filter: var(--glass-blur-heavy);
+
+  /* Glowing white border + soft outer glow */
+  box-shadow:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.15),
+    inset 0 0 20px rgba(255, 255, 255, 0.03),
+    0 0 30px rgba(255, 255, 255, 0.06),
+    0 8px 40px rgba(0, 0, 0, 0.25);
+}
+
+/* Earthquake Alert — full-width overlay */
 .app-earthquake {
   position: absolute;
   top: 0;
@@ -68,11 +110,11 @@
   right: 0;
   z-index: 1000;
   width: 100%;
-  padding: 1rem;
-  background: rgba(220, 53, 69, 0.95);
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
-  box-shadow: 0 4px 12px rgba(220, 53, 69, 0.5);
+  padding: 0.75rem 2rem;
+  background: rgba(239, 68, 68, 0.85);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  box-shadow: 0 4px 32px rgba(239, 68, 68, 0.5);
   animation: slideDown 0.3s ease-out;
 }
 
@@ -88,19 +130,10 @@
   }
 }
 
-.app-right-card {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  animation: fadeIn 0.5s ease-in-out;
-}
-
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(8px);
   }
 
   to {
@@ -109,126 +142,37 @@
   }
 }
 
-/* 天気アニメーションは削除されました */
-
-/* カウントダウン表示 */
-.app-countdown {
-  position: fixed !important;
-  top: 1rem !important;
-  right: 1rem !important;
-  z-index: 99999 !important;
-  background: rgba(255, 0, 0, 0.9) !important;
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
-  padding: 1rem 1.5rem;
-  border-radius: 0.5rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.8);
-  border: 3px solid rgba(255, 255, 255, 0.9);
-  animation: fadeIn 0.3s ease-in-out;
-  min-width: 250px;
-  pointer-events: none;
-}
-
-.app-countdown-text {
-  font-size: 1.8rem !important;
-  font-weight: 900 !important;
-  color: #fff !important;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 1);
-  font-family: 'Noto Sans JP', 'Courier New', 'Monaco', 'Menlo', monospace;
-  white-space: nowrap;
-  text-align: center;
-  display: block !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-}
-
-/* 週間天気予報ボタン */
-.app-weekly-weather-button {
-  position: fixed;
-  top: 1rem;
-  right: 1rem;
-  z-index: 1000;
-  background: rgba(77, 171, 247, 0.9);
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-radius: 0.5rem;
-  padding: 0.75rem;
-  color: #fff;
-  font-size: 1.5rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  width: 3rem;
-  height: 3rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: 'Noto Sans JP', sans-serif;
-  animation: fadeIn 0.3s ease-in-out;
-}
-
-.app-weekly-weather-button:hover {
-  background: rgba(77, 171, 247, 1);
-  transform: scale(1.05);
-  box-shadow: 0 6px 16px rgba(77, 171, 247, 0.4);
-}
-
-.app-weekly-weather-button:active {
-  transform: scale(0.98);
-}
-
-/* 全画面表示（1週間の天気予報） */
-.app-fullscreen {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  background: #000;
-  /* 黒背景 */
-  animation: fadeIn 0.5s ease-in-out;
-}
-
-.app-fullscreen>* {
-  width: 100%;
-  height: 100%;
-  max-width: 100%;
-  max-height: 100%;
-}
-
-/* バージョン情報表示 */
+/* Version badge */
 .app-version {
   position: fixed;
-  bottom: 0.5rem;
+  bottom: 0.4rem;
   right: 0.5rem;
   z-index: 1000;
-  background: rgba(0, 0, 0, 0.6);
-  -webkit-backdrop-filter: blur(5px);
-  backdrop-filter: blur(5px);
-  padding: 0.4rem 0.6rem;
-  border-radius: 0.25rem;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  font-family: 'Courier New', 'Monaco', 'Menlo', monospace;
+  background: rgba(0, 0, 0, 0.3);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--glass-radius-xs);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  font-family: 'Courier New', monospace;
   pointer-events: none;
   user-select: none;
 }
 
 .app-version-text {
-  font-size: 0.7rem;
-  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.6rem;
+  color: rgba(255, 255, 255, 0.3);
   line-height: 1.2;
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
 }
 
 .app-version-date {
-  font-size: 0.65rem;
-  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.55rem;
+  color: rgba(255, 255, 255, 0.18);
   line-height: 1.2;
-  margin-top: 0.1rem;
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+  margin-top: 0.05rem;
 }
 
+/* Debug overlay */
 .debug-overlay {
   position: fixed;
   left: 0.5rem;
@@ -236,14 +180,16 @@
   width: 48vw;
   max-width: 680px;
   max-height: 45vh;
-  background: rgba(0, 0, 0, 0.85);
-  border: 1px solid rgba(0, 255, 0, 0.4);
-  border-radius: 0.5rem;
+  background: rgba(0, 0, 0, 0.75);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(0, 255, 0, 0.3);
+  border-radius: var(--glass-radius-sm);
   padding: 0.5rem;
   z-index: 100000;
   color: #b6ffb6;
-  font-family: 'Courier New', 'Monaco', 'Menlo', monospace;
-  font-size: 0.75rem;
+  font-family: 'Courier New', monospace;
+  font-size: 0.72rem;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -262,7 +208,7 @@
 
 .debug-overlay-close {
   background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.25);
   color: #eaffea;
   border-radius: 0.25rem;
   padding: 0.1rem 0.4rem;
@@ -273,11 +219,11 @@
   display: flex;
   flex-direction: column;
   gap: 0.2rem;
-  color: rgba(182, 255, 182, 0.85);
+  color: rgba(182, 255, 182, 0.75);
 }
 
 .debug-overlay-body {
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.4);
   border-radius: 0.4rem;
   padding: 0.4rem;
   overflow-y: auto;
@@ -293,26 +239,5 @@
 }
 
 .debug-overlay-empty {
-  color: rgba(182, 255, 182, 0.6);
-}
-
-@media (max-width: 1024px) {
-  .app {
-    flex-direction: column;
-    gap: 1rem;
-    padding: 1rem;
-  }
-
-  .app-left {
-    flex: 0 0 auto;
-    height: 30vh;
-  }
-
-  .app-right {
-    flex: 1;
-  }
-
-  .app-version {
-    font-size: 0.6rem;
-  }
+  color: rgba(182, 255, 182, 0.45);
 }

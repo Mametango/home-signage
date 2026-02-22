@@ -1,17 +1,56 @@
-:root {
-  --glass-bg: rgba(255, 255, 255, 0.03);
-  --glass-border: rgba(255, 255, 255, 0.15);
-  --glass-blur: blur(24px);
-  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-  --glass-radius: 28px;
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700;800;900&family=Noto+Sans+JP:wght@200;300;400;500;700&display=swap');
 
-  --text-primary: #ffffff;
-  --text-secondary: rgba(255, 255, 255, 0.7);
-  --text-accent: #60a5fa;
-  --accent-color: #60a5fa;
-  --danger-color: #f87171;
-  --warning-color: #facc15;
-  --success-color: #4ade80;
+:root {
+  /* =============================================
+     Glassmorphism — Design Tokens
+     Premium frosted glass on animated gradient
+     ============================================= */
+
+  /* Background (dark charcoal gray) */
+  --glass-bg-dark: #1a1a1e;
+  --glass-bg-mid: #252528;
+  --glass-bg-light: #2a2a2f;
+
+  /* Glass panel surface */
+  --glass-surface: rgba(255, 255, 255, 0.07);
+  --glass-surface-hover: rgba(255, 255, 255, 0.12);
+  --glass-surface-strong: rgba(255, 255, 255, 0.14);
+  --glass-border: rgba(255, 255, 255, 0.15);
+  --glass-border-hover: rgba(255, 255, 255, 0.25);
+  --glass-blur: blur(24px);
+  --glass-blur-heavy: blur(40px);
+
+  /* Text */
+  --glass-text: #ffffff;
+  --glass-text-sub: rgba(255, 255, 255, 0.65);
+  --glass-text-dim: rgba(255, 255, 255, 0.35);
+
+  /* Accent colors */
+  --glass-accent-blue: #60a5fa;
+  --glass-accent-cyan: #22d3ee;
+  --glass-accent-violet: #a78bfa;
+  --glass-accent-pink: #f472b6;
+  --glass-accent-amber: #fbbf24;
+  --glass-accent-rose: #fb7185;
+  --glass-accent-green: #34d399;
+  --glass-accent-orange: #fb923c;
+
+  /* Glow versions */
+  --glass-glow-blue: rgba(96, 165, 250, 0.4);
+  --glass-glow-cyan: rgba(34, 211, 238, 0.35);
+  --glass-glow-violet: rgba(167, 139, 250, 0.35);
+  --glass-glow-pink: rgba(244, 114, 182, 0.35);
+
+  /* Utility */
+  --glass-danger: #ef4444;
+  --glass-warning: #f59e0b;
+  --glass-success: #10b981;
+
+  /* Shapes */
+  --glass-radius: 24px;
+  --glass-radius-md: 16px;
+  --glass-radius-sm: 12px;
+  --glass-radius-xs: 8px;
 }
 
 * {
@@ -21,67 +60,16 @@
 }
 
 body {
-  font-family: 'Noto Sans JP', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  font-family: 'Inter', 'Noto Sans JP', -apple-system, BlinkMacSystemFont, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow: hidden;
-  background-color: #0f172a;
-  background-image:
-    radial-gradient(at 0% 0%, hsla(253, 16%, 7%, 1) 0, transparent 50%),
-    radial-gradient(at 50% 0%, hsla(225, 39%, 30%, 1) 0, transparent 50%),
-    radial-gradient(at 100% 0%, hsla(339, 49%, 30%, 1) 0, transparent 50%);
-  background-size: cover;
-  background-attachment: fixed;
-  color: var(--text-primary);
-}
-
-/* アニメーションする光のオーブを追加 */
-body::before,
-body::after {
-  content: '';
-  position: absolute;
-  width: 60vw;
-  height: 60vw;
-  border-radius: 50%;
-  -webkit-filter: blur(100px);
-  filter: blur(100px);
-  z-index: -1;
-  -webkit-animation: float 20s infinite ease-in-out alternate;
-  animation: float 20s infinite ease-in-out alternate;
-  -webkit-transform: translate3d(0, 0, 0);
-  transform: translate3d(0, 0, 0);
-  will-change: transform;
-}
-
-body::before {
-  top: -10%;
-  left: -10%;
-  background: radial-gradient(circle, rgba(99, 102, 241, 0.3) 0%, transparent 70%);
-  animation-delay: 0s;
-}
-
-body::after {
-  bottom: -10%;
-  right: -10%;
-  background: radial-gradient(circle, rgba(236, 72, 153, 0.3) 0%, transparent 70%);
-  animation-delay: -10s;
-}
-
-@keyframes float {
-  0% {
-    transform: translate(0, 0) scale(1);
-  }
-
-  100% {
-    transform: translate(10%, 10%) scale(1.1);
-  }
+  background-color: var(--glass-bg-dark);
+  color: var(--glass-text);
 }
 
 #root {
   width: 100vw;
   height: 100vh;
   overflow: hidden;
-  z-index: 1;
 }
