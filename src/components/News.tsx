@@ -201,15 +201,17 @@ const News = () => {
         setLoading(true)
         setError(null)
 
-        // NHK JSON API（画像つき）+ RSS フォールバック
-        const [nhkJsonNews, nhkAreaNews] = await Promise.all([
+        // NHK JSON API（画像つき）+ RSS フォールバック + 新潟ニュース
+        const [nhkJsonNews, nhkAreaNews, nhkNiigataNews] = await Promise.all([
           fetchNHKJson('https://www3.nhk.or.jp/news/json16/new_001.json'),
           fetchNHKRss('https://www.nhk.or.jp/rss/news/cat0.xml', 'トップニュース'),
+          fetchNHKRss('https://www.nhk.or.jp/niigata/lnews/niigata.xml', '新潟'),
         ])
 
         console.log('📰 [ニュース取得]', {
           'JSON API': nhkJsonNews.length,
           'RSS': nhkAreaNews.length,
+          '新潟': nhkNiigataNews.length,
           '画像つき': nhkJsonNews.filter(n => n.image).length,
         })
 
@@ -225,13 +227,13 @@ const News = () => {
           }
         })
 
-        // RSSのニュース（重複除外）
-        nhkAreaNews.forEach(item => {
-          if (!seenTitles.has(item.title)) {
-            seenTitles.add(item.title)
-            newsItems.push(item)
-          }
-        })
+          // RSSのニュース（重複除外）
+          ;[...nhkAreaNews, ...nhkNiigataNews].forEach(item => {
+            if (!seenTitles.has(item.title)) {
+              seenTitles.add(item.title)
+              newsItems.push(item)
+            }
+          })
 
         // 一昨日以前を除外
         const yesterdayStartJST = getYesterdayStartJST()
@@ -275,7 +277,7 @@ const News = () => {
   useEffect(() => {
     if (normalNews.length <= 1) return
 
-    const DISPLAY_TIME = 8000  // 8 seconds per card
+    const DISPLAY_TIME = 30000  // 30 seconds per card
     const EXIT_ANIM = 600      // exit animation duration
 
     const timer = setInterval(() => {
@@ -438,7 +440,16 @@ const News = () => {
                   {(currentNormalIndex % totalItems) + 1} / {totalItems}
                 </div>
 
-                {/* Media (top) */}
+                {/* Title row: title left, meta right */}
+                <div className="news-card-header-row">
+                  <h3 className="news-card-title">{newsItem.title}</h3>
+                  <div className="news-card-meta">
+                    <span className="news-category-badge">{newsItem.category}</span>
+                    <span className="news-time">{formatDate(newsItem.pubDate)}</span>
+                  </div>
+                </div>
+
+                {/* Media (bottom) */}
                 {itemHasValidMedia && (
                   <div className="news-card-media">
                     {isVideo && normalizedVideoUrl ? (
@@ -453,20 +464,6 @@ const News = () => {
                       />
                     ) : null}
                   </div>
-                )}
-
-                {/* Category & Time */}
-                <div className="news-card-meta">
-                  <span className="news-category-badge">{newsItem.category}</span>
-                  <span className="news-time">{formatDate(newsItem.pubDate)}</span>
-                </div>
-
-                {/* Title */}
-                <h3 className="news-card-title">{newsItem.title}</h3>
-
-                {/* Description */}
-                {newsItem.description && (
-                  <p className="news-card-description">{newsItem.description}</p>
                 )}
               </>
             )
