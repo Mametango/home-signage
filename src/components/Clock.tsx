@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { format } from 'date-fns'
 import { getSettings } from './Settings'
 import WeatherIcon from './WeatherIcon'
@@ -956,7 +956,7 @@ const Clock = ({ showTimeOnly = false, renderMode }: ClockProps = {}) => {
           {forecastDays.map((day, index) => (
             <div key={`fc-${index}`} className="forecast-inline-item">
               <span className="forecast-inline-day">{day.weekday}</span>
-              <WeatherIcon code={day.weatherCode || (day.condition === '晴れ' ? '100' : day.condition?.includes('雨') ? '300' : day.condition?.includes('雪') ? '400' : '200')} size={36} />
+              <WeatherIcon code={day.weatherCode || (day.condition === '晴れ' ? '100' : day.condition?.includes('雨') ? '300' : day.condition?.includes('雪') ? '400' : '200')} size={60} />
               <span className="forecast-inline-temp">{day.maxTemp !== undefined ? `${day.maxTemp}°` : '--'}</span>
             </div>
           ))}
