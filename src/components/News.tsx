@@ -118,82 +118,26 @@ const News = () => {
   */
 
 
-  // NHK JSON API からニュースを取得（画像つき）
-  const NHK_BASE = 'https://www3.nhk.or.jp/news/'
-  const NHK_IMAGE_BASE = 'https://imgu.web.nhk/news/u/news/'
-  const categoryMap: Record<string, string> = {
-    '0': 'トップ', '1': '社会', '2': '科学・文化', '3': '政治',
-    '4': '経済', '5': '国際', '6': 'スポーツ', '7': '五輪',
-  }
-
-  const fetchNHKJson = async (jsonUrl: string): Promise<NewsItem[]> => {
+  // ニュースを取得（GASプロキシまたは内部API）
+  const fetchNewsFromApi = async (type: 'latest' | 'area'): Promise<NewsItem[]> => {
     try {
-      const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(jsonUrl)}`
-      const response = await fetch(proxyUrl, { cache: 'no-cache' })
+      // 環境変数から GAS の URL を取得（未設定時はデフォルトの GAS を参照）
+      const gasUrl = import.meta.env.VITE_NEWS_API_URL || 'https://script.google.com/macros/s/AKfycbwrDvEcIRw50vSe0KgtDBIFG38ZywNZEAmYOrPHceld-OVqE8MZBVXsQwLhOLDMDw91/exec'
+      const endpoint = gasUrl 
+        ? `${gasUrl}?type=${type}` 
+        : (type === 'latest' ? '/api/nhk-latest-news' : '/api/nhk-area-news')
+
+      const response = await fetch(endpoint, { cache: 'no-cache' })
       if (!response.ok) return []
 
       const data = await response.json()
-      const items = data?.channel?.item || []
-      const newsList: NewsItem[] = []
-
-      items.forEach((item: any, index: number) => {
-        const imgPath = item.imgPath || item.iconPath || ''
-        const imageUrl = imgPath ? `${NHK_IMAGE_BASE}${imgPath}` : ''
-        const cate = item.cate || '0'
-
-        newsList.push({
-          id: parseInt(item.id) || (Date.now() + index),
-          title: item.title || '',
-          link: item.link ? `${NHK_BASE}${item.link}` : '',
-          pubDate: item.pubDate || '',
-          description: '',
-          category: categoryMap[cate] || 'ニュース',
-          isUrgent: false,
-          image: imageUrl || undefined,
-        })
-      })
-      return newsList
+      return data.news || []
     } catch (err) {
-      console.error('NHK JSON API取得エラー:', err)
+      console.error(`ニュース取得エラー (${type}):`, err)
       return []
     }
   }
 
-  // NHKのRSS(XML)を取得してパース（フォールバック用）
-  const fetchNHKRss = async (rssUrl: string, categoryName: string): Promise<NewsItem[]> => {
-    try {
-      const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(rssUrl)}`
-      const response = await fetch(proxyUrl, {
-        method: 'GET',
-        headers: { 'Accept': 'application/xml, text/xml' }
-      })
-      if (!response.ok) return []
-
-      const xmlText = await response.text()
-      const parser = new DOMParser()
-      const xmlDoc = parser.parseFromString(xmlText, 'text/xml')
-      const items = xmlDoc.querySelectorAll('item')
-
-      const newsList: NewsItem[] = []
-      items.forEach((item, index) => {
-        const title = item.querySelector('title')?.textContent || ''
-        const link = item.querySelector('link')?.textContent || ''
-        const pubDate = item.querySelector('pubDate')?.textContent || ''
-        const description = item.querySelector('description')?.textContent || ''
-
-        newsList.push({
-          id: Date.now() + Math.floor(Math.random() * 1000) + index,
-          title, link, pubDate, description,
-          category: categoryName,
-          isUrgent: false,
-        })
-      })
-      return newsList
-    } catch (err) {
-      console.error(`${categoryName} RSS取得でエラー:`, err)
-      return []
-    }
-  }
 
   useEffect(() => {
     const fetchNews = async () => {
@@ -201,39 +145,36 @@ const News = () => {
         setLoading(true)
         setError(null)
 
-        // NHK JSON API（画像つき）+ RSS フォールバック + 新潟ニュース
-        const [nhkJsonNews, nhkAreaNews, nhkNiigataNews] = await Promise.all([
-          fetchNHKJson('https://www3.nhk.or.jp/news/json16/new_001.json'),
-          fetchNHKRss('https://www.nhk.or.jp/rss/news/cat0.xml', 'トップニュース'),
-          fetchNHKRss('https://www.nhk.or.jp/niigata/lnews/niigata.xml', '新潟'),
+        // 全国・新潟のニュースを取得
+        const [latestNews, areaNews] = await Promise.all([
+          fetchNewsFromApi('latest'),
+          fetchNewsFromApi('area'),
         ])
 
         console.log('📰 [ニュース取得]', {
-          'JSON API': nhkJsonNews.length,
-          'RSS': nhkAreaNews.length,
-          '新潟': nhkNiigataNews.length,
-          '画像つき': nhkJsonNews.filter(n => n.image).length,
+          '全国ニュース': latestNews.length,
+          '新潟ニュース': areaNews.length,
         })
 
-        // JSON API のニュースを優先、重複除外
+        // 重複除外
         const seenTitles = new Set<string>()
         let newsItems: NewsItem[] = []
 
-        // JSON APIのニュース（画像つき）を先に追加
-        nhkJsonNews.forEach(item => {
+        // 全国ニュースを先に追加
+        latestNews.forEach(item => {
           if (!seenTitles.has(item.title)) {
             seenTitles.add(item.title)
             newsItems.push(item)
           }
         })
 
-          // RSSのニュース（重複除外）
-          ;[...nhkAreaNews, ...nhkNiigataNews].forEach(item => {
-            if (!seenTitles.has(item.title)) {
-              seenTitles.add(item.title)
-              newsItems.push(item)
-            }
-          })
+        // 新潟ニュースを追加
+        areaNews.forEach(item => {
+          if (!seenTitles.has(item.title)) {
+            seenTitles.add(item.title)
+            newsItems.push(item)
+          }
+        })
 
         // 一昨日以前を除外
         const yesterdayStartJST = getYesterdayStartJST()
