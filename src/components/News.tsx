@@ -26,6 +26,12 @@ function parsePubDateToTime(pubDate: string | undefined): number {
   return Number.isNaN(t) ? 0 : t
 }
 
+/** HTMLタグを完全に除去する */
+function stripHtml(str: string): string {
+  if (!str) return ''
+  return str.replace(/<[^>]*>?/gm, '').replace(/\s+/g, ' ').trim()
+}
+
 /** 昨日 0:00 JST のタイムスタンプ（これより前のニュースは除外） */
 function getYesterdayStartJST(): number {
   const d = new Date()
@@ -370,7 +376,7 @@ const News = () => {
                 </div>
 
                 {/* Title */}
-                <h3 className="news-card-title">{newsItem.title}</h3>
+                <h3 className="news-card-title">{stripHtml(newsItem.title)}</h3>
 
                 {/* Media (bottom) */}
                 {itemHasValidMedia && (
