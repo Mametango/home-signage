@@ -119,13 +119,11 @@ const News = () => {
 
 
   // ニュースを取得（GASプロキシまたは内部API）
-  const fetchNewsFromApi = async (type: 'latest' | 'area'): Promise<NewsItem[]> => {
+  const fetchNewsFromApi = async (): Promise<NewsItem[]> => {
     try {
       // 環境変数から GAS の URL を取得（未設定時はデフォルトの GAS を参照）
-      const gasUrl = import.meta.env.VITE_NEWS_API_URL || 'https://script.google.com/macros/s/AKfycbyH6aAdi05lHJL4C5nJqebxZMz22q6ivdoaZw-LAt0XOuUuyC-HxY4Wi1B1peu5xq9c/exec'
-      const endpoint = gasUrl 
-        ? `${gasUrl}?type=${type}` 
-        : (type === 'latest' ? '/api/nhk-latest-news' : '/api/nhk-area-news')
+      const gasUrl = import.meta.env.VITE_NEWS_API_URL || 'https://script.google.com/macros/s/AKfycbzQkGiLRP5htIje6u0nfoUL8sw3A5zlJ6NRRameQLCQsbAh9Dvpcihp_SSXI2mltWIO/exec'
+      const endpoint = gasUrl ? gasUrl : '/api/nhk-latest-news'
 
       const response = await fetch(endpoint, { cache: 'no-cache' })
       if (!response.ok) return []
@@ -133,7 +131,7 @@ const News = () => {
       const data = await response.json()
       return data.news || []
     } catch (err) {
-      console.error(`ニュース取得エラー (${type}):`, err)
+      console.error(`ニュース取得エラー:`, err)
       return []
     }
   }
@@ -145,31 +143,19 @@ const News = () => {
         setLoading(true)
         setError(null)
 
-        // 全国・新潟のニュースを取得
-        const [latestNews, areaNews] = await Promise.all([
-          fetchNewsFromApi('latest'),
-          fetchNewsFromApi('area'),
-        ])
+        // 全国ニュースを取得
+        const latestNews = await fetchNewsFromApi()
 
         console.log('📰 [ニュース取得]', {
-          '全国ニュース': latestNews.length,
-          '新潟ニュース': areaNews.length,
+          '全国ニュース': latestNews.length
         })
 
         // 重複除外
         const seenTitles = new Set<string>()
         let newsItems: NewsItem[] = []
 
-        // 全国ニュースを先に追加
+        // 全国ニュースを追加
         latestNews.forEach(item => {
-          if (!seenTitles.has(item.title)) {
-            seenTitles.add(item.title)
-            newsItems.push(item)
-          }
-        })
-
-        // 新潟ニュースを追加
-        areaNews.forEach(item => {
           if (!seenTitles.has(item.title)) {
             seenTitles.add(item.title)
             newsItems.push(item)
