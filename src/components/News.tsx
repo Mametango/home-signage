@@ -122,7 +122,7 @@ const News = () => {
   const fetchNewsFromApi = async (type: 'latest' | 'area'): Promise<NewsItem[]> => {
     try {
       // 環境変数から GAS の URL を取得（未設定時はデフォルトの GAS を参照）
-      const gasUrl = import.meta.env.VITE_NEWS_API_URL || 'https://script.google.com/macros/s/AKfycbwrDvEcIRw50vSe0KgtDBIFG38ZywNZEAmYOrPHceld-OVqE8MZBVXsQwLhOLDMDw91/exec'
+      const gasUrl = import.meta.env.VITE_NEWS_API_URL || 'https://script.google.com/macros/s/AKfycbyH6aAdi05lHJL4C5nJqebxZMz22q6ivdoaZw-LAt0XOuUuyC-HxY4Wi1B1peu5xq9c/exec'
       const endpoint = gasUrl 
         ? `${gasUrl}?type=${type}` 
         : (type === 'latest' ? '/api/nhk-latest-news' : '/api/nhk-area-news')
