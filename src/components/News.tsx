@@ -32,6 +32,78 @@ function stripHtml(str: string): string {
   return str.replace(/<[^>]*>?/gm, '').replace(/\s+/g, ' ').trim()
 }
 
+function decodeHtmlEntities(str: string): string {
+  if (!str) return ''
+  return str
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&amp;/gi, '&')
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/gi, "'")
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+}
+
+function extractFirstMediaUrl(html?: string): string | undefined {
+  if (!html) return undefined
+
+  const mediaMatch = html.match(/<(img|source|video)[^>]+src=["']([^"']+)["']/i)
+  if (mediaMatch?.[2]) return decodeHtmlEntities(mediaMatch[2])
+
+  return undefined
+}
+
+function normalizeNewsItem(rawItem: NewsItem, index: number): NewsItem {
+  const cleanedTitle = stripHtml(rawItem.title)
+  const cleanedDescription = rawItem.description ? stripHtml(rawItem.description) : undefined
+  const embeddedMedia =
+    extractFirstMediaUrl(rawItem.image) ||
+    extractFirstMediaUrl(rawItem.video) ||
+    extractFirstMediaUrl(rawItem.title) ||
+    extractFirstMediaUrl(rawItem.description)
+
+  return {
+    ...rawItem,
+    id: rawItem.id ?? index,
+    title: decodeHtmlEntities(cleanedTitle),
+    description: cleanedDescription ? decodeHtmlEntities(cleanedDescription) : undefined,
+    image: rawItem.image || embeddedMedia,
+    video: rawItem.video
+  }
+}
+
+function isDisplayableNewsItem(item: NewsItem): boolean {
+  const title = stripHtml(item.title)
+  const description = stripHtml(item.description || '')
+  const normalizedLink = (item.link || '').trim()
+
+  const isSectionLink = [
+    '新着・注目',
+    '気象・災害',
+    '科学・文化',
+    '動画・番組'
+  ].includes(title)
+
+  const isArticleLink = /\/newsweb\/(na\/na-k|html\/)/.test(normalizedLink)
+
+  if (isSectionLink) return false
+  if (!title && !description) return false
+  if (!isArticleLink) return false
+
+  return true
+}
+
+function hasUsableNewsContent(items: NewsItem[]): boolean {
+  return items.some((item) => {
+    const title = stripHtml(item.title)
+    const description = stripHtml(item.description || '')
+    return title.length >= 8 || description.length >= 20
+  })
+}
+
+function getStaticNewsUrl(): string {
+  return new URL(`${import.meta.env.BASE_URL}latest-news.json`, window.location.href).toString()
+}
+
 /** 昨日 0:00 JST のタイムスタンプ（これより前のニュースは除外） */
 function getYesterdayStartJST(): number {
   const d = new Date()
@@ -135,10 +207,34 @@ const News = () => {
       if (!response.ok) return []
 
       const data = await response.json()
-      return data.news || []
+      const newsItems = Array.isArray(data.news) ? (data.news as NewsItem[]) : []
+      return newsItems.map((item: NewsItem, index: number) => normalizeNewsItem(item, index))
     } catch (err) {
       console.error(`ニュース取得エラー:`, err)
       return []
+    }
+  }
+
+  const fetchNewsWithFallback = async (): Promise<NewsItem[]> => {
+    const fetchAndNormalize = async (endpoint: string): Promise<NewsItem[]> => {
+      const response = await fetch(endpoint, { cache: 'no-cache' })
+      if (!response.ok) return []
+
+      const data = await response.json()
+      const newsItems = Array.isArray(data.news) ? (data.news as NewsItem[]) : []
+      return newsItems.map((item: NewsItem, index: number) => normalizeNewsItem(item, index))
+    }
+
+    try {
+      const remoteItems = await fetchNewsFromApi()
+      if (hasUsableNewsContent(remoteItems)) {
+        return remoteItems
+      }
+
+      console.warn('Remote news feed is missing article text. Falling back to static latest-news.json')
+      return await fetchAndNormalize(getStaticNewsUrl())
+    } catch {
+      return await fetchAndNormalize(getStaticNewsUrl())
     }
   }
 
@@ -150,18 +246,20 @@ const News = () => {
         setError(null)
 
         // 全国ニュースを取得
-        const latestNews = await fetchNewsFromApi()
+        const latestNews = await fetchNewsWithFallback()
 
         console.log('📰 [ニュース取得]', {
           '全国ニュース': latestNews.length
         })
+
+        const filteredNews = latestNews.filter(isDisplayableNewsItem)
 
         // 重複除外
         const seenTitles = new Set<string>()
         let newsItems: NewsItem[] = []
 
         // 全国ニュースを追加
-        latestNews.forEach(item => {
+        filteredNews.forEach(item => {
           if (!seenTitles.has(item.title)) {
             seenTitles.add(item.title)
             newsItems.push(item)
@@ -376,7 +474,7 @@ const News = () => {
                 </div>
 
                 {/* Title */}
-                <h3 className="news-card-title">{stripHtml(newsItem.title)}</h3>
+                <h3 className="news-card-title">{newsItem.title}</h3>
 
                 {/* Media (bottom) */}
                 {itemHasValidMedia && (
@@ -389,6 +487,7 @@ const News = () => {
                         src={normalizedImageUrl}
                         alt={newsItem.title}
                         loading="lazy"
+                        referrerPolicy="no-referrer"
                         onError={() => handleImageError(newsItem.id, normalizedImageUrl)}
                       />
                     ) : null}
