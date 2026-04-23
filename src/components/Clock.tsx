@@ -51,6 +51,12 @@ interface WeeklyWeatherItem {
   rainProbability?: number
 }
 
+interface OpenMeteoSnapshot {
+  currentTemp?: number
+  maxTemp?: number
+  minTemp?: number
+}
+
 const Clock = ({ showTimeOnly = false, renderMode }: ClockProps = {}) => {
   const [time, setTime] = useState(new Date())
   const [weather, setWeather] = useState<WeatherData | null>(null)
@@ -58,6 +64,30 @@ const Clock = ({ showTimeOnly = false, renderMode }: ClockProps = {}) => {
   const [city, setCity] = useState<string>('新発田市')
   const [_warnings, setWarnings] = useState<WarningInfo[]>([])
   const [weeklyWeather, setWeeklyWeather] = useState<WeeklyWeatherItem[]>([])
+
+  const fetchOpenMeteoSnapshot = async (lat: number, lon: number): Promise<OpenMeteoSnapshot | null> => {
+    try {
+      const response = await fetch(
+        `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m&daily=temperature_2m_max,temperature_2m_min&forecast_days=1&timezone=Asia%2FTokyo`
+      )
+
+      if (!response.ok) return null
+
+      const data = await response.json()
+      const currentTemp = data.current?.temperature_2m
+      const maxTemp = data.daily?.temperature_2m_max?.[0]
+      const minTemp = data.daily?.temperature_2m_min?.[0]
+
+      return {
+        currentTemp: typeof currentTemp === 'number' ? Math.round(currentTemp) : undefined,
+        maxTemp: typeof maxTemp === 'number' ? Math.round(maxTemp) : undefined,
+        minTemp: typeof minTemp === 'number' ? Math.round(minTemp) : undefined
+      }
+    } catch (error) {
+      console.log('Open-Meteo snapshot error:', error)
+      return null
+    }
+  }
 
   // 設定を読み込み
   useEffect(() => {
@@ -202,6 +232,7 @@ const Clock = ({ showTimeOnly = false, renderMode }: ClockProps = {}) => {
         const lat = 37.95
         const lon = 139.33
         const areaCode = '150000'
+        const openMeteoSnapshot = await fetchOpenMeteoSnapshot(lat, lon)
 
         // ウェザーニューズAPIを試行（APIキーが必要な場合はエラーになる）
         const weathernewsApiKey = import.meta.env.VITE_WEATHERNEWS_API_KEY || ''
@@ -256,18 +287,26 @@ const Clock = ({ showTimeOnly = false, renderMode }: ClockProps = {}) => {
 
                 const wxCode = currentForecast?.wx || todayForecast?.wx || 100
                 const weatherInfo = getWeatherCondition(wxCode)
-                const maxTemp = todayForecast?.maxtemp || currentForecast?.temp
-                const minTemp = todayForecast?.mintemp
+                const maxTemp = openMeteoSnapshot?.maxTemp ?? todayForecast?.maxtemp ?? currentForecast?.temp
+                const minTemp = openMeteoSnapshot?.minTemp ?? todayForecast?.mintemp
                 const precipitation = todayForecast?.pop || 0
 
                 setWeather({
-                  temp: currentForecast?.temp || maxTemp || 12,
+                  temp: openMeteoSnapshot?.currentTemp ?? currentForecast?.temp ?? maxTemp ?? 12,
                   maxTemp: maxTemp,
                   minTemp: minTemp,
                   condition: weatherInfo.condition,
                   icon: weatherInfo.icon,
                   weatherCode: String(wxCode),
-                  precipitation: precipitation
+                  precipitation: precipitation,
+                  today: {
+                    condition: weatherInfo.condition,
+                    icon: weatherInfo.icon,
+                    weatherCode: String(wxCode),
+                    maxTemp: maxTemp,
+                    minTemp: minTemp,
+                    precipitation: precipitation
+                  }
                 })
 
                 // 警報・注意報も取得
@@ -362,14 +401,25 @@ const Clock = ({ showTimeOnly = false, renderMode }: ClockProps = {}) => {
 
                     const weatherInfo = getWeatherCondition(weatherCode)
 
+                    const resolvedMaxTemp = openMeteoSnapshot?.maxTemp ?? maxTemp
+                    const resolvedMinTemp = openMeteoSnapshot?.minTemp ?? minTemp
+
                     setWeather({
-                      temp: maxTemp || minTemp || 12,
-                      maxTemp: maxTemp,
-                      minTemp: minTemp,
+                      temp: openMeteoSnapshot?.currentTemp ?? resolvedMaxTemp ?? resolvedMinTemp ?? 12,
+                      maxTemp: resolvedMaxTemp,
+                      minTemp: resolvedMinTemp,
                       condition: weatherInfo.condition,
                       icon: weatherInfo.icon,
                       weatherCode: weatherCode,
-                      precipitation: 0
+                      precipitation: 0,
+                      today: {
+                        condition: weatherInfo.condition,
+                        icon: weatherInfo.icon,
+                        weatherCode: weatherCode,
+                        maxTemp: resolvedMaxTemp,
+                        minTemp: resolvedMinTemp,
+                        precipitation: 0
+                      }
                     })
 
                     // 警報・注意報も取得
@@ -598,12 +648,15 @@ const Clock = ({ showTimeOnly = false, renderMode }: ClockProps = {}) => {
                 }
 
                 // 今日の天気情報を構築
+                const resolvedMaxTemp = openMeteoSnapshot?.maxTemp ?? maxTemp
+                const resolvedMinTemp = openMeteoSnapshot?.minTemp ?? minTemp
+
                 const todayInfo = {
                   condition: displayCondition,
                   icon: displayIcon,
                   weatherCode: todayWeatherCodeForIcon,
-                  maxTemp: maxTemp,
-                  minTemp: minTemp,
+                  maxTemp: resolvedMaxTemp,
+                  minTemp: resolvedMinTemp,
                   precipitation: todayPop
                 }
 
@@ -622,9 +675,9 @@ const Clock = ({ showTimeOnly = false, renderMode }: ClockProps = {}) => {
                 }
 
                 setWeather({
-                  temp: currentTemp ?? maxTemp ?? minTemp ?? 0,
-                  maxTemp: maxTemp,
-                  minTemp: minTemp,
+                  temp: openMeteoSnapshot?.currentTemp ?? currentTemp ?? resolvedMaxTemp ?? resolvedMinTemp ?? 0,
+                  maxTemp: resolvedMaxTemp,
+                  minTemp: resolvedMinTemp,
                   condition: displayCondition,
                   icon: displayIcon,
                   weatherCode: todayWeatherCodeForIcon,
@@ -700,8 +753,8 @@ const Clock = ({ showTimeOnly = false, renderMode }: ClockProps = {}) => {
             }
 
             // 最高気温と最低気温を取得
-            const maxTemp = data.main.temp_max ? Math.round(data.main.temp_max) : undefined
-            const minTemp = data.main.temp_min ? Math.round(data.main.temp_min) : undefined
+            const maxTemp = openMeteoSnapshot?.maxTemp ?? (data.main.temp_max ? Math.round(data.main.temp_max) : undefined)
+            const minTemp = openMeteoSnapshot?.minTemp ?? (data.main.temp_min ? Math.round(data.main.temp_min) : undefined)
 
             const conditionText = data.weather?.[0]?.description || data.weather?.[0]?.main || '晴れ'
 
@@ -716,7 +769,7 @@ const Clock = ({ showTimeOnly = false, renderMode }: ClockProps = {}) => {
             }
 
             setWeather({
-              temp: Math.round(data.main.temp),
+              temp: openMeteoSnapshot?.currentTemp ?? Math.round(data.main.temp),
               maxTemp: maxTemp,
               minTemp: minTemp,
               condition: conditionText,
@@ -752,11 +805,21 @@ const Clock = ({ showTimeOnly = false, renderMode }: ClockProps = {}) => {
 
         // フォールバック
         setWeather({
-          temp: 12,
+          temp: openMeteoSnapshot?.currentTemp ?? openMeteoSnapshot?.maxTemp ?? 12,
+          maxTemp: openMeteoSnapshot?.maxTemp,
+          minTemp: openMeteoSnapshot?.minTemp,
           condition: '曇り',
           icon: '☁️',
           weatherCode: '200',
           precipitation: 30,
+          today: {
+            condition: '曇り',
+            icon: '☁️',
+            weatherCode: '200',
+            maxTemp: openMeteoSnapshot?.maxTemp,
+            minTemp: openMeteoSnapshot?.minTemp,
+            precipitation: 30
+          }
         })
       } catch (error) {
         console.error('天気情報の取得に失敗しました:', error)
