@@ -429,7 +429,7 @@ const Clock = ({ showTimeOnly = false, renderMode }: ClockProps = {}) => {
                 // 気温の処理（temps配列には最高気温と最低気温が含まれる可能性がある）
                 let maxTemp: number | undefined
                 let minTemp: number | undefined
-                let currentTemp = 12
+                let currentTemp: number | undefined
 
                 if (temps && temps.length > 0) {
                   // 最高気温と最低気温を取得
@@ -622,7 +622,7 @@ const Clock = ({ showTimeOnly = false, renderMode }: ClockProps = {}) => {
                 }
 
                 setWeather({
-                  temp: currentTemp,
+                  temp: currentTemp ?? maxTemp ?? minTemp ?? 0,
                   maxTemp: maxTemp,
                   minTemp: minTemp,
                   condition: displayCondition,
@@ -894,9 +894,9 @@ const Clock = ({ showTimeOnly = false, renderMode }: ClockProps = {}) => {
     const todayDate = new Date()
     forecastDays.push({
       date: format(todayDate, 'M/d'),
-      weekday: 'TODAY',
+      weekday: format(todayDate, 'M/d'),
       condition: weather?.today?.condition ?? weather?.condition ?? '晴れ',
-      maxTemp: weather?.temp,
+      maxTemp: weather?.today?.maxTemp ?? weather?.maxTemp ?? weather?.temp,
       weatherCode: weather?.today?.weatherCode || '100',
     })
 
@@ -906,10 +906,9 @@ const Clock = ({ showTimeOnly = false, renderMode }: ClockProps = {}) => {
         const w = weeklyWeather[i]
         const d = new Date()
         d.setDate(d.getDate() + i)
-        const dayNames = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT']
         forecastDays.push({
           date: w.date || format(d, 'M/d'),
-          weekday: dayNames[d.getDay()],
+          weekday: w.date || format(d, 'M/d'),
           condition: w.condition || '晴れ',
           maxTemp: w.maxTemp,
           minTemp: w.minTemp,
@@ -919,10 +918,9 @@ const Clock = ({ showTimeOnly = false, renderMode }: ClockProps = {}) => {
       for (let i = 1; i <= 2; i++) {
         const d = new Date()
         d.setDate(d.getDate() + i)
-        const dayNames = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT']
         forecastDays.push({
           date: format(d, 'M/d'),
-          weekday: dayNames[d.getDay()],
+          weekday: format(d, 'M/d'),
           condition: i === 1 ? (weather?.tomorrow?.condition ?? '曇り') : '曇り',
           maxTemp: i === 1 ? weather?.tomorrow?.maxTemp : undefined,
           minTemp: i === 1 ? weather?.tomorrow?.minTemp : undefined,
