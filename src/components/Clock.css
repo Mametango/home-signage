@@ -184,7 +184,7 @@
 .forecast-inline-item {
   display: flex;
   align-items: center;
-  gap: 0.8rem;
+  gap: 1.1rem;
 }
 
 .forecast-inline-day {
