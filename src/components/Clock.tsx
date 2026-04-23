@@ -57,6 +57,15 @@ interface OpenMeteoSnapshot {
   minTemp?: number
 }
 
+const pickTemperature = (...values: Array<number | undefined>): number | undefined => {
+  for (const value of values) {
+    if (typeof value === 'number' && Number.isFinite(value) && value >= -50 && value <= 50) {
+      return value
+    }
+  }
+  return undefined
+}
+
 const Clock = ({ showTimeOnly = false, renderMode }: ClockProps = {}) => {
   const [time, setTime] = useState(new Date())
   const [weather, setWeather] = useState<WeatherData | null>(null)
@@ -292,7 +301,7 @@ const Clock = ({ showTimeOnly = false, renderMode }: ClockProps = {}) => {
                 const precipitation = todayForecast?.pop || 0
 
                 setWeather({
-                  temp: openMeteoSnapshot?.currentTemp ?? currentForecast?.temp ?? maxTemp ?? 12,
+                  temp: pickTemperature(openMeteoSnapshot?.currentTemp, currentForecast?.temp, maxTemp, minTemp, 12) as number,
                   maxTemp: maxTemp,
                   minTemp: minTemp,
                   condition: weatherInfo.condition,
@@ -405,7 +414,7 @@ const Clock = ({ showTimeOnly = false, renderMode }: ClockProps = {}) => {
                     const resolvedMinTemp = openMeteoSnapshot?.minTemp ?? minTemp
 
                     setWeather({
-                      temp: openMeteoSnapshot?.currentTemp ?? resolvedMaxTemp ?? resolvedMinTemp ?? 12,
+                      temp: pickTemperature(openMeteoSnapshot?.currentTemp, resolvedMaxTemp, resolvedMinTemp, 12) as number,
                       maxTemp: resolvedMaxTemp,
                       minTemp: resolvedMinTemp,
                       condition: weatherInfo.condition,
@@ -675,7 +684,7 @@ const Clock = ({ showTimeOnly = false, renderMode }: ClockProps = {}) => {
                 }
 
                 setWeather({
-                  temp: openMeteoSnapshot?.currentTemp ?? currentTemp ?? resolvedMaxTemp ?? resolvedMinTemp ?? 0,
+                  temp: pickTemperature(openMeteoSnapshot?.currentTemp, currentTemp, resolvedMaxTemp, resolvedMinTemp, 12) as number,
                   maxTemp: resolvedMaxTemp,
                   minTemp: resolvedMinTemp,
                   condition: displayCondition,
@@ -769,7 +778,7 @@ const Clock = ({ showTimeOnly = false, renderMode }: ClockProps = {}) => {
             }
 
             setWeather({
-              temp: openMeteoSnapshot?.currentTemp ?? Math.round(data.main.temp),
+              temp: pickTemperature(openMeteoSnapshot?.currentTemp, Math.round(data.main.temp), maxTemp, minTemp, 12) as number,
               maxTemp: maxTemp,
               minTemp: minTemp,
               condition: conditionText,
@@ -805,7 +814,7 @@ const Clock = ({ showTimeOnly = false, renderMode }: ClockProps = {}) => {
 
         // フォールバック
         setWeather({
-          temp: openMeteoSnapshot?.currentTemp ?? openMeteoSnapshot?.maxTemp ?? 12,
+          temp: pickTemperature(openMeteoSnapshot?.currentTemp, openMeteoSnapshot?.maxTemp, openMeteoSnapshot?.minTemp, 12) as number,
           maxTemp: openMeteoSnapshot?.maxTemp,
           minTemp: openMeteoSnapshot?.minTemp,
           condition: '曇り',
@@ -952,15 +961,17 @@ const Clock = ({ showTimeOnly = false, renderMode }: ClockProps = {}) => {
   // Left column: Time, Date & 3-day forecast
   if (mode === 'time') {
     const forecastDays: { date: string; weekday: string; condition: string; maxTemp?: number; minTemp?: number; weatherCode?: string }[] = []
+    const todayWeekly = weeklyWeather[0]
 
     // Today
     const todayDate = new Date()
     forecastDays.push({
       date: format(todayDate, 'M/d'),
       weekday: format(todayDate, 'M/d'),
-      condition: weather?.today?.condition ?? weather?.condition ?? '晴れ',
-      maxTemp: weather?.today?.maxTemp ?? weather?.maxTemp ?? weather?.temp,
-      weatherCode: weather?.today?.weatherCode || '100',
+      condition: todayWeekly?.condition ?? weather?.today?.condition ?? weather?.condition ?? '晴れ',
+      maxTemp: pickTemperature(todayWeekly?.maxTemp, weather?.today?.maxTemp, weather?.maxTemp, weather?.temp),
+      minTemp: pickTemperature(todayWeekly?.minTemp, weather?.today?.minTemp, weather?.minTemp),
+      weatherCode: weather?.today?.weatherCode || (todayWeekly?.condition === '晴れ' ? '100' : todayWeekly?.condition?.includes('雨') ? '300' : todayWeekly?.condition?.includes('雪') ? '400' : '200') || '100',
     })
 
     // Tomorrow & Day after
@@ -1018,7 +1029,15 @@ const Clock = ({ showTimeOnly = false, renderMode }: ClockProps = {}) => {
             <div key={`fc-${index}`} className="forecast-inline-item">
               <span className="forecast-inline-day">{day.weekday}</span>
               <WeatherIcon code={day.weatherCode || (day.condition === '晴れ' ? '100' : day.condition?.includes('雨') ? '300' : day.condition?.includes('雪') ? '400' : '200')} size={60} />
-              <span className="forecast-inline-temp">{day.maxTemp !== undefined ? `${day.maxTemp}°` : '--'}</span>
+              {index === 0 && day.minTemp !== undefined && day.maxTemp !== undefined ? (
+                <span className="forecast-inline-temp forecast-inline-temp--range">
+                  <span className="forecast-inline-temp-min">{day.minTemp}°</span>
+                  <span className="forecast-inline-temp-sep">/</span>
+                  <span>{day.maxTemp}°</span>
+                </span>
+              ) : (
+                <span className="forecast-inline-temp">{day.maxTemp !== undefined ? `${day.maxTemp}°` : '--'}</span>
+              )}
             </div>
           ))}
         </div>

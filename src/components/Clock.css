@@ -201,3 +201,18 @@
   font-weight: 400;
   color: var(--glass-text);
 }
+
+.forecast-inline-temp--range {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  font-size: 1.75rem;
+}
+
+.forecast-inline-temp-min {
+  color: var(--glass-text-sub);
+}
+
+.forecast-inline-temp-sep {
+  color: var(--glass-text-dim);
+}
