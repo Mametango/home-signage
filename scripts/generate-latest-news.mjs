@@ -5,6 +5,8 @@ import * as cheerio from 'cheerio'
 const LIST_URL = 'https://news.web.nhk/newsweb/pl/news-nwa-latest-nationwide'
 const OUTPUT_DIR = resolve(process.cwd(), 'public')
 const OUTPUT_FILE = resolve(OUTPUT_DIR, 'latest-news.json')
+const GENERATED_DIR = resolve(process.cwd(), 'src', 'generated')
+const GENERATED_FILE = resolve(GENERATED_DIR, 'latest-news.ts')
 
 const ARTICLE_PATH_RE = /\/newsweb\/(na\/na-k|html\/)/i
 
@@ -115,14 +117,22 @@ async function main() {
       .filter((result) => result.status === 'fulfilled' && result.value)
       .map((result) => result.value)
 
+    const payload = { generatedAt: new Date().toISOString(), news }
+
     await mkdir(OUTPUT_DIR, { recursive: true })
+    await mkdir(GENERATED_DIR, { recursive: true })
     await writeFile(
       OUTPUT_FILE,
-      JSON.stringify({ generatedAt: new Date().toISOString(), news }, null, 2),
+      JSON.stringify(payload, null, 2),
+      'utf8'
+    )
+    await writeFile(
+      GENERATED_FILE,
+      `export const embeddedLatestNews = ${JSON.stringify(payload, null, 2)} as const;\n`,
       'utf8'
     )
 
-    console.log(`Generated ${news.length} news items at ${OUTPUT_FILE}`)
+    console.log(`Generated ${news.length} news items at ${OUTPUT_FILE} and ${GENERATED_FILE}`)
   } catch (error) {
     console.error('Failed to generate latest-news.json:', error)
     process.exitCode = 1

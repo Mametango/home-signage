@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import './News.css'
+import { embeddedLatestNews } from '../generated/latest-news'
 
 interface NewsItem {
   id: number
@@ -102,6 +103,11 @@ function hasUsableNewsContent(items: NewsItem[]): boolean {
 
 function getStaticNewsUrl(): string {
   return new URL(`${import.meta.env.BASE_URL}latest-news.json`, window.location.href).toString()
+}
+
+function getEmbeddedNewsItems(): NewsItem[] {
+  const newsItems = Array.isArray(embeddedLatestNews.news) ? [...embeddedLatestNews.news] : []
+  return newsItems.map((item, index) => normalizeNewsItem(item as NewsItem, index))
 }
 
 /** 昨日 0:00 JST のタイムスタンプ（これより前のニュースは除外） */
@@ -232,9 +238,23 @@ const News = () => {
       }
 
       console.warn('Remote news feed is missing article text. Falling back to static latest-news.json')
-      return await fetchAndNormalize(getStaticNewsUrl())
+      const staticItems = await fetchAndNormalize(getStaticNewsUrl())
+      if (hasUsableNewsContent(staticItems)) {
+        return staticItems
+      }
+
+      console.warn('Static latest-news.json is unavailable. Falling back to embedded news data')
+      return getEmbeddedNewsItems()
     } catch {
-      return await fetchAndNormalize(getStaticNewsUrl())
+      try {
+        const staticItems = await fetchAndNormalize(getStaticNewsUrl())
+        if (hasUsableNewsContent(staticItems)) {
+          return staticItems
+        }
+      } catch {
+        // embedded fallback below
+      }
+      return getEmbeddedNewsItems()
     }
   }
 

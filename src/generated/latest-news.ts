@@ -1,4 +1,4 @@
-{
+export const embeddedLatestNews = {
   "generatedAt": "2026-04-26T11:34:18.222Z",
   "news": [
     {
@@ -110,4 +110,4 @@
       "image": "https://imgu.web.nhk/news/u/news/html/20260426/K10015108691_2604261720_0426173411_01_02.jpg"
     }
   ]
-}
+} as const;
