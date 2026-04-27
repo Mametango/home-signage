@@ -287,18 +287,20 @@ const News = () => {
         })
 
         // 一昨日以前を除外
-        const yesterdayStartJST = getYesterdayStartJST()
-        newsItems = newsItems.filter((item) => {
-          const t = parsePubDateToTime(item.pubDate)
-          return t === 0 || t >= yesterdayStartJST
-        })
-
         // 新しい順にソート
         newsItems.sort((a, b) => {
           const dateA = parsePubDateToTime(a.pubDate)
           const dateB = parsePubDateToTime(b.pubDate)
           return dateB - dateA
         })
+
+        const yesterdayStartJST = getYesterdayStartJST()
+        const recentNewsItems = newsItems.filter((item) => {
+          const t = parsePubDateToTime(item.pubDate)
+          return t === 0 || t >= yesterdayStartJST
+        })
+
+        newsItems = recentNewsItems.length > 0 ? recentNewsItems : newsItems.slice(0, 10)
 
         setNormalNews(newsItems)
 
