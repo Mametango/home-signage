@@ -84,7 +84,9 @@ function isDisplayableNewsItem(item: NewsItem): boolean {
     '動画・番組'
   ].includes(title)
 
-  const isArticleLink = /\/newsweb\/(na\/na-k|html\/)/.test(normalizedLink)
+  const isArticleLink =
+    /\/newsweb\/(na\/na-k|html\/)/.test(normalizedLink) ||
+    /\/news\/html\/\d+\/k\d+\.html/.test(normalizedLink)
 
   if (isSectionLink) return false
   if (!title && !description) return false
@@ -108,6 +110,17 @@ function getStaticNewsUrl(): string {
 function getEmbeddedNewsItems(): NewsItem[] {
   const newsItems = Array.isArray(embeddedLatestNews.news) ? [...embeddedLatestNews.news] : []
   return newsItems.map((item, index) => normalizeNewsItem(item as NewsItem, index))
+}
+
+async function fetchWithTimeout(endpoint: string, timeoutMs = 8000): Promise<Response> {
+  const controller = new AbortController()
+  const timeoutId = window.setTimeout(() => controller.abort(), timeoutMs)
+
+  try {
+    return await fetch(endpoint, { cache: 'no-cache', signal: controller.signal })
+  } finally {
+    window.clearTimeout(timeoutId)
+  }
 }
 
 /** 昨日 0:00 JST のタイムスタンプ（これより前のニュースは除外） */
@@ -209,7 +222,7 @@ const News = () => {
       const gasUrl = import.meta.env.VITE_NEWS_API_URL || 'https://script.google.com/macros/s/AKfycbzQkGiLRP5htIje6u0nfoUL8sw3A5zlJ6NRRameQLCQsbAh9Dvpcihp_SSXI2mltWIO/exec'
       const endpoint = gasUrl ? gasUrl : '/api/nhk-latest-news'
 
-      const response = await fetch(endpoint, { cache: 'no-cache' })
+      const response = await fetchWithTimeout(endpoint)
       if (!response.ok) return []
 
       const data = await response.json()
@@ -223,7 +236,7 @@ const News = () => {
 
   const fetchNewsWithFallback = async (): Promise<NewsItem[]> => {
     const fetchAndNormalize = async (endpoint: string): Promise<NewsItem[]> => {
-      const response = await fetch(endpoint, { cache: 'no-cache' })
+      const response = await fetchWithTimeout(endpoint, 5000)
       if (!response.ok) return []
 
       const data = await response.json()
@@ -232,29 +245,29 @@ const News = () => {
     }
 
     try {
-      const remoteItems = await fetchNewsFromApi()
-      if (hasUsableNewsContent(remoteItems)) {
-        return remoteItems
-      }
-
-      console.warn('Remote news feed is missing article text. Falling back to static latest-news.json')
       const staticItems = await fetchAndNormalize(getStaticNewsUrl())
       if (hasUsableNewsContent(staticItems)) {
         return staticItems
       }
 
       console.warn('Static latest-news.json is unavailable. Falling back to embedded news data')
-      return getEmbeddedNewsItems()
+      const embeddedItems = getEmbeddedNewsItems()
+      if (hasUsableNewsContent(embeddedItems)) {
+        return embeddedItems
+      }
+
+      console.warn('Embedded news data is unavailable. Falling back to remote news feed')
+      return fetchNewsFromApi()
     } catch {
       try {
-        const staticItems = await fetchAndNormalize(getStaticNewsUrl())
-        if (hasUsableNewsContent(staticItems)) {
-          return staticItems
+        const embeddedItems = getEmbeddedNewsItems()
+        if (hasUsableNewsContent(embeddedItems)) {
+          return embeddedItems
         }
       } catch {
-        // embedded fallback below
+        // remote fallback below
       }
-      return getEmbeddedNewsItems()
+      return fetchNewsFromApi()
     }
   }
 
