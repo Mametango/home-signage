@@ -104,7 +104,9 @@ function hasUsableNewsContent(items: NewsItem[]): boolean {
 }
 
 function getStaticNewsUrl(): string {
-  return new URL(`${import.meta.env.BASE_URL}latest-news.json`, window.location.href).toString()
+  const url = new URL(`${import.meta.env.BASE_URL}latest-news.json`, window.location.href)
+  url.searchParams.set('v', String(Date.now()))
+  return url.toString()
 }
 
 function getEmbeddedNewsItems(): NewsItem[] {
@@ -117,7 +119,13 @@ async function fetchWithTimeout(endpoint: string, timeoutMs = 8000): Promise<Res
   const timeoutId = window.setTimeout(() => controller.abort(), timeoutMs)
 
   try {
-    return await fetch(endpoint, { cache: 'no-cache', signal: controller.signal })
+    return await fetch(endpoint, {
+      cache: 'no-store',
+      headers: {
+        'Cache-Control': 'no-cache'
+      },
+      signal: controller.signal
+    })
   } finally {
     window.clearTimeout(timeoutId)
   }
@@ -331,9 +339,21 @@ const News = () => {
     }
 
     fetchNews()
-    const interval = setInterval(fetchNews, 1800000) // 30分ごとに自動更新（Vercel無料枠節約）
+    const interval = setInterval(fetchNews, 300000) // 5分ごとに最新ニュースを確認
+    const refreshWhenVisible = () => {
+      if (document.visibilityState !== 'hidden') {
+        fetchNews()
+      }
+    }
 
-    return () => clearInterval(interval)
+    window.addEventListener('focus', fetchNews)
+    document.addEventListener('visibilitychange', refreshWhenVisible)
+
+    return () => {
+      clearInterval(interval)
+      window.removeEventListener('focus', fetchNews)
+      document.removeEventListener('visibilitychange', refreshWhenVisible)
+    }
   }, [])
 
   // 緊急ニュースの表示管理を完全に停止
