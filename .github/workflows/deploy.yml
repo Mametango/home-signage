@@ -1,5 +1,6 @@
 name: Deploy to GitHub Pages
 
+# Keep this workflow active for scheduled news refreshes.
 on:
   push:
     branches:
