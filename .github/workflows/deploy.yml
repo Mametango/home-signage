@@ -7,7 +7,7 @@ on:
       - main
       - master
   schedule:
-    - cron: '*/30 * * * *'
+    - cron: '*/5 * * * *'
   workflow_dispatch:
 
 permissions:
@@ -16,8 +16,8 @@ permissions:
   id-token: write
 
 concurrency:
-  group: pages
-  cancel-in-progress: false
+  group: pages-${{ github.run_id }}
+  cancel-in-progress: true
 
 jobs:
   build:
