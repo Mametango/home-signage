@@ -379,7 +379,7 @@ export default async function handler(req, res) {
     // CORSを許可してJSONを返す
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
-    res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600'); // 5分キャッシュ、10分間は古いデータでも返す
+    res.setHeader('Cache-Control', 'no-store, max-age=0'); // 常に最新のNHKニュースを取りに行く
     res.status(200).json({ news: newsItems });
   } catch (error) {
     console.error('Unexpected error in /api/nhk-latest-news:', error);

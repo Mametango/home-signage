@@ -109,6 +109,12 @@ function getStaticNewsUrl(): string {
   return url.toString()
 }
 
+function getLiveNewsEndpoint(): string {
+  const url = new URL('/api/nhk-latest-news', window.location.href)
+  url.searchParams.set('v', String(Date.now()))
+  return url.toString()
+}
+
 function getEmbeddedNewsItems(): NewsItem[] {
   const newsItems = Array.isArray(embeddedLatestNews.news) ? [...embeddedLatestNews.news] : []
   return newsItems.map((item, index) => normalizeNewsItem(item as NewsItem, index))
@@ -226,11 +232,7 @@ const News = () => {
   // ニュースを取得（GASプロキシまたは内部API）
   const fetchNewsFromApi = async (): Promise<NewsItem[]> => {
     try {
-      // 環境変数から GAS の URL を取得（未設定時はデフォルトの GAS を参照）
-      const gasUrl = import.meta.env.VITE_NEWS_API_URL || 'https://script.google.com/macros/s/AKfycbzQkGiLRP5htIje6u0nfoUL8sw3A5zlJ6NRRameQLCQsbAh9Dvpcihp_SSXI2mltWIO/exec'
-      const endpoint = gasUrl ? gasUrl : '/api/nhk-latest-news'
-
-      const response = await fetchWithTimeout(endpoint)
+      const response = await fetchWithTimeout(getLiveNewsEndpoint())
       if (!response.ok) return []
 
       const data = await response.json()
@@ -253,29 +255,29 @@ const News = () => {
     }
 
     try {
+      const liveItems = await fetchNewsFromApi()
+      if (hasUsableNewsContent(liveItems)) {
+        return liveItems
+      }
+
+      console.warn('Live news feed is unavailable. Falling back to static latest-news.json')
       const staticItems = await fetchAndNormalize(getStaticNewsUrl())
       if (hasUsableNewsContent(staticItems)) {
         return staticItems
       }
 
       console.warn('Static latest-news.json is unavailable. Falling back to embedded news data')
-      const embeddedItems = getEmbeddedNewsItems()
-      if (hasUsableNewsContent(embeddedItems)) {
-        return embeddedItems
-      }
-
-      console.warn('Embedded news data is unavailable. Falling back to remote news feed')
-      return fetchNewsFromApi()
+      return getEmbeddedNewsItems()
     } catch {
       try {
-        const embeddedItems = getEmbeddedNewsItems()
-        if (hasUsableNewsContent(embeddedItems)) {
-          return embeddedItems
+        const staticItems = await fetchAndNormalize(getStaticNewsUrl())
+        if (hasUsableNewsContent(staticItems)) {
+          return staticItems
         }
       } catch {
-        // remote fallback below
+        // embedded fallback below
       }
-      return fetchNewsFromApi()
+      return getEmbeddedNewsItems()
     }
   }
 
