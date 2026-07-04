@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: read
+  actions: write
 
 concurrency:
   group: news-monitor
@@ -20,4 +21,18 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Check published latest-news.json
+        id: freshness
+        continue-on-error: true
         run: node scripts/check-latest-news.mjs --max-age-minutes=45
+
+      - name: Trigger deploy refresh when stale
+        if: steps.freshness.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run deploy.yml --ref main
+
+      - name: Fail monitor when stale
+        if: steps.freshness.outcome == 'failure'
+        run: |
+          echo "latest-news.json is stale; deploy workflow was dispatched."
+          exit 1
