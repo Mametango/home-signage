@@ -1,6 +1,7 @@
 name: Deploy to GitHub Pages
 
 # Keep this workflow active for scheduled news refreshes.
+# Refresh marker: 2026-07-05T06:58:00+09:00
 on:
   push:
     branches:
