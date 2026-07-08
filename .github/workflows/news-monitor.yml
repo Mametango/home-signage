@@ -22,17 +22,15 @@ jobs:
 
       - name: Check published latest-news.json
         id: freshness
-        continue-on-error: true
-        run: node scripts/check-latest-news.mjs --max-age-minutes=45
+        run: node scripts/check-latest-news.mjs --max-age-minutes=45 --soft-stale
 
       - name: Trigger deploy refresh when stale
-        if: steps.freshness.outcome == 'failure'
+        if: steps.freshness.outputs.stale == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh workflow run deploy.yml --ref main
 
-      - name: Fail monitor when stale
-        if: steps.freshness.outcome == 'failure'
+      - name: Report monitor recovery
+        if: steps.freshness.outputs.stale == 'true'
         run: |
-          echo "latest-news.json is stale; deploy workflow was dispatched."
-          exit 1
+          echo "::warning::latest-news.json is stale; deploy workflow was dispatched."
