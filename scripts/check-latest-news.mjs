@@ -7,13 +7,25 @@ function getArg(name, fallback) {
   return match ? match.slice(prefix.length) : fallback
 }
 
+function hasFlag(name) {
+  return process.argv.includes(`--${name}`)
+}
+
 function fail(message) {
   console.error(message)
   process.exit(1)
 }
 
+async function setOutput(name, value) {
+  const outputPath = process.env.GITHUB_OUTPUT
+  if (!outputPath) return
+  const fs = await import('node:fs/promises')
+  await fs.appendFile(outputPath, `${name}=${value}\n`, 'utf8')
+}
+
 const url = getArg('url', DEFAULT_URL)
 const maxAgeMinutes = Number(getArg('max-age-minutes', DEFAULT_MAX_AGE_MINUTES))
+const softStale = hasFlag('soft-stale')
 
 if (!Number.isFinite(maxAgeMinutes) || maxAgeMinutes <= 0) {
   fail(`Invalid --max-age-minutes value: ${maxAgeMinutes}`)
@@ -52,5 +64,13 @@ console.log(`latest-news.json items: ${payload.news.length}`)
 console.log(`latest-news.json first title: ${firstTitle}`)
 
 if (ageMinutes > maxAgeMinutes) {
-  fail(`latest-news.json is stale: ${ageMinutes.toFixed(1)} minutes old, max ${maxAgeMinutes} minutes`)
+  const message = `latest-news.json is stale: ${ageMinutes.toFixed(1)} minutes old, max ${maxAgeMinutes} minutes`
+  if (softStale) {
+    console.warn(message)
+    await setOutput('stale', 'true')
+  } else {
+    fail(message)
+  }
+} else {
+  await setOutput('stale', 'false')
 }
