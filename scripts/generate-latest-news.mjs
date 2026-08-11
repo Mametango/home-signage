@@ -9,7 +9,7 @@ const OUTPUT_FILE = resolve(OUTPUT_DIR, 'latest-news.json')
 const GENERATED_DIR = resolve(process.cwd(), 'src', 'generated')
 const GENERATED_FILE = resolve(GENERATED_DIR, 'latest-news.ts')
 
-const ARTICLE_PATH_RE = /\/newsweb\/(na\/na-k|html\/)|\/news\/html\/\d+\/k\d+\.html/i
+const ARTICLE_PATH_RE = /\/newsweb\/(na\/(na-k|nd-)|html\/)|\/news\/html\/\d+\/k\d+\.html/i
 
 function absoluteUrl(url = '', baseUrl = LIST_URL) {
   if (!url) return ''
