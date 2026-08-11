@@ -85,7 +85,7 @@ function isDisplayableNewsItem(item: NewsItem): boolean {
   ].includes(title)
 
   const isArticleLink =
-    /\/newsweb\/(na\/na-k|html\/)/.test(normalizedLink) ||
+    /\/newsweb\/(na\/(na-k|nd-)|html\/)/.test(normalizedLink) ||
     /\/news\/html\/\d+\/k\d+\.html/.test(normalizedLink)
 
   if (isSectionLink) return false
